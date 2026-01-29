@@ -328,6 +328,14 @@ export default function PostManagement() {
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
+
+            // 5MB Limit Check
+            if (file.size > 5 * 1024 * 1024) {
+                toast.error("File is too large! Max 5MB allowed.");
+                e.target.value = ''; // Reset input
+                return;
+            }
+
             const newFiles = [...selectedFiles];
             newFiles[index] = file;
             setSelectedFiles(newFiles);
