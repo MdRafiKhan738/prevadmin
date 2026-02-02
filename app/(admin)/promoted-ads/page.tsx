@@ -44,6 +44,15 @@ export default function PromotedAdsPage() {
     const [savingId, setSavingId] = useState<string | number | null>(null);
     const [manualSaving, setManualSaving] = useState(false);
 
+    // Premier Opportunity State
+    const [premierSettings, setPremierSettings] = useState({
+        verifyBadgePrice: 0,
+        highlightPostPrice: 0,
+        addLabelPrice: 0,
+        freeAdCredit: 0
+    });
+    const [premierSaving, setPremierSaving] = useState(false);
+
     useEffect(() => {
         fetchData();
     }, []);
@@ -52,11 +61,14 @@ export default function PromotedAdsPage() {
         setLoading(true);
         try {
             const token = Cookies.get('adminToken');
-            const [plansRes, subCatRes] = await Promise.all([
+            const [plansRes, subCatRes, premierRes] = await Promise.all([
                 axios.get(`${API_BASE_URL}/api/admins/promotion-plans`, {
                     headers: { 'Authorization': `Bearer ${token}`, 'x-auth-token': token }
                 }).catch(() => ({ data: [] })),
-                axios.get(`${API_BASE_URL}/api/categories/sub`)
+                axios.get(`${API_BASE_URL}/api/categories/sub`),
+                axios.get(`${API_BASE_URL}/api/premier-opportunity`, {
+                    headers: { 'Authorization': `Bearer ${token}`, 'x-auth-token': token }
+                }).catch(() => ({ data: { data: {} } }))
             ]);
 
             setPlans(plansRes.data.length > 0 ? plansRes.data : [{
@@ -71,6 +83,16 @@ export default function PromotedAdsPage() {
 
             const allSubs = subCatRes.data.data?.map((sc: any) => sc.name) || [];
             setCategories(allSubs);
+
+            if (premierRes && premierRes.data && premierRes.data.data) {
+                const settings = premierRes.data.data;
+                setPremierSettings({
+                    verifyBadgePrice: settings.verifyBadgePrice || 0,
+                    highlightPostPrice: settings.highlightPostPrice || 0,
+                    addLabelPrice: settings.addLabelPrice || 0,
+                    freeAdCredit: settings.freeAdCredit || 0
+                });
+            }
 
         } catch (err) {
             console.error("Fetch error:", err);
@@ -149,14 +171,29 @@ export default function PromotedAdsPage() {
         }
     };
 
+    const handleSavePremier = async () => {
+        setPremierSaving(true);
+        try {
+            const token = Cookies.get('adminToken');
+            await axios.put(`${API_BASE_URL}/api/premier-opportunity`, premierSettings, {
+                headers: { 'Authorization': `Bearer ${token}`, 'x-auth-token': token }
+            });
+            toast.success("Premier settings updated!");
+        } catch (err: any) {
+            toast.error("Failed to update settings");
+        } finally {
+            setPremierSaving(false);
+        }
+    };
+
     return (
-        <div className="bg-[#f1f5f9] min-h-screen p-3 font-['Tahoma','Verdana',sans-serif] text-[10px]">
+        <div className="bg-[#f1f5f9] min-h-screen p-3 font-['Tahoma','Verdana',sans-serif] text-xs">
             {/* Header */}
             <div className="flex items-center gap-3 mb-4">
                 <button className="text-rose-500 bg-white p-1 rounded-sm border border-slate-200">
                     <ArrowLeft className="w-3.5 h-3.5" strokeWidth={3} />
                 </button>
-                <h1 className="text-[13px] font-bold text-blue-700">Promote Plan</h1>
+                <h1 className="text-sm font-bold text-blue-700">Promote Plan</h1>
             </div>
 
             {/* Promote Plan Section */}
@@ -165,25 +202,25 @@ export default function PromotedAdsPage() {
                     <table className="w-full border-collapse">
                         <thead>
                             <tr className="text-left border-b border-slate-200 bg-white">
-                                <th className="px-2 py-2 font-bold text-slate-800 text-[10px] w-[22%]">Sub Categorie</th>
-                                <th className="px-2 py-2 font-bold text-slate-800 text-[11px] text-center border-l border-slate-100 uppercase">Amount</th>
-                                <th className="px-2 py-2 font-bold text-slate-800 text-[11px] text-center border-l border-slate-100" colSpan={2}>
-                                    <div className="text-[12px] uppercase">View</div>
-                                    <div className="flex justify-around text-[9px] font-normal text-slate-400 mt-0.5">
+                                <th className="px-2 py-2 font-bold text-slate-800 text-xs w-[22%]">Sub Categorie</th>
+                                <th className="px-2 py-2 font-bold text-slate-800 text-xs text-center border-l border-slate-100 uppercase">Amount</th>
+                                <th className="px-2 py-2 font-bold text-slate-800 text-xs text-center border-l border-slate-100" colSpan={2}>
+                                    <div className="text-xs uppercase">View</div>
+                                    <div className="flex justify-around text-xs font-normal text-slate-400 mt-0.5">
                                         <span className="w-1/2">Reach</span>
                                         <span className="w-1/2">Trafic</span>
                                     </div>
                                 </th>
-                                <th className="px-2 py-2 font-bold text-slate-800 text-[11px] text-center border-l border-slate-100" colSpan={2}>
-                                    <div className="text-[12px] uppercase">Min Amount</div>
-                                    <div className="flex justify-around text-[9px] font-normal text-slate-400 mt-0.5">
+                                <th className="px-2 py-2 font-bold text-slate-800 text-xs text-center border-l border-slate-100" colSpan={2}>
+                                    <div className="text-xs uppercase">Min Amount</div>
+                                    <div className="flex justify-around text-xs font-normal text-slate-400 mt-0.5">
                                         <span className="w-1/2">Reach</span>
                                         <span className="w-1/2">Trafic</span>
                                     </div>
                                 </th>
-                                <th className="px-2 py-2 font-bold text-slate-800 text-[11px] text-center border-l border-slate-100 whitespace-nowrap uppercase">Gap 'to Amount'</th>
-                                <th className="px-2 py-2 font-bold text-slate-800 text-[11px] text-center border-l border-slate-100 uppercase">Edit/Save</th>
-                                <th className="px-2 py-2 font-bold text-slate-800 text-[11px] text-center border-l border-slate-100 uppercase">Dl, +</th>
+                                <th className="px-2 py-2 font-bold text-slate-800 text-xs text-center border-l border-slate-100 whitespace-nowrap uppercase">Gap 'to Amount'</th>
+                                <th className="px-2 py-2 font-bold text-slate-800 text-xs text-center border-l border-slate-100 uppercase">Edit/Save</th>
+                                <th className="px-2 py-2 font-bold text-slate-800 text-xs text-center border-l border-slate-100 uppercase">Dl, +</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
@@ -191,9 +228,9 @@ export default function PromotedAdsPage() {
                                 <tr key={idx} className="hover:bg-slate-50/30 transition-colors">
                                     {/* Sub Categorie Selection */}
                                     <td className="p-1.5">
-                                        <div className="flex flex-wrap gap-1 p-1 min-h-[28px] border border-slate-200 rounded-sm bg-white relative group">
+                                        <div className="flex flex-wrap gap-1 p-1 min-h-7 border border-slate-200 rounded-sm bg-white relative group">
                                             {plan.subCategories.length > 0 ? plan.subCategories.map(sub => (
-                                                <span key={sub} className="bg-[#10b981] text-white px-1.5 py-0.5 rounded-sm flex items-center gap-1 text-[9px] font-bold relative z-20">
+                                                <span key={sub} className="bg-[#10b981] text-white px-1.5 py-0.5 rounded-sm flex items-center gap-1 text-xs font-bold relative z-20">
                                                     {sub}
                                                     <X
                                                         className="w-2.5 h-2.5 cursor-pointer hover:text-rose-200"
@@ -204,7 +241,7 @@ export default function PromotedAdsPage() {
                                                         }}
                                                     />
                                                 </span>
-                                            )) : <span className="text-slate-300 text-[10px] py-0.5 px-1 uppercase">Sub Catag..</span>}
+                                            )) : <span className="text-slate-300 text-xs py-0.5 px-1 uppercase">Sub Catag..</span>}
                                             <select
                                                 className="opacity-0 absolute inset-0 w-full h-full cursor-pointer z-10"
                                                 onChange={(e) => {
@@ -227,7 +264,7 @@ export default function PromotedAdsPage() {
                                     <td className="p-1.5 border-l border-slate-100 text-center">
                                         <input
                                             type="text"
-                                            className="w-16 h-8 border border-slate-200 rounded-sm text-center outline-none bg-[#f8fafc] focus:bg-white focus:border-blue-400 font-bold text-[11px] shadow-inner"
+                                            className="w-16 h-8 border border-slate-200 rounded-sm text-center outline-none bg-[#f8fafc] focus:bg-white focus:border-blue-400 font-bold text-xs shadow-inner"
                                             value={plan.amount}
                                             onChange={(e) => updatePlan(idx, 'amount', e.target.value)}
                                         />
@@ -238,13 +275,13 @@ export default function PromotedAdsPage() {
                                         <div className="flex gap-1.5 justify-center">
                                             <input
                                                 type="text"
-                                                className="w-14 h-8 border border-slate-200 rounded-sm text-center outline-none bg-[#f8fafc] focus:bg-white focus:border-blue-400 font-bold text-[11px] shadow-inner"
+                                                className="w-14 h-8 border border-slate-200 rounded-sm text-center outline-none bg-[#f8fafc] focus:bg-white focus:border-blue-400 font-bold text-xs shadow-inner"
                                                 value={plan.reach}
                                                 onChange={(e) => updatePlan(idx, 'reach', e.target.value)}
                                             />
                                             <input
                                                 type="text"
-                                                className="w-14 h-8 border border-slate-200 rounded-sm text-center outline-none bg-[#f8fafc] focus:bg-white focus:border-blue-400 font-bold text-[11px] shadow-inner"
+                                                className="w-14 h-8 border border-slate-200 rounded-sm text-center outline-none bg-[#f8fafc] focus:bg-white focus:border-blue-400 font-bold text-xs shadow-inner"
                                                 value={plan.traffic}
                                                 onChange={(e) => updatePlan(idx, 'traffic', e.target.value)}
                                             />
@@ -256,13 +293,13 @@ export default function PromotedAdsPage() {
                                         <div className="flex gap-1.5 justify-center">
                                             <input
                                                 type="text"
-                                                className="w-14 h-8 border border-slate-200 rounded-sm text-center outline-none bg-[#f8fafc] focus:bg-white focus:border-blue-400 font-bold text-[11px] shadow-inner"
+                                                className="w-14 h-8 border border-slate-200 rounded-sm text-center outline-none bg-[#f8fafc] focus:bg-white focus:border-blue-400 font-bold text-xs shadow-inner"
                                                 value={plan.minReach}
                                                 onChange={(e) => updatePlan(idx, 'minReach', e.target.value)}
                                             />
                                             <input
                                                 type="text"
-                                                className="w-14 h-8 border border-slate-200 rounded-sm text-center outline-none bg-[#f8fafc] focus:bg-white focus:border-blue-400 font-bold text-[11px] shadow-inner"
+                                                className="w-14 h-8 border border-slate-200 rounded-sm text-center outline-none bg-[#f8fafc] focus:bg-white focus:border-blue-400 font-bold text-xs shadow-inner"
                                                 value={plan.minTraffic}
                                                 onChange={(e) => updatePlan(idx, 'minTraffic', e.target.value)}
                                             />
@@ -273,7 +310,7 @@ export default function PromotedAdsPage() {
                                     <td className="p-1.5 border-l border-slate-100 text-center">
                                         <input
                                             type="text"
-                                            className="w-16 h-8 border border-slate-200 rounded-sm text-center outline-none bg-[#f8fafc] focus:bg-white focus:border-blue-400 font-bold text-[11px] shadow-inner"
+                                            className="w-16 h-8 border border-slate-200 rounded-sm text-center outline-none bg-[#f8fafc] focus:bg-white focus:border-blue-400 font-bold text-xs shadow-inner"
                                             value={plan.gapAmount}
                                             onChange={(e) => updatePlan(idx, 'gapAmount', e.target.value)}
                                         />
@@ -284,14 +321,14 @@ export default function PromotedAdsPage() {
                                         <div className="flex items-center justify-center gap-1">
                                             <button
                                                 onClick={() => updatePlan(idx, 'isEditing', true)}
-                                                className="bg-[#1e40af] text-white w-9 h-6 rounded-sm font-bold text-[9px] uppercase shadow-sm hover:bg-blue-800 transition-colors"
+                                                className="bg-[#1e40af] text-white w-9 h-6 rounded-sm font-bold text-xs uppercase shadow-sm hover:bg-blue-800 transition-colors"
                                             >
                                                 Edit
                                             </button>
                                             <button
                                                 onClick={() => handleSavePlan(idx)}
                                                 disabled={savingId === idx}
-                                                className="bg-[#1e40af] text-white w-9 h-6 rounded-sm font-bold text-[9px] uppercase shadow-sm hover:bg-blue-800 transition-colors disabled:bg-slate-300"
+                                                className="bg-[#1e40af] text-white w-9 h-6 rounded-sm font-bold text-xs uppercase shadow-sm hover:bg-blue-800 transition-colors disabled:bg-slate-300"
                                             >
                                                 {savingId === idx ? "..." : "Save"}
                                             </button>
@@ -333,70 +370,138 @@ export default function PromotedAdsPage() {
                 </div>
             </div>
 
-            {/* Manual Promotion Section */}
-            <div className="bg-white/50 p-3 rounded-sm border border-slate-100 max-w-3xl">
-                <h2 className="text-[11px] font-bold text-slate-800 mb-2 flex items-center gap-1.5 uppercase">
-                    Product a Product Manually
-                </h2>
+            <div className="flex gap-4 items-start">
+                {/* Manual Promotion Section */}
+                <div className="bg-white/50 p-3 rounded-sm border border-slate-100 max-w-3xl flex-1">
+                    <h2 className="text-xs font-bold text-slate-800 mb-2 flex items-center gap-1.5 uppercase">
+                        Product a Product Manually
+                    </h2>
 
-                <div className="grid grid-cols-[1fr_0.8fr] gap-3 mb-3">
-                    <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1">
-                            <div className="relative">
+                    <div className="grid grid-cols-[1fr_0.8fr] gap-3 mb-3">
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                                <div className="relative">
+                                    <input
+                                        placeholder="Product ID"
+                                        className="w-full border border-slate-300 px-2 h-8 outline-none text-xs font-bold placeholder:font-normal bg-white"
+                                        value={manualPromote.productId}
+                                        onChange={(e) => setManualPromote({ ...manualPromote, productId: e.target.value })}
+                                    />
+                                    <Search className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-emerald-600" />
+                                </div>
                                 <input
-                                    placeholder="Product ID"
-                                    className="w-full border border-slate-300 px-2 h-8 outline-none text-[10px] font-bold placeholder:font-normal bg-white"
-                                    value={manualPromote.productId}
-                                    onChange={(e) => setManualPromote({ ...manualPromote, productId: e.target.value })}
+                                    placeholder="Amount"
+                                    className="w-full border border-slate-300 px-2 h-8 outline-none text-xs font-bold placeholder:font-normal bg-white"
+                                    value={manualPromote.amount}
+                                    onChange={(e) => setManualPromote({ ...manualPromote, amount: e.target.value })}
                                 />
-                                <Search className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-emerald-600" />
                             </div>
-                            <input
-                                placeholder="Amount"
-                                className="w-full border border-slate-300 px-2 h-8 outline-none text-[10px] font-bold placeholder:font-normal bg-white"
-                                value={manualPromote.amount}
-                                onChange={(e) => setManualPromote({ ...manualPromote, amount: e.target.value })}
-                            />
-                        </div>
 
-                        <div className="space-y-1">
-                            <select
-                                className="w-full border border-slate-300 px-2 h-8 outline-none text-[10px] font-bold bg-white"
-                                value={manualPromote.adType}
-                                onChange={(e) => setManualPromote({ ...manualPromote, adType: e.target.value })}
-                            >
-                                <option value="" disabled>AD Type</option>
-                                <option value="Free">Free</option>
-                                <option value="Promoted">Promoted</option>
-                            </select>
-                            <div className="relative">
-                                <input
-                                    placeholder="Today to Run till"
-                                    className="w-full border border-slate-300 px-2 h-8 outline-none text-[10px] font-bold placeholder:font-normal bg-white"
-                                    value={manualPromote.runTill}
-                                    onChange={(e) => setManualPromote({ ...manualPromote, runTill: e.target.value })}
-                                    onFocus={(e) => e.target.type = 'date'}
-                                    onBlur={(e) => e.target.type = 'text'}
-                                />
-                                <Calendar className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                            <div className="space-y-1">
+                                <select
+                                    className="w-full border border-slate-300 px-2 h-8 outline-none text-xs font-bold bg-white"
+                                    value={manualPromote.adType}
+                                    onChange={(e) => setManualPromote({ ...manualPromote, adType: e.target.value })}
+                                >
+                                    <option value="" disabled>AD Type</option>
+                                    <option value="Free">Free</option>
+                                    <option value="Promoted">Promoted</option>
+                                </select>
+                                <div className="relative">
+                                    <input
+                                        placeholder="Today to Run till"
+                                        className="w-full border border-slate-300 px-2 h-8 outline-none text-xs font-bold placeholder:font-normal bg-white"
+                                        value={manualPromote.runTill}
+                                        onChange={(e) => setManualPromote({ ...manualPromote, runTill: e.target.value })}
+                                        onFocus={(e) => e.target.type = 'date'}
+                                        onBlur={(e) => e.target.type = 'text'}
+                                    />
+                                    <Calendar className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                                </div>
                             </div>
                         </div>
                     </div>
+
+                    <div className="flex gap-2">
+                        <button
+                            onClick={handleManualPromote}
+                            disabled={manualSaving}
+                            className="bg-[#00a65a] text-white px-5 py-1.5 rounded-[1px] font-bold text-xs shadow-sm hover:bg-[#008d4c] uppercase flex items-center gap-2 disabled:bg-slate-300"
+                        >
+                            {manualSaving ? "Saving..." : "Save"}
+                        </button>
+                        <button
+                            className="bg-white border border-slate-300 text-slate-600 px-5 py-1.5 rounded-[1px] font-bold text-xs shadow-sm hover:bg-slate-50 uppercase"
+                        >
+                            Cancel
+                        </button>
+                    </div>
                 </div>
 
-                <div className="flex gap-2">
-                    <button
-                        onClick={handleManualPromote}
-                        disabled={manualSaving}
-                        className="bg-[#00a65a] text-white px-5 py-1.5 rounded-[1px] font-bold text-[10px] shadow-sm hover:bg-[#008d4c] uppercase flex items-center gap-2 disabled:bg-slate-300"
-                    >
-                        {manualSaving ? "Saving..." : "Save"}
-                    </button>
-                    <button
-                        className="bg-white border border-slate-300 text-slate-600 px-5 py-1.5 rounded-[1px] font-bold text-[10px] shadow-sm hover:bg-slate-50 uppercase"
-                    >
-                        Cancel
-                    </button>
+                {/* Premier Opportunity Section */}
+                <div className="bg-white/50 p-3 rounded-sm border border-slate-100 flex-1">
+                    <h2 className="text-xs font-bold text-slate-800 mb-2 flex items-center gap-1.5 uppercase">
+                        Premier Opportunity
+                    </h2>
+                    <div className="space-y-2">
+                        <div className="flex items-center justify-between border-b border-dashed border-slate-200 pb-1">
+                            <label className="text-xs font-bold text-slate-600">Profile Verify Badge Price (year)</label>
+                            <div className="flex items-center gap-1">
+                                <span className="text-xs font-bold text-slate-400">$</span>
+                                <input
+                                    type="number"
+                                    className="w-16 h-6 border border-slate-300 px-1 text-center font-bold text-xs outline-none bg-white focus:border-blue-500"
+                                    value={premierSettings.verifyBadgePrice}
+                                    onChange={e => setPremierSettings({ ...premierSettings, verifyBadgePrice: Number(e.target.value) })}
+                                />
+                            </div>
+                        </div>
+                        <div className="flex items-center justify-between border-b border-dashed border-slate-200 pb-1">
+                            <label className="text-xs font-bold text-slate-600">Highlight Post Price</label>
+                            <div className="flex items-center gap-1">
+                                <span className="text-xs font-bold text-slate-400">$</span>
+                                <input
+                                    type="number"
+                                    className="w-16 h-6 border border-slate-300 px-1 text-center font-bold text-xs outline-none bg-white focus:border-blue-500"
+                                    value={premierSettings.highlightPostPrice}
+                                    onChange={e => setPremierSettings({ ...premierSettings, highlightPostPrice: Number(e.target.value) })}
+                                />
+                            </div>
+                        </div>
+                        <div className="flex items-center justify-between border-b border-dashed border-slate-200 pb-1">
+                            <label className="text-xs font-bold text-slate-600">Add Label Price</label>
+                            <div className="flex items-center gap-1">
+                                <span className="text-xs font-bold text-slate-400">$</span>
+                                <input
+                                    type="number"
+                                    className="w-16 h-6 border border-slate-300 px-1 text-center font-bold text-xs outline-none bg-white focus:border-blue-500"
+                                    value={premierSettings.addLabelPrice}
+                                    onChange={e => setPremierSettings({ ...premierSettings, addLabelPrice: Number(e.target.value) })}
+                                />
+                            </div>
+                        </div>
+                        <div className="flex items-center justify-between pb-1">
+                            <label className="text-xs font-bold text-emerald-600">Free Ad Credit Amount</label>
+                            <div className="flex items-center gap-1">
+                                <span className="text-xs font-bold text-slate-400">$</span>
+                                <input
+                                    type="number"
+                                    className="w-16 h-6 border border-slate-300 px-1 text-center font-bold text-xs outline-none bg-white focus:border-blue-500 text-emerald-600"
+                                    value={premierSettings.freeAdCredit}
+                                    onChange={e => setPremierSettings({ ...premierSettings, freeAdCredit: Number(e.target.value) })}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    <div className="flex gap-2 mt-3">
+                        <button
+                            onClick={handleSavePremier}
+                            disabled={premierSaving}
+                            className="bg-[#1e40af] text-white px-5 py-1.5 rounded-[1px] font-bold text-xs shadow-sm hover:bg-blue-800 uppercase flex items-center gap-2 disabled:bg-slate-300"
+                        >
+                            {premierSaving ? "Saving..." : "Update Premier Info"}
+                        </button>
+                    </div>
                 </div>
             </div>
 

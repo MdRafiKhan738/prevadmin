@@ -44,7 +44,7 @@ export default function DashboardPage() {
     return (
         <div className="space-y-4">
             {/* Breadcrumb */}
-            <div className="flex items-center gap-2 text-slate-500 text-[12px] mb-2 px-1">
+            <div className="flex items-center gap-2 text-slate-500 text-xs mb-2 px-1">
                 <Home className="w-3.5 h-3.5" />
                 <span>/</span>
                 <span className="font-normal text-slate-400">Dashboard</span>
@@ -60,16 +60,16 @@ export default function DashboardPage() {
                             initial={{ opacity: 0, y: 5 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: i * 0.01 }}
-                            className={`bg-white border-l-4 ${stat.color} p-4 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)] flex justify-between items-start min-h-[90px] rounded-sm`}
+                            className={`bg-white border-l-4 ${stat.color} p-4 shadow-md flex justify-between items-start min-h-24 rounded-sm`}
                         >
                             <div className="flex flex-col h-full justify-between">
                                 <h3 className="text-4xl font-light text-slate-700 leading-none">{stat.value}</h3>
                                 {stat.subText ? (
                                     <div className="flex flex-col mt-auto pt-2">
-                                        <p className="text-[11px] text-slate-400 font-medium truncate">{stat.title}</p>
+                                        <p className="text-xs text-slate-400 font-medium truncate">{stat.title}</p>
                                     </div>
                                 ) : (
-                                    <p className="text-[11px] text-slate-400 font-medium mt-auto pt-2 truncate">{stat.title}</p>
+                                    <p className="text-xs text-slate-400 font-medium mt-auto pt-2 truncate">{stat.title}</p>
                                 )}
                             </div>
                             <div className={`${stat.iconColor} pt-0.5 opacity-90`}>

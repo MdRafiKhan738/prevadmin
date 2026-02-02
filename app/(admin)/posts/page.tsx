@@ -434,7 +434,7 @@ export default function PostManagement() {
     };
 
     return (
-        <div className="bg-[#f1f5f9] min-h-[calc(100vh-4rem)] p-2 font-['Tahoma','Verdana',sans-serif] overflow-y-auto text-[11px]">
+        <div className="bg-[#f1f5f9] min-h-[calc(100vh-4rem)] p-2 font-['Tahoma','Verdana',sans-serif] overflow-y-auto text-xs">
             {/* Top Navigation & Status Bar */}
             <div className="bg-white rounded-t-md border border-slate-200 p-2 flex items-center justify-between shadow-sm mb-1">
                 <div className="flex items-center gap-4">
@@ -442,7 +442,7 @@ export default function PostManagement() {
                         <ArrowLeft className="w-4 h-4 stroke-[3]" />
                     </button>
 
-                    <div className="flex items-center gap-4 text-[12px] font-bold">
+                    <div className="flex items-center gap-4 text-xs font-bold">
                         <button
                             onClick={() => setActiveTab('all')}
                             className={cn("hover:text-indigo-600 transition-colors", activeTab === 'all' && "text-indigo-600 border-b-2 border-indigo-600")}
@@ -518,7 +518,7 @@ export default function PostManagement() {
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
-                            <tr className="bg-white text-slate-900 border-b border-slate-200 text-[10px]">
+                            <tr className="bg-white text-slate-900 border-b border-slate-200 text-xs">
                                 <th className="px-2 py-2 w-8">
                                     <input
                                         type="checkbox"
@@ -543,7 +543,7 @@ export default function PostManagement() {
                                 <th className="px-2 py-2 font-extrabold uppercase whitespace-nowrap text-right pr-4">Action</th>
                             </tr>
                         </thead>
-                        <tbody className="text-slate-600 font-bold text-[10px]">
+                        <tbody className="text-slate-600 font-bold text-xs">
                             {loading ? (
                                 <tr>
                                     <td colSpan={14} className="py-20 text-center">
@@ -556,7 +556,7 @@ export default function PostManagement() {
                                 </tr>
                             ) : (
                                 filteredAds.map((ad, idx) => (
-                                    <tr key={ad._id} className={cn("border-b border-slate-100 hover:bg-slate-50 transition-colors h-[40px]", selectedAds.includes(ad._id) && "bg-rose-50/50")}>
+                                    <tr key={ad._id} className={cn("border-b border-slate-100 hover:bg-slate-50 transition-colors h-10", selectedAds.includes(ad._id) && "bg-rose-50/50")}>
                                         <td className="px-2 py-1">
                                             <input
                                                 type="checkbox"
@@ -608,7 +608,7 @@ export default function PostManagement() {
                                             <select
                                                 value={ad.status}
                                                 onChange={(e) => updateStatus(ad._id, e.target.value)}
-                                                className="border-[1.5px] border-slate-900 rounded-px px-1 py-0 h-6 w-full max-w-[70px] bg-white text-[9px] font-black outline-none shadow-sm uppercase leading-none"
+                                                className="border-[1.5px] border-slate-900 rounded-px px-1 py-0 h-6 w-full max-w-[70px] bg-white text-xs font-black outline-none shadow-sm uppercase leading-none"
                                             >
                                                 <option value="pending">Review</option>
                                                 <option value="active">Active</option>
@@ -621,7 +621,7 @@ export default function PostManagement() {
                                                 <select
                                                     value={ad.category}
                                                     onChange={(e) => updateAdField(ad._id, 'category', e.target.value)}
-                                                    className="bg-transparent text-slate-900 border-none outline-none font-bold cursor-pointer w-full text-[10px]"
+                                                    className="bg-transparent text-slate-900 border-none outline-none font-bold cursor-pointer w-full text-xs"
                                                 >
                                                     <option value="">Select Category</option>
                                                     {categories.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
@@ -663,13 +663,13 @@ export default function PostManagement() {
                                             </div>
                                         </td>
                                         <td className="px-2 py-1 leading-[1.1]">
-                                            <div className="flex flex-col text-[9px]">
+                                            <div className="flex flex-col text-xs">
                                                 <span className="text-slate-400">{ad.senBy || 'N/A'}</span>
                                                 <span className="text-slate-800">{ad.edBy || 'N/A'}</span>
                                             </div>
                                         </td>
                                         <td className="px-2 py-1 whitespace-nowrap">
-                                            <div className="flex flex-col text-[9px] leading-tight">
+                                            <div className="flex flex-col text-xs leading-tight">
                                                 <span>{new Date(ad.createdAt).toLocaleDateString()}</span>
                                                 <span className="text-slate-400">{new Date(ad.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                             </div>
@@ -681,7 +681,7 @@ export default function PostManagement() {
                                                         setSelectedAd(ad);
                                                         setShowShortViewModal(true);
                                                     }}
-                                                    className="bg-emerald-500 text-white w-8 h-5 flex items-center justify-center rounded-sm text-[8px] font-black shadow-sm uppercase"
+                                                    className="bg-emerald-500 text-white w-8 h-5 flex items-center justify-center rounded-sm text-xs font-black shadow-sm uppercase"
                                                 >
                                                     Short
                                                 </button>
@@ -691,7 +691,7 @@ export default function PostManagement() {
                                                         setEditFormData(ad);
                                                         setShowEditModal(true);
                                                     }}
-                                                    className="bg-emerald-600 text-white w-8 h-5 flex items-center justify-center rounded-sm text-[8px] font-black shadow-sm uppercase"
+                                                    className="bg-emerald-600 text-white w-8 h-5 flex items-center justify-center rounded-sm text-xs font-black shadow-sm uppercase"
                                                 >
                                                     Detail
                                                 </button>
@@ -712,24 +712,24 @@ export default function PostManagement() {
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowSearchModal(false)} className="absolute inset-0 bg-black/20 backdrop-blur-sm" />
                         <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white border-[1.5px] border-slate-900 w-full max-w-4xl rounded-sm shadow-2xl relative z-10">
                             <div className="p-4 border-b border-slate-200">
-                                <h2 className="text-[13px] font-bold text-slate-900">Search By Item</h2>
+                                <h2 className="text-sm font-bold text-slate-900">Search By Item</h2>
                             </div>
                             <div className="p-4 grid grid-cols-5 gap-x-3 gap-y-3">
                                 <div className="space-y-1">
                                     <label className="text-slate-700 font-bold block">Product Tracing ID</label>
-                                    <input type="text" placeholder="Tracing ID..." className="w-full border border-slate-300 px-2 py-1 outline-none font-medium h-7 text-[11px]" />
+                                    <input type="text" placeholder="Tracing ID..." className="w-full border border-slate-300 px-2 py-1 outline-none font-medium h-7 text-xs" />
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-slate-700 font-bold block">Mobile</label>
-                                    <input type="text" placeholder="Mobile..." className="w-full border border-slate-300 px-2 py-1 outline-none font-medium h-7 text-[11px]" />
+                                    <input type="text" placeholder="Mobile..." className="w-full border border-slate-300 px-2 py-1 outline-none font-medium h-7 text-xs" />
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-slate-700 font-bold block">Email</label>
-                                    <input type="text" placeholder="Email..." className="w-full border border-slate-300 px-2 py-1 outline-none font-medium h-7 text-[11px]" />
+                                    <input type="text" placeholder="Email..." className="w-full border border-slate-300 px-2 py-1 outline-none font-medium h-7 text-xs" />
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-slate-700 font-bold block">Active Status</label>
-                                    <select className="w-full border border-slate-300 px-1 py-1 outline-none font-medium h-7 text-[11px]">
+                                    <select className="w-full border border-slate-300 px-1 py-1 outline-none font-medium h-7 text-xs">
                                         <option>Select</option>
                                         <option>Active</option>
                                         <option>Pending</option>
@@ -738,7 +738,7 @@ export default function PostManagement() {
                                 <div className="space-y-1">
                                     <label className="text-slate-700 font-bold block">Categorie</label>
                                     <select
-                                        className="w-full border border-slate-300 px-1 py-1 outline-none font-medium h-7 text-[11px]"
+                                        className="w-full border border-slate-300 px-1 py-1 outline-none font-medium h-7 text-xs"
                                         value={searchKeys.categoryId}
                                         onChange={(e) => setSearchKeys({ ...searchKeys, categoryId: e.target.value, subCategoryId: '' })}
                                     >
@@ -749,7 +749,7 @@ export default function PostManagement() {
                                 <div className="space-y-1">
                                     <label className="text-slate-700 font-bold block">Sub Categorie</label>
                                     <select
-                                        className="w-full border border-slate-300 px-1 py-1 outline-none font-medium h-7 text-[11px]"
+                                        className="w-full border border-slate-300 px-1 py-1 outline-none font-medium h-7 text-xs"
                                         value={searchKeys.subCategoryId}
                                         onChange={(e) => setSearchKeys({ ...searchKeys, subCategoryId: e.target.value })}
                                     >
@@ -762,7 +762,7 @@ export default function PostManagement() {
                                 <div className="space-y-1">
                                     <label className="text-slate-700 font-bold block">Location</label>
                                     <select
-                                        className="w-full border border-slate-300 px-1 py-1 outline-none font-medium h-7 text-[11px]"
+                                        className="w-full border border-slate-300 px-1 py-1 outline-none font-medium h-7 text-xs"
                                         value={searchKeys.locationId}
                                         onChange={(e) => setSearchKeys({ ...searchKeys, locationId: e.target.value, subLocationId: '' })}
                                     >
@@ -773,7 +773,7 @@ export default function PostManagement() {
                                 <div className="space-y-1">
                                     <label className="text-slate-700 font-bold block">Sub Location</label>
                                     <select
-                                        className="w-full border border-slate-300 px-1 py-1 outline-none font-medium h-7 text-[11px]"
+                                        className="w-full border border-slate-300 px-1 py-1 outline-none font-medium h-7 text-xs"
                                         value={searchKeys.subLocationId}
                                         onChange={(e) => setSearchKeys({ ...searchKeys, subLocationId: e.target.value })}
                                     >
@@ -785,24 +785,24 @@ export default function PostManagement() {
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-slate-700 font-bold block">Registration Date From</label>
-                                    <div className="flex border border-slate-300 h-7 text-[11px]">
+                                    <div className="flex border border-slate-300 h-7 text-xs">
                                         <input type="text" className="flex-1 px-1 outline-none font-medium" />
                                         <button className="px-1 border-l border-slate-200 bg-slate-50"><Calendar className="w-3 h-3" /></button>
                                     </div>
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-slate-700 font-bold block">Registration Date To</label>
-                                    <div className="flex border border-slate-300 h-7 text-[11px]">
+                                    <div className="flex border border-slate-300 h-7 text-xs">
                                         <input type="text" className="flex-1 px-1 outline-none font-medium" />
                                         <button className="px-1 border-l border-slate-200 bg-slate-50"><Calendar className="w-3 h-3" /></button>
                                     </div>
                                 </div>
                             </div>
                             <div className="p-4 flex justify-end gap-2 border-t border-slate-200">
-                                <button onClick={() => setShowSearchModal(false)} className="bg-slate-500 text-white px-4 py-1.5 font-bold rounded-sm text-[11px] shadow-sm flex items-center gap-1">
+                                <button onClick={() => setShowSearchModal(false)} className="bg-slate-500 text-white px-4 py-1.5 font-bold rounded-sm text-xs shadow-sm flex items-center gap-1">
                                     <X className="w-3 h-3" /> Hide Search
                                 </button>
-                                <button className="bg-emerald-500 text-white px-4 py-1.5 font-bold rounded-sm text-[11px] shadow-sm flex items-center gap-1">
+                                <button className="bg-emerald-500 text-white px-4 py-1.5 font-bold rounded-sm text-xs shadow-sm flex items-center gap-1">
                                     <Search className="w-3 h-3" /> Search
                                 </button>
                             </div>
@@ -816,14 +816,14 @@ export default function PostManagement() {
                 {showEditModal && (
                     <div className="fixed inset-0 z-[110] flex items-center justify-center p-2">
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowEditModal(false)} className="absolute inset-0 bg-black/10" />
-                        <motion.div initial={{ scale: 0.98, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.98, opacity: 0 }} className="bg-white border-[1px] border-slate-300 w-full max-w-[1100px] rounded-sm shadow-xl relative z-10 flex flex-col max-h-[98vh] text-[11px] font-['Tahoma','Verdana',sans-serif]">
+                        <motion.div initial={{ scale: 0.98, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.98, opacity: 0 }} className="bg-white border-[1px] border-slate-300 w-full max-w-[1100px] rounded-sm shadow-xl relative z-10 flex flex-col max-h-[98vh] text-xs font-['Tahoma','Verdana',sans-serif]">
                             {/* Top Bar Navigation */}
                             <div className="p-1 px-2 flex items-center justify-between border-b bg-white">
                                 <div className="flex items-center gap-1.5">
                                     <LayoutGrid className="w-3.5 h-3.5 text-slate-800" />
                                     <span className="text-slate-400">/</span>
                                     <span className="font-bold text-slate-600">{selectedAd?._id ? "Edit Post" : "Add Post"}</span>
-                                    <span className="bg-emerald-600 text-white px-1 ml-2 rounded-[2px] text-[9px] py-0.5 font-bold">Publish</span>
+                                    <span className="bg-emerald-600 text-white px-1 ml-2 rounded-[2px] text-xs py-0.5 font-bold">Publish</span>
                                 </div>
                                 <button onClick={() => setShowEditModal(false)} className="hover:bg-slate-100 p-0.5 rounded"><X className="w-3.5 h-3.5 text-slate-400" /></button>
                             </div>
@@ -834,27 +834,27 @@ export default function PostManagement() {
                                     <div className="border border-slate-200 p-2 rounded-sm space-y-2">
                                         <input
                                             placeholder="Heading"
-                                            className="w-full border border-slate-200 px-2 h-7 outline-none font-bold text-[11px] placeholder:text-slate-300"
+                                            className="w-full border border-slate-200 px-2 h-7 outline-none font-bold text-xs placeholder:text-slate-300"
                                             value={editFormData.headline || ''}
                                             onChange={(e) => handleEditChange('headline', e.target.value)}
                                         />
                                         <div className="space-y-0.5">
-                                            <div className="text-[10px] text-slate-400">Description Present</div>
+                                            <div className="text-xs text-slate-400">Description Present</div>
                                             <textarea
-                                                className="w-full border border-slate-200 p-1.5 outline-none text-[11px] h-24 resize-none bg-white text-slate-400"
+                                                className="w-full border border-slate-200 p-1.5 outline-none text-xs h-24 resize-none bg-white text-slate-400"
                                                 value={editFormData.description || ''}
                                                 readOnly
                                             />
                                         </div>
                                         <div className="space-y-0.5">
-                                            <div className="text-[10px] text-slate-400">Description Edit</div>
+                                            <div className="text-xs text-slate-400">Description Edit</div>
                                             <textarea
-                                                className="w-full border border-slate-200 p-1.5 outline-none text-[11px] h-32 resize-none bg-white"
+                                                className="w-full border border-slate-200 p-1.5 outline-none text-xs h-32 resize-none bg-white"
                                                 value={editFormData.description || ''}
                                                 onChange={(e) => handleEditChange('description', e.target.value)}
                                             />
                                         </div>
-                                        <div className="flex items-center gap-3 justify-end text-[10px] text-slate-400 pr-1">
+                                        <div className="flex items-center gap-3 justify-end text-xs text-slate-400 pr-1">
                                             <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" className="w-3 h-3 border-slate-300" /> Accept</label>
                                             <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" className="w-3 h-3 border-slate-300" /> Reject</label>
                                         </div>
@@ -864,7 +864,7 @@ export default function PostManagement() {
                                         {['category', 'subCategory', 'location', 'subLocation'].map((name) => (
                                             <select
                                                 key={name}
-                                                className="border border-slate-200 h-7 outline-none text-[10px] bg-white px-1"
+                                                className="border border-slate-200 h-7 outline-none text-xs bg-white px-1"
                                                 value={editFormData[name as keyof typeof editFormData] as string || ''}
                                                 onChange={(e) => handleEditChange(name, e.target.value)}
                                             >
@@ -882,40 +882,40 @@ export default function PostManagement() {
                                             <div className="relative">
                                                 <input
                                                     type="text"
-                                                    className="border border-slate-200 h-7 outline-none text-[10px] w-48 px-2 bg-slate-50 font-bold text-slate-500"
+                                                    className="border border-slate-200 h-7 outline-none text-xs w-48 px-2 bg-slate-50 font-bold text-slate-500"
                                                     value={selectedAd ? (selectedAd._id) : "Auto Value"}
                                                     readOnly
                                                 />
-                                                <span className="absolute -top-3 left-0 text-[8px] text-slate-400">Merchant ID (Auto)</span>
+                                                <span className="absolute -top-3 left-0 text-xs text-slate-400">Merchant ID (Auto)</span>
                                             </div>
                                             <div className="ml-0.5 flex items-center justify-center h-7 text-slate-400 font-bold text-lg">+</div>
                                             <div className="ml-4 flex-1 grid grid-cols-2 gap-1.5">
                                                 <input
                                                     placeholder="Price (Payble)"
-                                                    className="border border-slate-200 h-7 px-2 outline-none text-[10px] w-full"
+                                                    className="border border-slate-200 h-7 px-2 outline-none text-xs w-full"
                                                     value={editFormData.price || ''}
                                                     onChange={(e) => handleEditChange('price', e.target.value)}
                                                 />
                                                 <input
                                                     placeholder="Price (Old)"
-                                                    className="border border-slate-200 h-7 px-2 outline-none text-[10px] w-full"
+                                                    className="border border-slate-200 h-7 px-2 outline-none text-xs w-full"
                                                 />
                                             </div>
                                         </div>
-                                        <div className="text-center text-slate-400 font-bold border-t border-dashed pt-1 cursor-pointer hover:text-slate-600 text-[10px]">
+                                        <div className="text-center text-slate-400 font-bold border-t border-dashed pt-1 cursor-pointer hover:text-slate-600 text-xs">
                                             + catagory wise another feature
                                         </div>
                                     </div>
 
                                     <div className="flex gap-2 pt-1">
-                                        <button onClick={() => setShowEditModal(false)} className="flex-1 bg-[#d9534f] text-white py-2 font-bold rounded-sm text-[11px] uppercase">Cancel</button>
+                                        <button onClick={() => setShowEditModal(false)} className="flex-1 bg-[#d9534f] text-white py-2 font-bold rounded-sm text-xs uppercase">Cancel</button>
                                         <button
                                             onClick={() => selectedAd && deleteAd(selectedAd._id)}
-                                            className="flex-1 bg-[#f0ad4e] text-white py-2 font-bold rounded-sm text-[11px] uppercase"
+                                            className="flex-1 bg-[#f0ad4e] text-white py-2 font-bold rounded-sm text-xs uppercase"
                                         >
                                             Delete
                                         </button>
-                                        <button onClick={handleSaveEdit} className="grow-[1.5] bg-[#5cb85c] text-white py-2 font-bold rounded-sm text-[11px] uppercase flex items-center justify-center gap-2">
+                                        <button onClick={handleSaveEdit} className="grow-[1.5] bg-[#5cb85c] text-white py-2 font-bold rounded-sm text-xs uppercase flex items-center justify-center gap-2">
                                             {saveLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Save'}
                                         </button>
                                     </div>
@@ -925,17 +925,17 @@ export default function PostManagement() {
                                 <div className="flex flex-col gap-2">
                                     <div className="grid grid-cols-[1fr_1fr_1fr_1fr] gap-2 border border-slate-200 p-2 rounded-sm bg-white">
                                         <div className="flex flex-col gap-0.5">
-                                            <label className="text-[9px] text-slate-400 font-bold italic">Show Till (Date)</label>
+                                            <label className="text-xs text-slate-400 font-bold italic">Show Till (Date)</label>
                                             <input
                                                 type="date"
-                                                className="border border-slate-200 h-6 outline-none text-[10px] px-1 w-full"
+                                                className="border border-slate-200 h-6 outline-none text-xs px-1 w-full"
                                                 value={editFormData.showTill ? new Date(editFormData.showTill).toISOString().split('T')[0] : ''}
                                                 onChange={(e) => handleEditChange('showTill', e.target.value)}
                                             />
                                         </div>
                                         <div className="flex flex-col gap-0.5">
-                                            <label className="text-[9px] text-slate-400">Post Entry</label>
-                                            <div className="text-[10px] font-bold text-slate-900 leading-tight">
+                                            <label className="text-xs text-slate-400">Post Entry</label>
+                                            <div className="text-xs font-bold text-slate-900 leading-tight">
                                                 {selectedAd?._id ? (
                                                     <>
                                                         {new Date(selectedAd.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}<br />
@@ -950,8 +950,8 @@ export default function PostManagement() {
                                             </div>
                                         </div>
                                         <div className="flex flex-col gap-0.5">
-                                            <label className="text-[9px] text-slate-400">Post Modify</label>
-                                            <div className="text-[10px] font-bold text-slate-900 leading-tight">
+                                            <label className="text-xs text-slate-400">Post Modify</label>
+                                            <div className="text-xs font-bold text-slate-900 leading-tight">
                                                 {selectedAd?.updatedAt ? (
                                                     <>
                                                         {new Date(selectedAd.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}<br />
@@ -968,9 +968,9 @@ export default function PostManagement() {
                                             </div>
                                         </div>
                                         <div className="flex flex-col gap-0.5 relative">
-                                            <label className="text-[9px] text-slate-400">Promote Type</label>
+                                            <label className="text-xs text-slate-400">Promote Type</label>
                                             <select
-                                                className="border border-slate-200 h-6 outline-none text-[10px] px-1 bg-white"
+                                                className="border border-slate-200 h-6 outline-none text-xs px-1 bg-white"
                                                 value={editFormData.adType || 'Free'}
                                                 onChange={(e) => handleEditChange('adType', e.target.value)}
                                             >
@@ -979,8 +979,8 @@ export default function PostManagement() {
                                             </select>
                                         </div>
                                         <div className="flex flex-col gap-0.5">
-                                            <label className="text-[9px] text-slate-400 font-bold">Marchent ID</label>
-                                            <div className="text-[10px] font-bold text-slate-800">{selectedAd?._id || 'Auto value'}</div>
+                                            <label className="text-xs text-slate-400 font-bold">Marchent ID</label>
+                                            <div className="text-xs font-bold text-slate-800">{selectedAd?._id || 'Auto value'}</div>
                                         </div>
                                     </div>
 
@@ -988,13 +988,13 @@ export default function PostManagement() {
                                         <div className="flex flex-col gap-2">
                                             <div className="flex flex-col gap-0.5">
                                                 <div className="flex items-center gap-1">
-                                                    <span className="text-[10px] text-slate-400">Product Status</span>
+                                                    <span className="text-xs text-slate-400">Product Status</span>
                                                     <ArrowLeft className="w-2.5 h-2.5 text-blue-500 rotate-[30deg]" />
                                                 </div>
                                                 <select
                                                     value={editFormData.status || 'pending'}
                                                     onChange={(e) => handleEditChange('status', e.target.value)}
-                                                    className="w-full border border-slate-300 h-7 text-[10px] outline-none px-1 bg-white"
+                                                    className="w-full border border-slate-300 h-7 text-xs outline-none px-1 bg-white"
                                                 >
                                                     <option value="active">Active</option>
                                                     <option value="notification">Notification</option>
@@ -1007,11 +1007,11 @@ export default function PostManagement() {
                                             </div>
                                             <div className="grid grid-cols-2 gap-2">
                                                 <div className="flex flex-col gap-0.5">
-                                                    <label className="text-[9px] text-slate-400">Total View</label>
-                                                    <div className="h-7 border border-slate-200 flex items-center px-1.5 text-[10px] font-bold text-slate-600">{editFormData.views || 0}</div>
+                                                    <label className="text-xs text-slate-400">Total View</label>
+                                                    <div className="h-7 border border-slate-200 flex items-center px-1.5 text-xs font-bold text-slate-600">{editFormData.views || 0}</div>
                                                 </div>
                                                 <div className="flex flex-col gap-0.5">
-                                                    <div className="flex items-center gap-1 uppercase text-[7px] font-bold text-slate-400">Promot <span className="text-[6px]">Amount & Date List</span></div>
+                                                    <div className="flex items-center gap-1 uppercase text-xs font-bold text-slate-400">Promot <span className="text-xs">Amount & Date List</span></div>
                                                     <div className="h-7 border border-slate-200 flex items-center justify-center gap-1 bg-slate-50">
                                                         <RotateCcw className="w-2.5 h-2.5 text-slate-400" />
                                                         <Calendar className="w-2.5 h-2.5 text-slate-400" />
@@ -1021,24 +1021,24 @@ export default function PostManagement() {
                                         </div>
                                         <div className="flex flex-col gap-2">
                                             <div className="flex flex-col gap-0.5">
-                                                <label className="text-[9px] text-slate-400">Notification Dialogue</label>
+                                                <label className="text-xs text-slate-400">Notification Dialogue</label>
                                                 <input
-                                                    className="w-full border border-slate-200 h-7 text-[10px] outline-none px-2"
+                                                    className="w-full border border-slate-200 h-7 text-xs outline-none px-2"
                                                     value={editFormData.notificationDialogue || ''}
                                                     onChange={(e) => handleEditChange('notificationDialogue', e.target.value)}
                                                 />
                                             </div>
                                             <div className="grid grid-cols-[1fr_1fr_0.8fr] gap-1.5">
                                                 <div className="flex flex-col gap-0.5">
-                                                    <label className="text-[9px] text-slate-400 whitespace-nowrap">View From</label>
+                                                    <label className="text-xs text-slate-400 whitespace-nowrap">View From</label>
                                                     <div className="flex border border-slate-200 h-7 items-center justify-center bg-slate-50"><Calendar className="w-3 h-3 text-slate-400" /></div>
                                                 </div>
                                                 <div className="flex flex-col gap-0.5">
-                                                    <label className="text-[9px] text-slate-400 whitespace-nowrap">View Till</label>
+                                                    <label className="text-xs text-slate-400 whitespace-nowrap">View Till</label>
                                                     <div className="flex border border-slate-200 h-7 items-center justify-center bg-slate-50"><Calendar className="w-3 h-3 text-slate-400" /></div>
                                                 </div>
                                                 <div className="flex flex-col gap-0.5">
-                                                    <label className="text-[9px] text-slate-400">Result</label>
+                                                    <label className="text-xs text-slate-400">Result</label>
                                                     <div className="h-7 border border-slate-200 bg-slate-50"></div>
                                                 </div>
                                             </div>
@@ -1046,21 +1046,21 @@ export default function PostManagement() {
                                     </div>
 
                                     <div className="border border-slate-200 p-2 rounded-sm space-y-1 bg-white">
-                                        <label className="text-[10px] text-slate-400">Note</label>
+                                        <label className="text-xs text-slate-400">Note</label>
                                         <input
-                                            className="w-full border border-slate-200 h-7 text-[10px] outline-none px-2"
+                                            className="w-full border border-slate-200 h-7 text-xs outline-none px-2"
                                             value={editFormData.note || ''}
                                             onChange={(e) => handleEditChange('note', e.target.value)}
                                         />
                                     </div>
 
                                     <div className="border border-slate-200 p-2 rounded-sm bg-white">
-                                        <div className="text-[11px] font-bold text-slate-800 mb-2">Photo Zone</div>
+                                        <div className="text-xs font-bold text-slate-800 mb-2">Photo Zone</div>
                                         <div className="flex gap-2.5 items-start">
                                             {[...Array(5)].map((_, i) => (
                                                 <div key={i} className="flex flex-col gap-1">
                                                     <div className="flex items-center gap-3">
-                                                        <label className="text-[7px] text-slate-400 cursor-pointer hover:text-emerald-600 transition-colors uppercase font-bold">
+                                                        <label className="text-xs text-slate-400 cursor-pointer hover:text-emerald-600 transition-colors uppercase font-bold">
                                                             Choose File
                                                             <input
                                                                 type="file"
@@ -1071,7 +1071,7 @@ export default function PostManagement() {
                                                         </label>
                                                         <label className="flex items-center gap-0.5 cursor-pointer leading-none">
                                                             <input type="checkbox" className="w-2.5 h-2.5" />
-                                                            <span className="text-[7px] text-slate-400 whitespace-nowrap">Long Img?</span>
+                                                            <span className="text-xs text-slate-400 whitespace-nowrap">Long Img?</span>
                                                         </label>
                                                     </div>
                                                     <div className="w-[78px] h-[52px] border border-slate-200 rounded-[1px] bg-slate-50 relative overflow-hidden flex items-center justify-center group/p">
@@ -1117,8 +1117,8 @@ export default function PostManagement() {
                                     </div>
 
                                     <div className="border border-slate-200 p-2 rounded-sm space-y-1.5 bg-white">
-                                        <div className="text-[10px] font-extrabold text-slate-800 uppercase">Approve photo</div>
-                                        <table className="w-full text-[10px]">
+                                        <div className="text-xs font-extrabold text-slate-800 uppercase">Approve photo</div>
+                                        <table className="w-full text-xs">
                                             <thead>
                                                 <tr className="border-b border-slate-100 italic">
                                                     <th className="text-left font-bold pb-1 w-1/4">Photo</th>
@@ -1142,14 +1142,14 @@ export default function PostManagement() {
                                                                 />
                                                             </div>
                                                         </td>
-                                                        <td className="py-1 text-center font-bold text-slate-800 text-[12px]">Product</td>
+                                                        <td className="py-1 text-center font-bold text-slate-800 text-xs">Product</td>
                                                         <td className="py-1 text-center px-4">
-                                                            <button className="bg-[#f0ad4e] text-white px-3 py-1 rounded-[1px] font-bold text-[11px] w-full shadow-sm">Accept</button>
+                                                            <button className="bg-[#f0ad4e] text-white px-3 py-1 rounded-[1px] font-bold text-xs w-full shadow-sm">Accept</button>
                                                         </td>
                                                         <td className="py-1 text-right pr-4">
                                                             <button
                                                                 onClick={() => selectedAd && deleteImage(selectedAd._id, img)}
-                                                                className="bg-[#d9534f] text-white px-2 py-1 rounded-[1px] font-bold text-[11px] shadow-sm"
+                                                                className="bg-[#d9534f] text-white px-2 py-1 rounded-[1px] font-bold text-xs shadow-sm"
                                                             >
                                                                 Delete
                                                             </button>
@@ -1175,29 +1175,29 @@ export default function PostManagement() {
                             <div className="flex items-center justify-between mb-4 pb-2 border-b">
                                 <div className="flex items-center gap-2">
                                     <ArrowLeft className="w-3 h-3 text-rose-500" />
-                                    <span className="text-[10px] font-bold text-slate-800">/ Short View</span>
-                                    <span className="bg-emerald-600 text-white px-1 rounded-sm text-[8px] py-0.5">Publish</span>
+                                    <span className="text-xs font-bold text-slate-800">/ Short View</span>
+                                    <span className="bg-emerald-600 text-white px-1 rounded-sm text-xs py-0.5">Publish</span>
                                 </div>
                                 <button onClick={() => setShowShortViewModal(false)}><X className="w-3.5 h-3.5 text-slate-400" /></button>
                             </div>
 
                             <div className="space-y-4">
                                 <div className="space-y-1">
-                                    <label className="text-[9px] font-bold text-slate-400 uppercase">Heading</label>
-                                    <div className="text-[11px] font-bold text-slate-900 border-b pb-1">{selectedAd.headline}</div>
+                                    <label className="text-xs font-bold text-slate-400 uppercase">Heading</label>
+                                    <div className="text-xs font-bold text-slate-900 border-b pb-1">{selectedAd.headline}</div>
                                 </div>
 
                                 <div className="space-y-1">
-                                    <label className="text-[9px] font-bold text-slate-400 uppercase">Description Present</label>
-                                    <div className="text-[10px] text-slate-600 max-h-16 overflow-y-auto bg-slate-50 p-1.5 border border-slate-200">{selectedAd.description}</div>
+                                    <label className="text-xs font-bold text-slate-400 uppercase">Description Present</label>
+                                    <div className="text-xs text-slate-600 max-h-16 overflow-y-auto bg-slate-50 p-1.5 border border-slate-200">{selectedAd.description}</div>
                                 </div>
 
                                 <div className="space-y-1">
-                                    <label className="text-[9px] font-bold text-indigo-500 uppercase italic">Description Edit</label>
-                                    <div className="text-[10px] text-slate-600 h-16 bg-indigo-50/20 p-1.5 border border-slate-200">Present</div>
+                                    <label className="text-xs font-bold text-indigo-500 uppercase italic">Description Edit</label>
+                                    <div className="text-xs text-slate-600 h-16 bg-indigo-50/20 p-1.5 border border-slate-200">Present</div>
                                 </div>
 
-                                <div className="flex justify-end gap-3 text-[9px] font-bold">
+                                <div className="flex justify-end gap-3 text-xs font-bold">
                                     <label className="flex items-center gap-1 cursor-pointer">
                                         <input
                                             type="radio"
@@ -1222,24 +1222,24 @@ export default function PostManagement() {
 
                                 <div className="grid grid-cols-2 gap-2">
                                     <div className="space-y-1">
-                                        <label className="text-[8px] text-slate-400">Category</label>
-                                        <div className="w-full border border-slate-200 h-6 text-[9px] flex items-center px-1 bg-slate-50 font-bold">{selectedAd.category}</div>
+                                        <label className="text-xs text-slate-400">Category</label>
+                                        <div className="w-full border border-slate-200 h-6 text-xs flex items-center px-1 bg-slate-50 font-bold">{selectedAd.category}</div>
                                     </div>
                                     <div className="space-y-1">
-                                        <label className="text-[8px] text-slate-400">Sub Category</label>
-                                        <div className="w-full border border-slate-200 h-6 text-[9px] flex items-center px-1 bg-slate-50">{selectedAd.subCategory || 'N/A'}</div>
+                                        <label className="text-xs text-slate-400">Sub Category</label>
+                                        <div className="w-full border border-slate-200 h-6 text-xs flex items-center px-1 bg-slate-50">{selectedAd.subCategory || 'N/A'}</div>
                                     </div>
                                     <div className="space-y-1">
-                                        <label className="text-[8px] text-slate-400">Location</label>
-                                        <div className="w-full border border-slate-200 h-6 text-[9px] flex items-center px-1 bg-slate-50 font-bold">{selectedAd.location}</div>
+                                        <label className="text-xs text-slate-400">Location</label>
+                                        <div className="w-full border border-slate-200 h-6 text-xs flex items-center px-1 bg-slate-50 font-bold">{selectedAd.location}</div>
                                     </div>
                                     <div className="space-y-1">
-                                        <label className="text-[8px] text-slate-400">Sub Location</label>
-                                        <div className="w-full border border-slate-200 h-6 text-[9px] flex items-center px-1 bg-slate-50">{selectedAd.subLocation || 'N/A'}</div>
+                                        <label className="text-xs text-slate-400">Sub Location</label>
+                                        <div className="w-full border border-slate-200 h-6 text-xs flex items-center px-1 bg-slate-50">{selectedAd.subLocation || 'N/A'}</div>
                                     </div>
                                     <div className="col-span-2">
-                                        <label className="text-[8px] text-slate-400">Price (Payable)</label>
-                                        <div className="w-full border border-slate-200 h-6 text-[10px] flex items-center px-1 font-bold text-emerald-600">৳ {selectedAd.price || '0'}</div>
+                                        <label className="text-xs text-slate-400">Price (Payable)</label>
+                                        <div className="w-full border border-slate-200 h-6 text-xs flex items-center px-1 font-bold text-emerald-600">৳ {selectedAd.price || '0'}</div>
                                     </div>
                                 </div>
 
@@ -1256,7 +1256,7 @@ export default function PostManagement() {
                                 </div>
 
                                 <div className="flex gap-2 pt-2">
-                                    <button onClick={() => setShowShortViewModal(false)} className="flex-1 bg-rose-500 text-white py-1.5 font-bold rounded-sm text-[10px] shadow-sm hover:bg-rose-600">Cancel</button>
+                                    <button onClick={() => setShowShortViewModal(false)} className="flex-1 bg-rose-500 text-white py-1.5 font-bold rounded-sm text-xs shadow-sm hover:bg-rose-600">Cancel</button>
                                     <button
                                         onClick={() => {
                                             if (selectedAd && confirm("Confirm delete ad?")) {
@@ -1269,7 +1269,7 @@ export default function PostManagement() {
                                                 });
                                             }
                                         }}
-                                        className="flex-1 bg-yellow-500 text-white py-1.5 font-bold rounded-sm text-[10px] shadow-sm hover:bg-yellow-600"
+                                        className="flex-1 bg-yellow-500 text-white py-1.5 font-bold rounded-sm text-xs shadow-sm hover:bg-yellow-600"
                                     >
                                         Delete
                                     </button>
@@ -1280,7 +1280,7 @@ export default function PostManagement() {
                                                 setShowShortViewModal(false);
                                             }
                                         }}
-                                        className="grow-[2] bg-emerald-600 text-white py-1.5 font-bold rounded-sm text-[10px] shadow-sm hover:bg-emerald-700"
+                                        className="grow-[2] bg-emerald-600 text-white py-1.5 font-bold rounded-sm text-xs shadow-sm hover:bg-emerald-700"
                                     >
                                         Publish
                                     </button>

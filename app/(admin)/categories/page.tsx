@@ -27,6 +27,7 @@ interface Feature {
     buttonType?: string;
     boxFadeName?: string;
     buttonItemNames?: string[];
+    category?: Category;
 }
 
 interface Category {
@@ -94,10 +95,11 @@ export default function CategoriesPage() {
     // Form States - Feature
     const [featForm, setFeatForm] = useState({
         name: '',
+        category: '',
         inputType: 'Text',
         order: 1,
         status: true,
-        buttonType: 'Call, Message, Send CV',
+        buttonType: '',
         boxFadeName: '',
         buttonItemNames: [''],
     });
@@ -205,6 +207,7 @@ export default function CategoriesPage() {
         try {
             const payload = {
                 ...featForm,
+                category: featForm.category,
                 buttonItemNames: featForm.buttonItemNames.filter(n => n.trim())
             };
             if (editingFeatId) {
@@ -277,10 +280,11 @@ export default function CategoriesPage() {
         setEditingFeatId(f._id);
         setFeatForm({
             name: f.name,
+            category: f.category?._id || '',
             inputType: f.inputType,
             order: f.order,
             status: f.status,
-            buttonType: f.buttonType || 'Call, Message, Send CV',
+            buttonType: f.buttonType || '',
             boxFadeName: f.boxFadeName || '',
             buttonItemNames: f.buttonItemNames?.length ? f.buttonItemNames : [''],
         });
@@ -319,10 +323,11 @@ export default function CategoriesPage() {
         setEditingFeatId(null);
         setFeatForm({
             name: '',
+            category: '',
             inputType: 'Text',
             order: 1,
             status: true,
-            buttonType: 'Call, Message, Send CV',
+            buttonType: '',
             boxFadeName: '',
             buttonItemNames: [''],
         });
@@ -337,7 +342,7 @@ export default function CategoriesPage() {
     return (
         <div className="bg-[#f1f5f9] min-h-screen p-4 font-['Tahoma','Verdana',sans-serif]">
             {/* Breadcrumb Area */}
-            <div className="flex items-center gap-1.5 text-[11px] text-slate-500 mb-3 ml-1">
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 mb-3 ml-1">
                 <Home className="w-3 h-3" />
                 <span>/</span>
                 <span>Manage Categories</span>
@@ -349,10 +354,10 @@ export default function CategoriesPage() {
                     <button className="text-rose-500 hover:opacity-80 transition-opacity">
                         <ArrowLeft className="w-4 h-4 stroke-[3]" />
                     </button>
-                    <span className="text-indigo-600 font-bold text-[13px] tracking-tight">Categories</span>
+                    <span className="text-indigo-600 font-bold text-sm tracking-tight">Categories</span>
                 </div>
 
-                <div className="text-slate-900 text-[12px] font-medium">
+                <div className="text-slate-900 text-xs font-medium">
                     Total Categories <span className="font-bold">({subCategories.length})</span>
                 </div>
 
@@ -367,7 +372,7 @@ export default function CategoriesPage() {
             {/* Table Area */}
             <div className="bg-white border-x border-b border-slate-200 shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left text-[11px] border-collapse">
+                    <table className="w-full text-left text-xs border-collapse">
                         <thead>
                             <tr className="bg-white text-slate-800 font-bold border-b border-slate-100">
                                 <th className="px-5 py-3 font-bold w-1/4">Sub Category name</th>
@@ -423,16 +428,16 @@ export default function CategoriesPage() {
                 {showMainModal && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                            onClick={() => setShowMainModal(false)} className="absolute inset-0 bg-black/30 backdrop-blur-[1px]" />
+                            onClick={() => setShowMainModal(false)} className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
 
                         <motion.div
                             initial={{ scale: 0.98, opacity: 0, y: 10 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.98, opacity: 0, y: 10 }}
-                            className="bg-white border-[1.5px] border-slate-900 w-full max-w-[850px] rounded-sm shadow-2xl relative z-10 flex flex-col"
+                            className="bg-white border border-slate-900 w-full max-w-[850px] rounded-sm shadow-2xl relative z-10 flex flex-col"
                         >
                             <div className="flex justify-between items-center p-2 border-b border-slate-200 bg-slate-50">
-                                <div className="flex items-center gap-2 font-bold text-[11px] text-slate-800 uppercase">
+                                <div className="flex items-center gap-2 font-bold text-xs text-slate-800 uppercase">
                                     <CircleDot className="w-4 h-4" /> {editingSubCatId ? 'Edit category' : 'New category'}
                                 </div>
                                 <button onClick={() => setShowMainModal(false)} className="hover:bg-slate-200 p-1 rounded transition-colors text-slate-400">
@@ -442,7 +447,7 @@ export default function CategoriesPage() {
 
                             <div className="p-4 flex gap-6 overflow-hidden">
                                 {/* Left/Middle Column Form */}
-                                <form onSubmit={handleSubCatSubmit} className="flex-1 grid grid-cols-2 gap-x-6 gap-y-3 text-[11px]">
+                                <form onSubmit={handleSubCatSubmit} className="flex-1 grid grid-cols-2 gap-x-6 gap-y-3 text-xs">
                                     {/* Sub Category Name */}
                                     <div className="space-y-1 col-span-1">
                                         <label className="text-slate-500 font-bold">Sub Catagorie Name</label>
@@ -556,13 +561,13 @@ export default function CategoriesPage() {
                                     {/* Category Section */}
                                     <div className="space-y-2">
                                         <div className="flex justify-between items-center px-1">
-                                            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-tighter">Create Catagorie</span>
+                                            <span className="text-xs font-bold text-slate-500 uppercase tracking-tighter">Create Catagorie</span>
                                             <button onClick={openNewCat} className="bg-white border border-slate-400 p-0.5 px-2 hover:bg-slate-50">
                                                 <Plus className="w-3 h-3 stroke-[3]" />
                                             </button>
                                         </div>
                                         <div className="border border-slate-200 rounded-sm">
-                                            <table className="w-full text-[10px] text-left border-collapse">
+                                            <table className="w-full text-xs text-left border-collapse">
                                                 <thead className="bg-[#f8f9fa] border-b border-slate-200">
                                                     <tr>
                                                         <th className="px-2 py-2 font-bold whitespace-nowrap">Catagorie Name</th>
@@ -594,17 +599,17 @@ export default function CategoriesPage() {
                                     {/* Feature Section */}
                                     <div className="space-y-2 pb-4">
                                         <div className="flex justify-between items-center px-1">
-                                            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-tighter">Create Feature</span>
+                                            <span className="text-xs font-bold text-slate-500 uppercase tracking-tighter">Create Feature</span>
                                             <button onClick={openNewFeat} className="bg-white border border-slate-400 p-0.5 px-2 hover:bg-slate-50">
                                                 <Plus className="w-3 h-3 stroke-[3]" />
                                             </button>
                                         </div>
                                         <div className="border border-slate-200 rounded-sm">
-                                            <table className="w-full text-[10px] text-left border-collapse">
+                                            <table className="w-full text-xs text-left border-collapse">
                                                 <thead className="bg-[#f8f9fa] border-b border-slate-200">
                                                     <tr>
                                                         <th className="px-2 py-2 font-bold whitespace-nowrap">Feature name</th>
-                                                        <th className="px-2 py-2 font-bold">Inpute</th>
+                                                        <th className="px-2 py-2 font-bold">Category</th>
                                                         <th className="px-2 py-2 font-bold text-center">Order</th>
                                                         <th className="px-2 py-2 font-bold text-center">Status</th>
                                                         <th className="w-6 px-1 py-2 text-center"></th>
@@ -615,7 +620,7 @@ export default function CategoriesPage() {
                                                     {features.map(f => (
                                                         <tr key={f._id}>
                                                             <td className="px-2 py-1.5 font-bold text-slate-800">{f.name}</td>
-                                                            <td className="px-2 py-1.5">{f.inputType}</td>
+                                                            <td className="px-2 py-1.5">{f.category?.name}</td>
                                                             <td className="px-2 py-1.5 text-center">{f.order}</td>
                                                             <td className="px-2 py-1.5 text-center">
                                                                 <CheckCircle2 className={cn("w-3 h-3 mx-auto", f.status ? "text-green-500" : "text-slate-300")} />
@@ -636,16 +641,16 @@ export default function CategoriesPage() {
                                 {showCategoryModal && (
                                     <motion.div
                                         initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
-                                        className="absolute -bottom-[20px] left-0 w-full p-4 flex justify-center z-[110]"
+                                        className="absolute -bottom-5 left-0 w-full p-4 flex justify-center z-[110]"
                                     >
-                                        <div className="bg-white border-[1.5px] border-slate-900 w-full max-w-[700px] shadow-2xl rounded-sm">
+                                        <div className="bg-white border border-slate-900 w-full max-w-[700px] shadow-2xl rounded-sm">
                                             <div className="flex justify-between items-center p-2 border-b border-slate-200 bg-slate-50">
-                                                <div className="flex items-center gap-2 font-bold text-[11px] text-slate-800 uppercase">
+                                                <div className="flex items-center gap-2 font-bold text-xs text-slate-800 uppercase">
                                                     <CircleDot className="w-4 h-4" /> {editingCatId ? 'Edit Catagorie' : 'Catagorie Name'}
                                                 </div>
                                                 <button onClick={() => setShowCategoryModal(false)} className="text-slate-400 p-1"><X className="w-4 h-4" /></button>
                                             </div>
-                                            <form onSubmit={handleCatSubmit} className="p-4 grid grid-cols-2 gap-x-12 gap-y-3 text-[11px]">
+                                            <form onSubmit={handleCatSubmit} className="p-4 grid grid-cols-2 gap-x-12 gap-y-3 text-xs">
                                                 <div className="space-y-1">
                                                     <input type="text" placeholder="Catagorie Name" className="w-full border border-slate-300 px-2 py-1.5 outline-none font-medium bg-white"
                                                         value={catForm.name} onChange={e => setCatForm({ ...catForm, name: e.target.value })} required />
@@ -694,19 +699,26 @@ export default function CategoriesPage() {
                                 {showFeatureModal && (
                                     <motion.div
                                         initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
-                                        className="absolute -bottom-[20px] left-0 w-full p-4 flex justify-center z-[110]"
+                                        className="absolute -bottom-5 left-0 w-full p-4 flex justify-center z-[110]"
                                     >
-                                        <div className="bg-white border-[1.5px] border-slate-900 w-full max-w-[700px] shadow-2xl rounded-sm">
+                                        <div className="bg-white border border-slate-900 w-full max-w-[700px] shadow-2xl rounded-sm">
                                             <div className="flex justify-between items-center p-2 border-b border-slate-200 bg-slate-50">
-                                                <div className="flex items-center gap-2 font-bold text-[11px] text-slate-800 uppercase">
+                                                <div className="flex items-center gap-2 font-bold text-xs text-slate-800 uppercase">
                                                     <CircleDot className="w-4 h-4" /> New Feature
                                                 </div>
                                                 <button onClick={() => setShowFeatureModal(false)} className="text-slate-400 p-1"><X className="w-4 h-4" /></button>
                                             </div>
-                                            <form onSubmit={handleFeatSubmit} className="p-4 grid grid-cols-2 gap-x-12 gap-y-3 text-[11px]">
+                                            <form onSubmit={handleFeatSubmit} className="p-4 grid grid-cols-2 gap-x-12 gap-y-3 text-xs">
                                                 <div className="space-y-1">
                                                     <input type="text" placeholder="Feature Name" className="w-full border border-slate-300 px-2 py-1.5 outline-none font-medium"
                                                         value={featForm.name} onChange={e => setFeatForm({ ...featForm, name: e.target.value })} required />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <select className="w-full border border-slate-300 px-2 py-1.5 outline-none font-medium bg-white"
+                                                        value={featForm.category} onChange={e => setFeatForm({ ...featForm, category: e.target.value })} required>
+                                                        <option value="">Select Category</option>
+                                                        {categories.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+                                                    </select>
                                                 </div>
                                                 <div className="space-y-1">
                                                     <div className="border border-slate-200 px-2 py-1.5 bg-[#f4f4f4] text-slate-500 text-center">
@@ -716,19 +728,23 @@ export default function CategoriesPage() {
                                                 <div className="space-y-1">
                                                     <select className="w-full border border-slate-300 px-2 py-1.5 outline-none font-medium bg-white"
                                                         value={featForm.buttonType} onChange={e => setFeatForm({ ...featForm, buttonType: e.target.value })}>
-                                                        <option>Button Type</option>
-                                                        <option>Call, Message, Send CV</option>
-                                                        <option>Apply Now</option>
+                                                        <option value="">Button Type</option>
+                                                        <option value="Box">Box</option>
+                                                        <option value="Radio">Radio</option>
                                                     </select>
                                                 </div>
                                                 <div className="space-y-1">
                                                     <input type="number" placeholder="Ordering" className="w-full border border-slate-300 px-2 py-1.5 outline-none font-medium"
                                                         value={featForm.order} onChange={e => setFeatForm({ ...featForm, order: Number(e.target.value) })} />
                                                 </div>
-                                                <div className="space-y-1">
-                                                    <input type="text" placeholder="Box Fade Name" className="w-full border border-slate-300 px-2 py-1.5 outline-none font-medium"
-                                                        value={featForm.boxFadeName} onChange={e => setFeatForm({ ...featForm, boxFadeName: e.target.value })} />
-                                                </div>
+
+                                                {featForm.buttonType === 'Box' && (
+                                                    <div className="space-y-1">
+                                                        <input type="text" placeholder="Box Fade Name" className="w-full border border-slate-300 px-2 py-1.5 outline-none font-medium"
+                                                            value={featForm.boxFadeName} onChange={e => setFeatForm({ ...featForm, boxFadeName: e.target.value })} />
+                                                    </div>
+                                                )}
+
                                                 <div className="flex items-center gap-4 mt-1">
                                                     <span className="text-slate-900 font-bold lowercase">Status</span>
                                                     <label className="flex items-center gap-1.5 cursor-pointer font-bold text-slate-800">
@@ -738,18 +754,30 @@ export default function CategoriesPage() {
                                                         <input type="radio" checked={!featForm.status} onChange={() => setFeatForm({ ...featForm, status: false })} className="w-3 h-3 accent-blue-600" /> No
                                                     </label>
                                                 </div>
-                                                <div className="space-y-1">
-                                                    <div className="flex gap-1">
-                                                        <input type="text" placeholder="Button Item Name" className="flex-1 border border-slate-300 px-2 py-1.5 outline-none font-medium"
-                                                            value={featForm.buttonItemNames[0]} onChange={e => {
-                                                                const newItems = [...featForm.buttonItemNames];
-                                                                newItems[0] = e.target.value;
-                                                                setFeatForm({ ...featForm, buttonItemNames: newItems });
-                                                            }} />
-                                                        <button type="button" className="p-1 px-2 border border-slate-900 bg-white hover:bg-slate-50"><Plus className="w-3 h-3 stroke-[3]" /></button>
-                                                        <button type="button" className="p-1 px-2 border border-slate-900 bg-white hover:bg-slate-50"><Minus className="w-3 h-3 stroke-[3]" /></button>
+
+                                                {featForm.buttonType === 'Radio' && (
+                                                    <div className="space-y-1 max-h-32 overflow-y-auto pr-1 custom-scrollbar">
+                                                        {featForm.buttonItemNames.map((name, idx) => (
+                                                            <div key={idx} className="flex gap-1 mb-1">
+                                                                <input type="text" placeholder="Button Item Name" className="flex-1 border border-slate-300 px-2 py-1.5 outline-none font-medium"
+                                                                    value={name} onChange={e => {
+                                                                        const newItems = [...featForm.buttonItemNames];
+                                                                        newItems[idx] = e.target.value;
+                                                                        setFeatForm({ ...featForm, buttonItemNames: newItems });
+                                                                    }} />
+                                                                <button type="button" onClick={() => {
+                                                                    setFeatForm({ ...featForm, buttonItemNames: [...featForm.buttonItemNames, ''] });
+                                                                }} className="p-1 px-2 border border-slate-900 bg-white hover:bg-slate-50"><Plus className="w-3 h-3 stroke-[3]" /></button>
+                                                                {featForm.buttonItemNames.length > 1 && (
+                                                                    <button type="button" onClick={() => {
+                                                                        const newItems = featForm.buttonItemNames.filter((_, i) => i !== idx);
+                                                                        setFeatForm({ ...featForm, buttonItemNames: newItems });
+                                                                    }} className="p-1 px-2 border border-slate-900 bg-white hover:bg-slate-50"><Minus className="w-3 h-3 stroke-[3]" /></button>
+                                                                )}
+                                                            </div>
+                                                        ))}
                                                     </div>
-                                                </div>
+                                                )}
                                                 <div className="flex gap-2 h-max self-end mt-1">
                                                     <button type="submit" className="bg-[#127ef3] text-white flex-1 py-1.5 font-bold rounded-sm border border-blue-800 shadow-inner px-12">
                                                         Save

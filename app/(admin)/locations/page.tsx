@@ -247,7 +247,7 @@ export default function LocationsPage() {
     return (
         <div className="bg-[#f1f5f9] min-h-screen p-4 font-['Tahoma','Verdana',sans-serif]">
             {/* Breadcrumb Area */}
-            <div className="flex items-center gap-1.5 text-[11px] text-slate-500 mb-3 ml-1">
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 mb-3 ml-1">
                 <Home className="w-3 h-3" />
                 <span>/</span>
                 <span className="text-slate-500">Manage Location</span>
@@ -259,10 +259,10 @@ export default function LocationsPage() {
                     <button className="text-rose-500 hover:opacity-80 transition-opacity">
                         <ArrowLeft className="w-4 h-4 stroke-[3]" />
                     </button>
-                    <span className="text-indigo-600 font-bold text-[13px] tracking-tight">Location</span>
+                    <span className="text-indigo-600 font-bold text-sm tracking-tight">Location</span>
                 </div>
 
-                <div className="text-slate-900 text-[12px] font-medium">
+                <div className="text-slate-900 text-xs font-medium">
                     Total Location <span className="font-bold">({subLocations.length})</span>
                 </div>
 
@@ -277,7 +277,7 @@ export default function LocationsPage() {
                         <input
                             type="text"
                             placeholder="Search..."
-                            className="px-2 text-[11px] outline-none w-48 font-medium"
+                            className="px-2 text-xs outline-none w-48 font-medium"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
@@ -291,7 +291,7 @@ export default function LocationsPage() {
             {/* Table Area */}
             <div className="bg-white border-x border-b border-slate-200 shadow-sm overflow-hidden mb-8">
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left text-[11px] border-collapse">
+                    <table className="w-full text-left text-xs border-collapse">
                         <thead>
                             <tr className="bg-white text-slate-800 font-bold border-b border-slate-100">
                                 <th className="px-5 py-3 font-bold w-1/4">Sub Location name</th>
@@ -347,16 +347,16 @@ export default function LocationsPage() {
                 {showMainModal && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                            onClick={() => setShowMainModal(false)} className="absolute inset-0 bg-black/30 backdrop-blur-[1px]" />
+                            onClick={() => setShowMainModal(false)} className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
 
                         <motion.div
                             initial={{ scale: 0.98, opacity: 0, y: 10 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.98, opacity: 0, y: 10 }}
-                            className="bg-white border-[1.5px] border-slate-900 w-full max-w-[850px] rounded-sm shadow-2xl relative z-10 flex flex-col"
+                            className="bg-white border border-slate-900 w-full max-w-[850px] rounded-sm shadow-2xl relative z-10 flex flex-col"
                         >
                             <div className="flex justify-between items-center p-2 border-b border-slate-200 bg-slate-50">
-                                <div className="flex items-center gap-2 font-bold text-[11px] text-slate-800 uppercase">
+                                <div className="flex items-center gap-2 font-bold text-xs text-slate-800 uppercase">
                                     <CircleDot className="w-4 h-4" /> {editingSubLocId ? 'Edit Location & Sublocation' : 'New Location & Sublocation Create'}
                                 </div>
                                 <button onClick={() => setShowMainModal(false)} className="hover:bg-slate-200 p-1 rounded transition-colors text-slate-400">
@@ -366,7 +366,7 @@ export default function LocationsPage() {
 
                             <div className="p-4 flex gap-6">
                                 {/* Left Side Form */}
-                                <form onSubmit={handleSubLocSubmit} className="flex-1 space-y-3 text-[11px]">
+                                <form onSubmit={handleSubLocSubmit} className="flex-1 space-y-3 text-xs">
                                     <div className="flex gap-4">
                                         <div className="flex-1 space-y-3">
                                             <div className="flex gap-1 items-center">
@@ -427,13 +427,13 @@ export default function LocationsPage() {
                                 {/* Right Column Table */}
                                 <div className="w-[340px] border-l border-slate-200 pl-6 flex flex-col gap-2">
                                     <div className="flex justify-between items-center px-1">
-                                        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-tighter">Create Location</span>
+                                        <span className="text-xs font-bold text-slate-500 uppercase tracking-tighter">Create Location</span>
                                         <button onClick={openNewLoc} className="bg-white border border-slate-400 p-0.5 px-2 hover:bg-slate-50">
                                             <Plus className="w-3 h-3 stroke-[3]" />
                                         </button>
                                     </div>
                                     <div className="border border-slate-200 rounded-sm h-[200px] overflow-y-auto custom-scrollbar">
-                                        <table className="w-full text-[10px] text-left border-collapse">
+                                        <table className="w-full text-xs text-left border-collapse">
                                             <thead className="bg-[#f8f9fa] border-b border-slate-200 sticky top-0">
                                                 <tr>
                                                     <th className="px-2 py-2 font-bold whitespace-nowrap italic">Catagory Name</th>
@@ -468,16 +468,16 @@ export default function LocationsPage() {
                                 {showLocationModal && (
                                     <motion.div
                                         initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
-                                        className="absolute -bottom-[20px] left-0 w-full p-4 flex justify-center z-[110]"
+                                        className="absolute -bottom-5 left-0 w-full p-4 flex justify-center z-[110]"
                                     >
-                                        <div className="bg-white border-[1.5px] border-slate-900 w-full max-w-[700px] shadow-2xl rounded-sm">
+                                        <div className="bg-white border border-slate-900 w-full max-w-[700px] shadow-2xl rounded-sm">
                                             <div className="flex justify-between items-center p-2 border-b border-slate-200 bg-slate-50">
-                                                <div className="flex items-center gap-2 font-bold text-[11px] text-slate-800 uppercase">
+                                                <div className="flex items-center gap-2 font-bold text-xs text-slate-800 uppercase">
                                                     <CircleDot className="w-4 h-4" /> {editingLocId ? 'Edit Location Name' : 'Location Name'}
                                                 </div>
                                                 <button onClick={() => setShowLocationModal(false)} className="text-slate-400 p-1"><X className="w-4 h-4" /></button>
                                             </div>
-                                            <form onSubmit={handleLocSubmit} className="p-6 grid grid-cols-2 gap-x-12 gap-y-4 text-[11px]">
+                                            <form onSubmit={handleLocSubmit} className="p-6 grid grid-cols-2 gap-x-12 gap-y-4 text-xs">
                                                 <input type="text" placeholder="Location Name" className="w-full border border-slate-300 px-2 py-1.5 outline-none font-medium"
                                                     value={locForm.name} onChange={e => setLocForm({ ...locForm, name: e.target.value })} required />
 
