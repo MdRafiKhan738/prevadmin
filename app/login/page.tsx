@@ -61,30 +61,30 @@ export default function LoginPage() {
                     <div className="p-8">
                         <form onSubmit={handleLogin} className="space-y-6">
                             <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-700 ml-1">Email</label>
+                                <label className="text-sm font-semibold text-black ml-1">Email</label>
                                 <div className="relative group">
-                                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-black group-focus-within:text-indigo-500 transition-colors" />
                                     <input
                                         type="email"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         required
-                                        className="w-full pl-11 pr-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl focus:bg-white focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all font-medium text-slate-700"
+                                        className="w-full pl-11 pr-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl focus:bg-white focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all font-medium text-black"
                                         placeholder="admin@example.com"
                                     />
                                 </div>
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-700 ml-1">Password</label>
+                                <label className="text-sm font-semibold text-black ml-1">Password</label>
                                 <div className="relative group">
-                                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-black group-focus-within:text-indigo-500 transition-colors" />
                                     <input
                                         type="password"
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         required
-                                        className="w-full pl-11 pr-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl focus:bg-white focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all font-medium text-slate-700"
+                                        className="w-full pl-11 pr-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl focus:bg-white focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all font-medium text-black"
                                         placeholder="••••••••"
                                     />
                                 </div>

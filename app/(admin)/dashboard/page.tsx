@@ -44,10 +44,10 @@ export default function DashboardPage() {
     return (
         <div className="space-y-4">
             {/* Breadcrumb */}
-            <div className="flex items-center gap-2 text-slate-500 text-xs mb-2 px-1">
+            <div className="flex items-center gap-2 text-black text-xs mb-2 px-1">
                 <Home className="w-3.5 h-3.5" />
                 <span>/</span>
-                <span className="font-normal text-slate-400">Dashboard</span>
+                <span className="font-normal text-black">Dashboard</span>
             </div>
 
             {/* Stats Grid */}
@@ -63,13 +63,13 @@ export default function DashboardPage() {
                             className={`bg-white border-l-4 ${stat.color} p-4 shadow-md flex justify-between items-start min-h-24 rounded-sm`}
                         >
                             <div className="flex flex-col h-full justify-between">
-                                <h3 className="text-4xl font-light text-slate-700 leading-none">{stat.value}</h3>
+                                <h3 className="text-4xl font-light text-black leading-none">{stat.value}</h3>
                                 {stat.subText ? (
                                     <div className="flex flex-col mt-auto pt-2">
-                                        <p className="text-xs text-slate-400 font-medium truncate">{stat.title}</p>
+                                        <p className="text-xs text-black font-medium truncate">{stat.title}</p>
                                     </div>
                                 ) : (
-                                    <p className="text-xs text-slate-400 font-medium mt-auto pt-2 truncate">{stat.title}</p>
+                                    <p className="text-xs text-black font-medium mt-auto pt-2 truncate">{stat.title}</p>
                                 )}
                             </div>
                             <div className={`${stat.iconColor} pt-0.5 opacity-90`}>

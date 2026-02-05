@@ -64,11 +64,11 @@ export default function AdminSidebar({ isCollapsed, toggleCollapse }: AdminSideb
                     "flex items-center gap-2.5 px-4 py-1 transition-all text-sm font-medium group relative overflow-hidden whitespace-nowrap",
                     isActive
                         ? "text-blue-600 border-l-4 border-blue-600 bg-blue-50/70"
-                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-50",
+                        : "text-black hover:text-black hover:bg-slate-50",
                     isCollapsed ? "justify-center px-0 border-l-0" : ""
                 )}
             >
-                <Icon className={cn("w-5 h-5 shrink-0", isActive ? "text-blue-600" : "text-slate-400 group-hover:text-slate-600")} strokeWidth={1.5} />
+                <Icon className={cn("w-5 h-5 shrink-0", isActive ? "text-blue-600" : "text-black group-hover:text-black")} strokeWidth={1.5} />
                 {!isCollapsed && <span className="truncate">{item.label}</span>}
                 {isActive && isCollapsed && (
                     <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-600" />

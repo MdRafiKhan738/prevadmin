@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     ArrowLeft, Search, Plus, Trash2, Edit2, CheckCircle2,
     Shuffle, X, Calendar, CircleDot, Loader2, Home, Minus,
-    CheckCircle, XCircle, ChevronLeft
+    CheckCircle, XCircle, ChevronLeft, ChevronDown
 } from 'lucide-react';
 import axios from 'axios';
 import { clsx } from 'clsx';
@@ -43,12 +43,14 @@ interface SubCategory {
     _id: string;
     name: string;
     category: Category;
-    feature?: Feature;
+    features?: Feature[];
     buttonType?: string;
-    freePost?: string;
+    freePost?: number;
     order: number;
     status: boolean;
     image?: string;
+    priceBoxShow: boolean;
+    priceBoxName?: string;
     tags: string[];
     createdAt: string;
     createdBy?: { adminName: string };
@@ -72,13 +74,15 @@ export default function CategoriesPage() {
 
     // Form States - SubCategory (Main Modal)
     const [subCatForm, setSubCatForm] = useState({
-        name: '',
+        names: [''], // Multiple names support
         category: '',
-        feature: '',
+        features: [''], // Multiple features support
         buttonType: 'Call, Message, Send CV',
-        freePost: 'Free Post',
+        freePost: 1,
         order: 1,
         status: true,
+        priceBoxShow: false,
+        priceBoxName: '',
         tags: [''],
         image: null as File | null,
     });
@@ -105,6 +109,7 @@ export default function CategoriesPage() {
     });
 
     const [isSaving, setIsSaving] = useState(false);
+    const [showButtonTypeDropdown, setShowButtonTypeDropdown] = useState(false);
 
     useEffect(() => {
         fetchAllData();
@@ -136,13 +141,15 @@ export default function CategoriesPage() {
 
         try {
             const formData = new FormData();
-            formData.append('name', subCatForm.name);
+            subCatForm.names.filter((n: string) => n.trim()).forEach((n: string) => formData.append('name', n));
             formData.append('category', subCatForm.category);
-            formData.append('feature', subCatForm.feature);
+            formData.append('features', JSON.stringify(subCatForm.features.filter(f => f.trim())));
             formData.append('buttonType', subCatForm.buttonType);
-            formData.append('freePost', subCatForm.freePost);
+            formData.append('freePost', String(subCatForm.freePost));
             formData.append('order', String(subCatForm.order));
             formData.append('status', String(subCatForm.status));
+            formData.append('priceBoxShow', String(subCatForm.priceBoxShow));
+            formData.append('priceBoxName', subCatForm.priceBoxName);
             subCatForm.tags.filter(t => t.trim()).forEach(tag => formData.append('tags', tag));
             if (subCatForm.image) formData.append('image', subCatForm.image);
 
@@ -251,13 +258,15 @@ export default function CategoriesPage() {
     const handleEditSubCat = (sc: SubCategory) => {
         setEditingSubCatId(sc._id);
         setSubCatForm({
-            name: sc.name,
+            names: [sc.name],
             category: sc.category._id,
-            feature: sc.feature?._id || '',
+            features: sc.features?.length ? sc.features.map(f => f._id) : [''],
             buttonType: sc.buttonType || 'Call, Message, Send CV',
-            freePost: sc.freePost || 'Free Post',
+            freePost: Number(sc.freePost) || 0,
             order: sc.order,
             status: sc.status,
+            priceBoxShow: sc.priceBoxShow || false,
+            priceBoxName: sc.priceBoxName || '',
             tags: sc.tags.length > 0 ? sc.tags : [''],
             image: null,
         });
@@ -294,13 +303,15 @@ export default function CategoriesPage() {
     const openNewSubCat = () => {
         setEditingSubCatId(null);
         setSubCatForm({
-            name: '',
+            names: [''],
             category: '',
-            feature: '',
+            features: [''],
             buttonType: 'Call, Message, Send CV',
-            freePost: 'Free Post',
+            freePost: 1,
             order: 1,
             status: true,
+            priceBoxShow: false,
+            priceBoxName: '',
             tags: [''],
             image: null,
         });
@@ -342,7 +353,7 @@ export default function CategoriesPage() {
     return (
         <div className="bg-[#f1f5f9] min-h-screen p-4 font-['Tahoma','Verdana',sans-serif]">
             {/* Breadcrumb Area */}
-            <div className="flex items-center gap-1.5 text-xs text-slate-500 mb-3 ml-1">
+            <div className="flex items-center gap-1.5 text-xs text-black mb-3 ml-1">
                 <Home className="w-3 h-3" />
                 <span>/</span>
                 <span>Manage Categories</span>
@@ -357,7 +368,7 @@ export default function CategoriesPage() {
                     <span className="text-indigo-600 font-bold text-sm tracking-tight">Categories</span>
                 </div>
 
-                <div className="text-slate-900 text-xs font-medium">
+                <div className="text-black text-xs font-medium">
                     Total Categories <span className="font-bold">({subCategories.length})</span>
                 </div>
 
@@ -374,9 +385,11 @@ export default function CategoriesPage() {
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs border-collapse">
                         <thead>
-                            <tr className="bg-white text-slate-800 font-bold border-b border-slate-100">
+                            <tr className="bg-white text-black font-bold border-b border-slate-100">
                                 <th className="px-5 py-3 font-bold w-1/4">Sub Category name</th>
                                 <th className="px-5 py-3 font-bold">Category name</th>
+                                <th className="px-5 py-3 font-bold">Button Type</th>
+                                <th className="px-5 py-3 font-bold text-center w-24">Free Post</th>
                                 <th className="px-5 py-3 font-bold text-center w-24">Order</th>
                                 <th className="px-5 py-3 font-bold text-center w-24">Status</th>
                                 <th className="px-5 py-3 font-bold w-48">Entry date</th>
@@ -385,15 +398,23 @@ export default function CategoriesPage() {
                                 <th className="px-5 py-3 text-center w-12"><Trash2 className="w-3.5 h-3.5 mx-auto" /></th>
                             </tr>
                         </thead>
-                        <tbody className="text-slate-600 font-medium">
+                        <tbody className="text-black">
                             {isLoading ? (
                                 <tr><td colSpan={8} className="py-20 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-blue-500" /></td></tr>
                             ) : filteredSubCategories.length === 0 ? (
-                                <tr><td colSpan={8} className="py-12 text-center text-slate-400 italic">No subcategories found</td></tr>
+                                <tr><td colSpan={8} className="py-12 text-center text-black italic">No subcategories found</td></tr>
                             ) : filteredSubCategories.map((sc) => (
                                 <tr key={sc._id} className="border-b border-slate-50 hover:bg-slate-50 transition-colors">
-                                    <td className="px-5 py-2.5 text-slate-900 font-bold">{sc.name}</td>
-                                    <td className="px-5 py-2.5 text-slate-700 font-bold">{sc.category?.name}</td>
+                                    <td className="px-5 py-2.5 text-black">{sc.name}</td>
+                                    <td className="px-5 py-2.5 text-black">{sc.category?.name}</td>
+                                    <td className="px-5 py-2.5 text-black">
+                                        <div className="flex flex-wrap gap-1">
+                                            {sc.buttonType?.split(',').map(t => (
+                                                <span key={t} className="bg-slate-100 px-1 rounded-sm text-[10px] uppercase font-medium">{t.trim()}</span>
+                                            ))}
+                                        </div>
+                                    </td>
+                                    <td className="px-5 py-2.5 text-center">{sc.freePost || 0}</td>
                                     <td className="px-5 py-2.5 text-center">{sc.order}</td>
                                     <td className="px-5 py-2.5 text-center">
                                         {sc.status ? (
@@ -402,17 +423,17 @@ export default function CategoriesPage() {
                                             <XCircle className="w-4 h-4 text-[#e74c3c] mx-auto fill-rose-50" />
                                         )}
                                     </td>
-                                    <td className="px-5 py-2.5 text-slate-500">
+                                    <td className="px-5 py-2.5 text-black">
                                         {new Date(sc.createdAt).toLocaleDateString('en-GB') + ' ' + new Date(sc.createdAt).toLocaleTimeString('en-GB')}
                                     </td>
-                                    <td className="px-5 py-2.5 text-slate-500">{sc.createdBy?.adminName || 'System'}</td>
+                                    <td className="px-5 py-2.5 text-black">{sc.createdBy?.adminName || 'System'}</td>
                                     <td className="px-5 py-2.5 text-center">
-                                        <button onClick={() => handleEditSubCat(sc)} className="text-slate-400 hover:text-indigo-600 transition-colors">
+                                        <button onClick={() => handleEditSubCat(sc)} className="text-black hover:text-indigo-600 transition-colors">
                                             <Edit2 className="w-3.5 h-3.5 mx-auto" strokeWidth={2.5} />
                                         </button>
                                     </td>
                                     <td className="px-5 py-2.5 text-center">
-                                        <button onClick={() => handleDelete(sc._id, 'sub')} className="text-slate-400 hover:text-rose-500 transition-colors">
+                                        <button onClick={() => handleDelete(sc._id, 'sub')} className="text-black hover:text-rose-500 transition-colors">
                                             <Trash2 className="w-3.5 h-3.5 mx-auto" strokeWidth={2.5} />
                                         </button>
                                     </td>
@@ -434,13 +455,13 @@ export default function CategoriesPage() {
                             initial={{ scale: 0.98, opacity: 0, y: 10 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.98, opacity: 0, y: 10 }}
-                            className="bg-white border border-slate-900 w-full max-w-[850px] rounded-sm shadow-2xl relative z-10 flex flex-col"
+                            className="bg-white border border-slate-900 w-full max-w-[98vw] h-[98vh] rounded-sm shadow-2xl relative z-10 flex flex-col"
                         >
                             <div className="flex justify-between items-center p-2 border-b border-slate-200 bg-slate-50">
-                                <div className="flex items-center gap-2 font-bold text-xs text-slate-800 uppercase">
+                                <div className="flex items-center gap-2 font-bold text-xs text-black uppercase">
                                     <CircleDot className="w-4 h-4" /> {editingSubCatId ? 'Edit category' : 'New category'}
                                 </div>
-                                <button onClick={() => setShowMainModal(false)} className="hover:bg-slate-200 p-1 rounded transition-colors text-slate-400">
+                                <button onClick={() => setShowMainModal(false)} className="hover:bg-slate-200 p-1 rounded transition-colors text-black">
                                     <X className="w-4 h-4" />
                                 </button>
                             </div>
@@ -450,29 +471,103 @@ export default function CategoriesPage() {
                                 <form onSubmit={handleSubCatSubmit} className="flex-1 grid grid-cols-2 gap-x-6 gap-y-3 text-xs">
                                     {/* Sub Category Name */}
                                     <div className="space-y-1 col-span-1">
-                                        <label className="text-slate-500 font-bold">Sub Catagorie Name</label>
-                                        <div className="flex gap-1">
-                                            <input type="text" className="flex-1 border border-slate-300 px-2 py-1.5 outline-none font-medium bg-[#f9fbff]"
-                                                value={subCatForm.name} onChange={e => setSubCatForm({ ...subCatForm, name: e.target.value })} required />
-                                            <button type="button" className="p-1 px-2 border border-slate-900 bg-white hover:bg-slate-50"><Plus className="w-3 h-3 stroke-[3]" /></button>
-                                            <button type="button" className="p-1 px-2 border border-slate-900 bg-white hover:bg-slate-50"><Minus className="w-3 h-3 stroke-[3]" /></button>
+                                        <label className="text-black font-bold">Sub Catagorie Name</label>
+                                        <div className="flex flex-col gap-1.5">
+                                            {subCatForm.names.map((name: string, index: number) => (
+                                                <div key={index} className="flex gap-1">
+                                                    <input
+                                                        type="text"
+                                                        className="flex-1 border border-slate-300 px-2 py-1.5 outline-none font-medium bg-[#f9fbff]"
+                                                        value={name}
+                                                        onChange={e => {
+                                                            const newNames = [...subCatForm.names];
+                                                            newNames[index] = e.target.value;
+                                                            setSubCatForm({ ...subCatForm, names: newNames });
+                                                        }}
+                                                        required
+                                                    />
+                                                    {index === subCatForm.names.length - 1 ? (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setSubCatForm({ ...subCatForm, names: [...subCatForm.names, ''] })}
+                                                            className="p-1 px-2 border border-slate-900 bg-white hover:bg-slate-50"
+                                                        >
+                                                            <Plus className="w-3 h-3 stroke-[3]" />
+                                                        </button>
+                                                    ) : (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setSubCatForm({ ...subCatForm, names: subCatForm.names.filter((_: string, i: number) => i !== index) })}
+                                                            className="p-1 px-2 border border-slate-900 bg-white hover:bg-slate-50"
+                                                        >
+                                                            <Minus className="w-3 h-3 stroke-[3]" />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
 
                                     {/* Button Type */}
                                     <div className="space-y-1 col-span-1">
-                                        <label className="text-slate-500 font-bold">Button Type</label>
-                                        <select className="w-full border border-slate-300 px-2 py-1.5 outline-none font-medium bg-[#f9fbff]"
-                                            value={subCatForm.buttonType} onChange={e => setSubCatForm({ ...subCatForm, buttonType: e.target.value })}>
-                                            <option>Call, Message, Send CV</option>
-                                            <option>Call Only</option>
-                                            <option>In-App Message</option>
-                                        </select>
+                                        <label className="text-black font-bold">Button Type</label>
+                                        <div className="relative">
+                                            <div
+                                                className="w-full border border-slate-300 px-2 py-1.5 outline-none font-medium bg-[#f9fbff] flex items-center justify-between cursor-pointer min-h-[32px]"
+                                                onClick={() => setShowButtonTypeDropdown(!showButtonTypeDropdown)}
+                                            >
+                                                <div className="flex flex-wrap gap-1">
+                                                    {subCatForm.buttonType ? subCatForm.buttonType.split(',').map(t => (
+                                                        <span key={t.trim()} className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-sm text-[10px] flex items-center gap-1 font-bold">
+                                                            {t.trim()}
+                                                        </span>
+                                                    )) : <span className="text-slate-400">Select...</span>}
+                                                </div>
+                                                <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", showButtonTypeDropdown && "rotate-180")} />
+                                            </div>
+                                            {showButtonTypeDropdown && (
+                                                <>
+                                                    <div className="fixed inset-0 z-[110]" onClick={() => setShowButtonTypeDropdown(false)} />
+                                                    <div className="absolute top-full left-0 w-full bg-white border border-slate-300 shadow-xl z-[120] mt-1 rounded-sm py-1 overflow-hidden">
+                                                        {['Call', 'Message', 'Send CV'].map(type => {
+                                                            const isSelected = subCatForm.buttonType.split(',').map(t => t.trim()).includes(type);
+                                                            return (
+                                                                <label key={type} className="flex items-center gap-2.5 px-3 py-2 hover:bg-slate-50 cursor-pointer transition-colors group">
+                                                                    <div className={cn(
+                                                                        "w-3.5 h-3.5 border rounded-[2px] flex items-center justify-center transition-all",
+                                                                        isSelected ? "bg-blue-600 border-blue-600" : "border-slate-300 group-hover:border-blue-400"
+                                                                    )}>
+                                                                        {isSelected && <CheckCircle2 className="w-2.5 h-2.5 text-white" strokeWidth={4} />}
+                                                                    </div>
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        className="hidden"
+                                                                        checked={isSelected}
+                                                                        onChange={() => {
+                                                                            let types = subCatForm.buttonType.split(',').map(t => t.trim()).filter(Boolean);
+                                                                            if (isSelected) {
+                                                                                types = types.filter(t => t !== type);
+                                                                            } else {
+                                                                                types.push(type);
+                                                                            }
+                                                                            setSubCatForm({ ...subCatForm, buttonType: types.join(', ') });
+                                                                        }}
+                                                                    />
+                                                                    <span className={cn("text-xs transition-colors", isSelected ? "text-blue-700 font-bold" : "text-black")}>
+                                                                        {type}
+                                                                    </span>
+                                                                </label>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
                                     </div>
 
                                     {/* Categories Dropdown */}
                                     <div className="space-y-1 col-span-1">
-                                        <label className="text-slate-500 font-bold">Catagorie</label>
+                                        <label className="text-black font-bold">Catagorie</label>
                                         <select className="w-full border border-slate-300 px-2 py-1.5 outline-none font-medium bg-white"
                                             value={subCatForm.category} onChange={e => setSubCatForm({ ...subCatForm, category: e.target.value })} required>
                                             <option value="">Select Category</option>
@@ -482,46 +577,81 @@ export default function CategoriesPage() {
 
                                     {/* Free Post */}
                                     <div className="space-y-1 col-span-1">
-                                        <label className="text-slate-500 font-bold opacity-0 invisible">Free Post</label>
-                                        <input type="text" className="w-full border border-slate-300 px-2 py-1.5 outline-none font-medium bg-[#f9fbff]"
-                                            value={subCatForm.freePost} onChange={e => setSubCatForm({ ...subCatForm, freePost: e.target.value })} />
+                                        <label className="text-black font-bold">Free Post</label>
+                                        <input type="number" className="w-full border border-slate-300 px-2 py-1.5 outline-none font-medium bg-[#f9fbff]"
+                                            value={subCatForm.freePost} onChange={e => setSubCatForm({ ...subCatForm, freePost: Number(e.target.value) })} />
                                     </div>
 
                                     {/* Feature Name */}
                                     <div className="space-y-1 col-span-1">
-                                        <label className="text-slate-500 font-bold">Feature Name</label>
-                                        <select className="w-full border border-slate-300 px-2 py-1.5 outline-none font-medium bg-white"
-                                            value={subCatForm.feature} onChange={e => setSubCatForm({ ...subCatForm, feature: e.target.value })}>
-                                            <option value="">Select Feature</option>
-                                            {features.map(f => <option key={f._id} value={f._id}>{f.name}</option>)}
-                                        </select>
-                                    </div>
-
-                                    {/* Order */}
-                                    <div className="space-y-1 col-span-1">
-                                        <label className="text-slate-500 font-bold opacity-0 invisible">Order</label>
-                                        <input type="number" className="w-full border border-slate-300 px-2 py-1.5 outline-none font-medium bg-[#f9fbff]"
-                                            value={subCatForm.order} onChange={e => setSubCatForm({ ...subCatForm, order: Number(e.target.value) })} />
-                                    </div>
-
-                                    {/* Tag Name */}
-                                    <div className="space-y-1 col-span-1">
-                                        <label className="text-slate-500 font-bold">Tag Name</label>
-                                        <div className="flex gap-1">
-                                            <input type="text" className="flex-1 border border-slate-300 px-2 py-1.5 outline-none font-medium bg-white"
-                                                value={subCatForm.tags[0]} onChange={e => {
-                                                    const newTags = [...subCatForm.tags];
-                                                    newTags[0] = e.target.value;
-                                                    setSubCatForm({ ...subCatForm, tags: newTags });
-                                                }} />
-                                            <button type="button" className="p-1 px-2 border border-slate-900 bg-white hover:bg-slate-50"><Plus className="w-3 h-3 stroke-[3]" /></button>
-                                            <button type="button" className="p-1 px-2 border border-slate-900 bg-white hover:bg-slate-50"><Minus className="w-3 h-3 stroke-[3]" /></button>
+                                        <label className="text-black font-bold">Feature Name</label>
+                                        <div className="flex flex-col gap-1.5">
+                                            {subCatForm.features.map((featureId, index) => (
+                                                <div key={index} className="flex gap-1">
+                                                    <select
+                                                        className="flex-1 border border-slate-300 px-2 py-1.5 outline-none font-medium bg-white"
+                                                        value={featureId}
+                                                        onChange={e => {
+                                                            const newFeatures = [...subCatForm.features];
+                                                            newFeatures[index] = e.target.value;
+                                                            setSubCatForm({ ...subCatForm, features: newFeatures });
+                                                        }}
+                                                    >
+                                                        <option value="">Select Feature</option>
+                                                        {features.map(f => <option key={f._id} value={f._id}>{f.name}</option>)}
+                                                    </select>
+                                                    {index === subCatForm.features.length - 1 ? (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setSubCatForm({ ...subCatForm, features: [...subCatForm.features, ''] })}
+                                                            className="p-1 px-2 border border-slate-900 bg-white hover:bg-slate-50"
+                                                        >
+                                                            <Plus className="w-3 h-3 stroke-[3]" />
+                                                        </button>
+                                                    ) : (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setSubCatForm({ ...subCatForm, features: subCatForm.features.filter((_, i) => i !== index) })}
+                                                            className="p-1 px-2 border border-slate-900 bg-white hover:bg-slate-50"
+                                                        >
+                                                            <Minus className="w-3 h-3 stroke-[3]" />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
 
+                                    {/* PriceBox Section */}
+                                    <div className="space-y-1 col-span-1">
+                                        <div className="flex items-center gap-4 py-1">
+                                            <span className="text-black font-bold">PriceBox Show</span>
+                                            <label className="flex items-center gap-1.5 cursor-pointer font-bold text-black text-[13px]">
+                                                <input type="radio" checked={subCatForm.priceBoxShow} onChange={() => setSubCatForm({ ...subCatForm, priceBoxShow: true })} className="w-3.5 h-3.5 accent-blue-600" /> Yes
+                                            </label>
+                                            <label className="flex items-center gap-1.5 cursor-pointer font-bold text-black text-[13px]">
+                                                <input type="radio" checked={!subCatForm.priceBoxShow} onChange={() => setSubCatForm({ ...subCatForm, priceBoxShow: false })} className="w-3.5 h-3.5 accent-blue-600" /> No
+                                            </label>
+                                        </div>
+                                        {subCatForm.priceBoxShow && (
+                                            <input
+                                                type="text"
+                                                placeholder="PriceBox Name"
+                                                className="w-full border border-slate-300 px-2 py-1.5 outline-none font-medium bg-white text-black text-[13px]"
+                                                value={subCatForm.priceBoxName}
+                                                onChange={e => setSubCatForm({ ...subCatForm, priceBoxName: e.target.value })}
+                                            />
+                                        )}
+                                    </div>
+                                    {/* Order */}
+                                    <div className="space-y-1 col-span-1">
+                                        <label className="text-black font-bold text-[13px]">Order</label>
+                                        <input type="number" className="w-full border border-slate-300 px-2 py-1.5 outline-none font-medium bg-[#f9fbff] text-black text-[13px]"
+                                            value={subCatForm.order} onChange={e => setSubCatForm({ ...subCatForm, order: Number(e.target.value) })} />
+                                    </div>
                                     {/* Date and File */}
                                     <div className="space-y-1 col-span-1 flex flex-col justify-end">
-                                        <div className="bg-[#f0f0f0] border border-slate-300 text-slate-500 px-2 py-1.5 text-center mb-1">
+                                        <div className="bg-[#f0f0f0] border border-slate-300 text-black px-2 py-1.5 text-center mb-1">
                                             {new Date().toLocaleDateString('en-GB') + ' ' + new Date().toLocaleTimeString('en-GB')}
                                         </div>
                                         <div className="flex gap-1">
@@ -529,18 +659,18 @@ export default function CategoriesPage() {
                                                 Choose File
                                                 <input type="file" className="hidden" onChange={e => setSubCatForm({ ...subCatForm, image: e.target.files?.[0] || null })} />
                                             </label>
-                                            <span className="text-slate-400 self-center truncate max-w-[100px]">{subCatForm.image ? subCatForm.image.name : 'No file chosen'}</span>
+                                            <span className="text-black self-center truncate max-w-[100px]">{subCatForm.image ? subCatForm.image.name : 'No file chosen'}</span>
                                         </div>
                                     </div>
 
                                     {/* Status */}
                                     <div className="col-span-1"></div>
                                     <div className="col-span-1 flex items-center gap-4 py-1">
-                                        <span className="text-slate-900 font-bold">Status</span>
-                                        <label className="flex items-center gap-1.5 cursor-pointer font-bold text-slate-800">
+                                        <span className="text-black font-bold">Status</span>
+                                        <label className="flex items-center gap-1.5 cursor-pointer font-bold text-black">
                                             <input type="radio" name="subcat-status" checked={subCatForm.status} onChange={() => setSubCatForm({ ...subCatForm, status: true })} className="w-3 h-3 accent-blue-600" /> Yes
                                         </label>
-                                        <label className="flex items-center gap-1.5 cursor-pointer font-bold text-slate-800">
+                                        <label className="flex items-center gap-1.5 cursor-pointer font-bold text-black">
                                             <input type="radio" name="subcat-status" checked={!subCatForm.status} onChange={() => setSubCatForm({ ...subCatForm, status: false })} className="w-3 h-3 accent-blue-600" /> No
                                         </label>
                                     </div>
@@ -550,18 +680,18 @@ export default function CategoriesPage() {
                                         <button type="submit" className="bg-[#127ef3] text-white flex-1 py-1.5 font-bold rounded-sm border border-blue-800 hover:bg-blue-600 shadow-inner">
                                             {isSaving ? 'Processing...' : 'Save'}
                                         </button>
-                                        <button type="button" onClick={() => setShowMainModal(false)} className="bg-white text-slate-600 px-6 py-1.5 font-bold rounded-sm border border-slate-300 hover:bg-slate-50">
+                                        <button type="button" onClick={() => setShowMainModal(false)} className="bg-white text-black px-6 py-1.5 font-bold rounded-sm border border-slate-300 hover:bg-slate-50">
                                             Cancel
                                         </button>
                                     </div>
                                 </form>
 
                                 {/* Right Column Tables */}
-                                <div className="w-[340px] flex flex-col gap-4 border-l border-slate-200 pl-6 h-full overflow-y-auto max-h-[450px] pr-2 custom-scrollbar">
+                                <div className="w-[450px] flex flex-col gap-4 border-l border-slate-200 pl-6 h-full overflow-y-auto pr-2 custom-scrollbar">
                                     {/* Category Section */}
                                     <div className="space-y-2">
                                         <div className="flex justify-between items-center px-1">
-                                            <span className="text-xs font-bold text-slate-500 uppercase tracking-tighter">Create Catagorie</span>
+                                            <span className="text-xs font-bold text-black uppercase tracking-tighter">Create Catagorie</span>
                                             <button onClick={openNewCat} className="bg-white border border-slate-400 p-0.5 px-2 hover:bg-slate-50">
                                                 <Plus className="w-3 h-3 stroke-[3]" />
                                             </button>
@@ -581,14 +711,14 @@ export default function CategoriesPage() {
                                                 <tbody className="divide-y divide-slate-100">
                                                     {categories.map(c => (
                                                         <tr key={c._id}>
-                                                            <td className="px-2 py-1.5 font-bold text-slate-800">{c.name}</td>
+                                                            <td className="px-2 py-1.5 font-bold text-black">{c.name}</td>
                                                             <td className="px-2 py-1.5">{c.inputType}</td>
                                                             <td className="px-2 py-1.5 text-center">{c.order}</td>
                                                             <td className="px-2 py-1.5 text-center">
-                                                                <CheckCircle2 className={cn("w-3 h-3 mx-auto", c.status ? "text-green-500" : "text-slate-300")} />
+                                                                <CheckCircle2 className={cn("w-3 h-3 mx-auto", c.status ? "text-green-500" : "text-black")} />
                                                             </td>
-                                                            <td className="px-1 py-1.5"><Edit2 onClick={() => handleEditCat(c)} className="w-3 h-3 text-slate-800 cursor-pointer" /></td>
-                                                            <td className="px-1 py-1.5"><Trash2 onClick={() => handleDelete(c._id, 'cat')} className="w-3 h-3 text-slate-800 cursor-pointer" /></td>
+                                                            <td className="px-1 py-1.5"><Edit2 onClick={() => handleEditCat(c)} className="w-3 h-3 text-black cursor-pointer" /></td>
+                                                            <td className="px-1 py-1.5"><Trash2 onClick={() => handleDelete(c._id, 'cat')} className="w-3 h-3 text-black cursor-pointer" /></td>
                                                         </tr>
                                                     ))}
                                                 </tbody>
@@ -599,7 +729,7 @@ export default function CategoriesPage() {
                                     {/* Feature Section */}
                                     <div className="space-y-2 pb-4">
                                         <div className="flex justify-between items-center px-1">
-                                            <span className="text-xs font-bold text-slate-500 uppercase tracking-tighter">Create Feature</span>
+                                            <span className="text-xs font-bold text-black uppercase tracking-tighter">Create Feature</span>
                                             <button onClick={openNewFeat} className="bg-white border border-slate-400 p-0.5 px-2 hover:bg-slate-50">
                                                 <Plus className="w-3 h-3 stroke-[3]" />
                                             </button>
@@ -619,14 +749,14 @@ export default function CategoriesPage() {
                                                 <tbody className="divide-y divide-slate-100">
                                                     {features.map(f => (
                                                         <tr key={f._id}>
-                                                            <td className="px-2 py-1.5 font-bold text-slate-800">{f.name}</td>
+                                                            <td className="px-2 py-1.5 font-bold text-black">{f.name}</td>
                                                             <td className="px-2 py-1.5">{f.category?.name}</td>
                                                             <td className="px-2 py-1.5 text-center">{f.order}</td>
                                                             <td className="px-2 py-1.5 text-center">
-                                                                <CheckCircle2 className={cn("w-3 h-3 mx-auto", f.status ? "text-green-500" : "text-slate-300")} />
+                                                                <CheckCircle2 className={cn("w-3 h-3 mx-auto", f.status ? "text-green-500" : "text-black")} />
                                                             </td>
-                                                            <td className="px-1 py-1.5"><Edit2 className="w-3 h-3 text-slate-800 cursor-pointer" /></td>
-                                                            <td className="px-1 py-1.5"><Trash2 className="w-3 h-3 text-slate-800 cursor-pointer" /></td>
+                                                            <td className="px-1 py-1.5"><Edit2 onClick={() => handleEditFeat(f)} className="w-3 h-3 text-black cursor-pointer" /></td>
+                                                            <td className="px-1 py-1.5"><Trash2 onClick={() => handleDelete(f._id, 'feat')} className="w-3 h-3 text-black cursor-pointer" /></td>
                                                         </tr>
                                                     ))}
                                                 </tbody>
@@ -643,12 +773,12 @@ export default function CategoriesPage() {
                                         initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
                                         className="absolute -bottom-5 left-0 w-full p-4 flex justify-center z-[110]"
                                     >
-                                        <div className="bg-white border border-slate-900 w-full max-w-[700px] shadow-2xl rounded-sm">
+                                        <div className="bg-white border border-slate-900 w-full max-w-[98vw] h-[98vh] shadow-2xl rounded-sm flex flex-col">
                                             <div className="flex justify-between items-center p-2 border-b border-slate-200 bg-slate-50">
-                                                <div className="flex items-center gap-2 font-bold text-xs text-slate-800 uppercase">
+                                                <div className="flex items-center gap-2 font-bold text-xs text-black uppercase">
                                                     <CircleDot className="w-4 h-4" /> {editingCatId ? 'Edit Catagorie' : 'Catagorie Name'}
                                                 </div>
-                                                <button onClick={() => setShowCategoryModal(false)} className="text-slate-400 p-1"><X className="w-4 h-4" /></button>
+                                                <button onClick={() => setShowCategoryModal(false)} className="text-black p-1"><X className="w-4 h-4" /></button>
                                             </div>
                                             <form onSubmit={handleCatSubmit} className="p-4 grid grid-cols-2 gap-x-12 gap-y-3 text-xs">
                                                 <div className="space-y-1">
@@ -660,31 +790,31 @@ export default function CategoriesPage() {
                                                         Choose File
                                                         <input type="file" className="hidden" onChange={e => setCatForm({ ...catForm, icon: e.target.files?.[0] || null })} />
                                                     </label>
-                                                    <span className="text-slate-400 self-center">{catForm.icon ? catForm.icon.name : 'No file chosen'}</span>
+                                                    <span className="text-black self-center">{catForm.icon ? catForm.icon.name : 'No file chosen'}</span>
                                                 </div>
                                                 <div className="space-y-1">
-                                                    <div className="border border-slate-200 px-2 py-1.5 bg-[#f4f4f4] text-slate-500">
+                                                    <div className="border border-slate-200 px-2 py-1.5 bg-[#f4f4f4] text-black">
                                                         {new Date().toLocaleDateString('en-GB') + ' ' + new Date().toLocaleTimeString('en-GB')}
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-4">
-                                                    <span className="text-slate-900 font-bold lowercase">Status</span>
-                                                    <label className="flex items-center gap-1.5 cursor-pointer font-bold text-slate-800">
+                                                    <span className="text-black font-bold lowercase">Status</span>
+                                                    <label className="flex items-center gap-1.5 cursor-pointer font-bold text-black">
                                                         <input type="radio" checked={catForm.status} onChange={() => setCatForm({ ...catForm, status: true })} className="w-3 h-3 accent-blue-600" /> Yes
                                                     </label>
-                                                    <label className="flex items-center gap-1.5 cursor-pointer font-bold text-slate-800">
+                                                    <label className="flex items-center gap-1.5 cursor-pointer font-bold text-black">
                                                         <input type="radio" checked={!catForm.status} onChange={() => setCatForm({ ...catForm, status: false })} className="w-3 h-3 accent-blue-600" /> No
                                                     </label>
                                                 </div>
                                                 <div className="space-y-1">
-                                                    <input type="number" placeholder="Ordering" className="w-full border border-slate-300 px-2 py-1.5 outline-none font-medium bg-white text-slate-900"
+                                                    <input type="number" placeholder="Ordering" className="w-full border border-slate-300 px-2 py-1.5 outline-none font-medium bg-white text-black"
                                                         value={catForm.order} onChange={e => setCatForm({ ...catForm, order: Number(e.target.value) })} />
                                                 </div>
                                                 <div className="flex gap-2 h-max self-end mt-1">
                                                     <button type="submit" className="bg-[#127ef3] text-white flex-1 py-1.5 font-bold rounded-sm border border-blue-800 shadow-inner px-12">
                                                         Save
                                                     </button>
-                                                    <button type="button" onClick={() => setShowCategoryModal(false)} className="bg-white text-slate-600 px-8 py-1.5 font-bold rounded-sm border border-slate-300">
+                                                    <button type="button" onClick={() => setShowCategoryModal(false)} className="bg-white text-black px-8 py-1.5 font-bold rounded-sm border border-slate-300">
                                                         Cancel
                                                     </button>
                                                 </div>
@@ -701,12 +831,12 @@ export default function CategoriesPage() {
                                         initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
                                         className="absolute -bottom-5 left-0 w-full p-4 flex justify-center z-[110]"
                                     >
-                                        <div className="bg-white border border-slate-900 w-full max-w-[700px] shadow-2xl rounded-sm">
+                                        <div className="bg-white border border-slate-900 w-full max-w-[98vw] h-[98vh] shadow-2xl rounded-sm flex flex-col">
                                             <div className="flex justify-between items-center p-2 border-b border-slate-200 bg-slate-50">
-                                                <div className="flex items-center gap-2 font-bold text-xs text-slate-800 uppercase">
+                                                <div className="flex items-center gap-2 font-bold text-xs text-black uppercase">
                                                     <CircleDot className="w-4 h-4" /> New Feature
                                                 </div>
-                                                <button onClick={() => setShowFeatureModal(false)} className="text-slate-400 p-1"><X className="w-4 h-4" /></button>
+                                                <button onClick={() => setShowFeatureModal(false)} className="text-black p-1"><X className="w-4 h-4" /></button>
                                             </div>
                                             <form onSubmit={handleFeatSubmit} className="p-4 grid grid-cols-2 gap-x-12 gap-y-3 text-xs">
                                                 <div className="space-y-1">
@@ -721,7 +851,7 @@ export default function CategoriesPage() {
                                                     </select>
                                                 </div>
                                                 <div className="space-y-1">
-                                                    <div className="border border-slate-200 px-2 py-1.5 bg-[#f4f4f4] text-slate-500 text-center">
+                                                    <div className="border border-slate-200 px-2 py-1.5 bg-[#f4f4f4] text-black text-center">
                                                         {new Date().toLocaleDateString('en-GB') + ' ' + new Date().toLocaleTimeString('en-GB')}
                                                     </div>
                                                 </div>
@@ -746,16 +876,16 @@ export default function CategoriesPage() {
                                                 )}
 
                                                 <div className="flex items-center gap-4 mt-1">
-                                                    <span className="text-slate-900 font-bold lowercase">Status</span>
-                                                    <label className="flex items-center gap-1.5 cursor-pointer font-bold text-slate-800">
+                                                    <span className="text-black font-bold lowercase">Status</span>
+                                                    <label className="flex items-center gap-1.5 cursor-pointer font-bold text-black">
                                                         <input type="radio" checked={featForm.status} onChange={() => setFeatForm({ ...featForm, status: true })} className="w-3 h-3 accent-blue-600" /> Yes
                                                     </label>
-                                                    <label className="flex items-center gap-1.5 cursor-pointer font-bold text-slate-800">
+                                                    <label className="flex items-center gap-1.5 cursor-pointer font-bold text-black">
                                                         <input type="radio" checked={!featForm.status} onChange={() => setFeatForm({ ...featForm, status: false })} className="w-3 h-3 accent-blue-600" /> No
                                                     </label>
                                                 </div>
 
-                                                {featForm.buttonType === 'Radio' && (
+                                                {['Radio', 'Box'].includes(featForm.buttonType) && (
                                                     <div className="space-y-1 max-h-32 overflow-y-auto pr-1 custom-scrollbar">
                                                         {featForm.buttonItemNames.map((name, idx) => (
                                                             <div key={idx} className="flex gap-1 mb-1">
@@ -782,7 +912,7 @@ export default function CategoriesPage() {
                                                     <button type="submit" className="bg-[#127ef3] text-white flex-1 py-1.5 font-bold rounded-sm border border-blue-800 shadow-inner px-12">
                                                         Save
                                                     </button>
-                                                    <button type="button" onClick={() => setShowFeatureModal(false)} className="bg-white text-slate-600 px-8 py-1.5 font-bold rounded-sm border border-slate-300">
+                                                    <button type="button" onClick={() => setShowFeatureModal(false)} className="bg-white text-black px-8 py-1.5 font-bold rounded-sm border border-slate-300">
                                                         Cancel
                                                     </button>
                                                 </div>

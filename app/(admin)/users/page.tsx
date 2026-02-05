@@ -386,13 +386,13 @@ export default function UserManagement() {
     const getStatusColor = (status: string) => {
         switch (status) {
             case 'active': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
-            case 'inactive': return 'bg-slate-100 text-slate-700 border-slate-200';
+            case 'inactive': return 'bg-slate-100 text-black border-slate-200';
             case 'review':
             case 'pending': return 'bg-amber-100 text-amber-700 border-amber-200';
             case 'active_message': return 'bg-teal-100 text-teal-700 border-teal-200';
             case 'inactive_message': return 'bg-orange-100 text-orange-700 border-orange-200';
             case 'r_delete': return 'bg-rose-100 text-rose-700 border-rose-200';
-            default: return 'bg-slate-100 text-slate-600 border-slate-200';
+            default: return 'bg-slate-100 text-black border-slate-200';
         }
     };
 
@@ -418,14 +418,14 @@ export default function UserManagement() {
                         <button className="text-rose-500"><ArrowLeft className="w-3.5 h-3.5" strokeWidth={3} /></button>
                         <span className="font-bold text-blue-600 text-xs">Users</span>
                     </div>
-                    <div className="text-slate-700 font-bold text-xs">Total Users ({users.length})</div>
+                    <div className="text-black font-bold text-xs">Total Users ({users.length})</div>
                 </div>
 
                 <div className="flex items-center gap-2">
                     <div className="flex bg-slate-100 p-0.5 rounded-sm overflow-hidden border border-slate-200">
-                        <button onClick={() => setUserTypeFilter('both')} className={cn("px-2 py-1 text-xs font-bold rounded-sm transition-colors", userTypeFilter === 'both' ? "bg-rose-500 text-white" : "text-slate-600")}>⇋ Both</button>
-                        <button onClick={() => setUserTypeFilter('seller')} className={cn("px-2 py-1 text-xs font-bold rounded-sm transition-colors", userTypeFilter === 'seller' ? "bg-emerald-600 text-white" : "text-slate-600")}>Seller</button>
-                        <button onClick={() => setUserTypeFilter('customer')} className={cn("px-2 py-1 text-xs font-bold rounded-sm transition-colors", userTypeFilter === 'customer' ? "bg-emerald-600 text-white" : "text-slate-600")}>Customer</button>
+                        <button onClick={() => setUserTypeFilter('both')} className={cn("px-2 py-1 text-xs font-bold rounded-sm transition-colors", userTypeFilter === 'both' ? "bg-rose-500 text-white" : "text-black")}>⇋ Both</button>
+                        <button onClick={() => setUserTypeFilter('seller')} className={cn("px-2 py-1 text-xs font-bold rounded-sm transition-colors", userTypeFilter === 'seller' ? "bg-emerald-600 text-white" : "text-black")}>Seller</button>
+                        <button onClick={() => setUserTypeFilter('customer')} className={cn("px-2 py-1 text-xs font-bold rounded-sm transition-colors", userTypeFilter === 'customer' ? "bg-emerald-600 text-white" : "text-black")}>Customer</button>
                     </div>
                     <button
                         onClick={handleBulkDelete}
@@ -455,20 +455,21 @@ export default function UserManagement() {
                                     onChange={toggleSelectAll}
                                 />
                             </th>
-                            <th className="px-2 py-2 text-left font-bold text-slate-700 uppercase tracking-tight">Id</th>
-                            <th className="px-2 py-2 text-left font-bold text-slate-700 uppercase tracking-tight">M Name</th>
-                            <th className="px-2 py-2 text-left font-bold text-slate-700 uppercase tracking-tight">Categorie</th>
-                            <th className="px-2 py-2 text-left font-bold text-slate-700 uppercase tracking-tight">Location</th>
-                            <th className="px-2 py-2 text-left font-bold text-slate-700 uppercase tracking-tight">Created Date</th>
-                            <th className="px-2 py-2 text-left font-bold text-slate-700 uppercase tracking-tight w-28">Status</th>
-                            <th className="px-2 py-2 text-center font-bold text-slate-700 uppercase tracking-tight">Rating</th>
-                            <th className="px-2 py-2 text-center font-bold text-slate-700 uppercase tracking-tight">Edit by</th>
-                            <th className="px-2 py-2 text-center font-bold text-slate-700 uppercase tracking-tight">Edit</th>
+                            <th className="px-2 py-2 text-left font-bold text-black uppercase tracking-tight">Id</th>
+                            <th className="px-2 py-2 text-left font-bold text-black uppercase tracking-tight">M Name</th>
+                            <th className="px-2 py-2 text-left font-bold text-black uppercase tracking-tight">Phone</th>
+                            <th className="px-2 py-2 text-left font-bold text-black uppercase tracking-tight">Categorie</th>
+                            <th className="px-2 py-2 text-left font-bold text-black uppercase tracking-tight">Location</th>
+                            <th className="px-2 py-2 text-left font-bold text-black uppercase tracking-tight">Created Date</th>
+                            <th className="px-2 py-2 text-left font-bold text-black uppercase tracking-tight w-28">Status</th>
+                            <th className="px-2 py-2 text-center font-bold text-black uppercase tracking-tight">Rating</th>
+                            <th className="px-2 py-2 text-center font-bold text-black uppercase tracking-tight">Edit by</th>
+                            <th className="px-2 py-2 text-center font-bold text-black uppercase tracking-tight">Edit</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                         {loading ? (
-                            <tr><td colSpan={10} className="py-20 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-indigo-600" /></td></tr>
+                            <tr><td colSpan={11} className="py-20 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-indigo-600" /></td></tr>
                         ) : filteredUsers.map((user) => (
                             <tr key={user._id} className={cn("hover:bg-slate-50 transition-colors", selectedUsers.includes(user._id) && "bg-rose-50/50")}>
                                 <td className="px-2 py-1.5">
@@ -479,14 +480,15 @@ export default function UserManagement() {
                                         onChange={() => toggleSelectUser(user._id)}
                                     />
                                 </td>
-                                <td className="px-2 py-1.5 font-bold text-xs text-slate-600">{user._id.slice(-8)}</td>
-                                <td className="px-2 py-1.5 font-bold text-slate-800">{user.name}</td>
-                                <td className="px-2 py-1.5 text-slate-600">{user.category}</td>
-                                <td className="px-2 py-1.5 text-slate-600">{user.location}</td>
-                                <td className="px-2 py-1.5 text-slate-600">{new Date(user.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'numeric', year: '2-digit' })}</td>
+                                <td className="px-2 py-1.5 text-xs text-black">{user._id.slice(-8)}</td>
+                                <td className="px-2 py-1.5 text-black">{user.name}</td>
+                                <td className="px-2 py-1.5 text-black">{user.mobile}</td>
+                                <td className="px-2 py-1.5 text-black">{user.category}</td>
+                                <td className="px-2 py-1.5 text-black">{user.location}</td>
+                                <td className="px-2 py-1.5 text-black">{new Date(user.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'numeric', year: '2-digit' })}</td>
                                 <td className="px-2 py-1.5">
                                     <select
-                                        className="border border-slate-300 rounded-sm h-6 text-xs font-bold outline-none px-1 w-full bg-white"
+                                        className="border border-slate-300 rounded-sm h-6 text-xs outline-none px-1 w-full bg-white"
                                         value={user.accountStatus}
                                         onChange={(e) => { }} // Handle status update
                                     >
@@ -498,10 +500,10 @@ export default function UserManagement() {
                                         <option value="r_delete">R-Delete</option>
                                     </select>
                                 </td>
-                                <td className="px-2 py-1.5 text-center font-bold text-slate-700">{user.rating || ''}</td>
-                                <td className="px-2 py-1.5 text-center text-slate-500">Admin</td>
+                                <td className="px-2 py-1.5 text-center text-black">{user.rating || ''}</td>
+                                <td className="px-2 py-1.5 text-center text-black">Admin</td>
                                 <td className="px-2 py-1.5 text-center">
-                                    <button onClick={() => handleOpenModal(user)} className="text-blue-500 font-bold hover:underline">Edit</button>
+                                    <button onClick={() => handleOpenModal(user)} className="text-blue-500 hover:underline">Edit</button>
                                 </td>
                             </tr>
                         ))}
@@ -515,18 +517,18 @@ export default function UserManagement() {
                     showSearchModal && (
                         <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
                             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowSearchModal(false)} className="absolute inset-0 bg-black/10" />
-                            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white border border-slate-900 w-full max-w-4xl rounded-sm shadow-2xl relative z-10 p-4 font-['Tahoma','Verdana',sans-serif]">
+                            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white border border-slate-900 w-full max-w-[98vw] rounded-sm shadow-2xl relative z-10 p-4 font-['Tahoma','Verdana',sans-serif]">
                                 <div className="flex items-center justify-between mb-2">
-                                    <span className="text-xs font-bold text-slate-400">Searching</span>
-                                    <button onClick={() => setShowSearchModal(false)}><X className="w-4 h-4 text-slate-400" /></button>
+                                    <span className="text-xs font-bold text-black">Searching</span>
+                                    <button onClick={() => setShowSearchModal(false)}><X className="w-4 h-4 text-black" /></button>
                                 </div>
 
                                 <div className="border border-slate-200 p-3 space-y-4">
                                     <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                                         <div className="flex bg-slate-100 p-0.5 rounded-sm overflow-hidden border border-slate-200">
                                             <button className="px-2 py-1 bg-rose-500 text-white text-xs font-bold rounded-sm">Both</button>
-                                            <button className="px-2 py-1 text-slate-600 text-xs font-bold">Seller</button>
-                                            <button className="px-2 py-1 text-slate-600 text-xs font-bold">Customer</button>
+                                            <button className="px-2 py-1 text-black text-xs font-bold">Seller</button>
+                                            <button className="px-2 py-1 text-black text-xs font-bold">Customer</button>
                                         </div>
                                         <div className="flex items-center gap-1.5">
                                             <button className="p-1 bg-rose-500 text-white rounded-sm"><Trash2 className="w-3 h-3" /></button>
@@ -545,14 +547,14 @@ export default function UserManagement() {
                                             { label: 'Active Status', placeholder: 'Select', type: 'select' }
                                         ].map((f, i) => (
                                             <div key={i} className="flex flex-col gap-0.5 border border-slate-200 p-1.5 rounded-sm">
-                                                <label className="text-xs font-bold text-slate-400 uppercase leading-none">{f.label}</label>
+                                                <label className="text-xs font-bold text-black uppercase leading-none">{f.label}</label>
                                                 {f.type === 'select' ? (
-                                                    <select className="text-xs font-bold text-slate-700 outline-none w-full bg-transparent h-4">
+                                                    <select className="text-xs text-black outline-none w-full bg-transparent h-4">
                                                         <option>{f.placeholder}</option>
                                                     </select>
                                                 ) : (
                                                     <input
-                                                        className="text-xs font-bold text-slate-700 outline-none w-full bg-transparent h-4"
+                                                        className="text-xs text-black outline-none w-full bg-transparent h-4"
                                                         placeholder={f.placeholder}
                                                         value={f.value || ''}
                                                         onChange={(e) => f.onChange?.(e.target.value)}
@@ -565,10 +567,10 @@ export default function UserManagement() {
                                     <div className="grid grid-cols-4 gap-3">
                                         {['Registration Date To', 'Registration Date From', 'Login Date from', 'Login Date till'].map((label, i) => (
                                             <div key={label} className="flex flex-col gap-0.5 border border-slate-200 p-1 rounded-sm">
-                                                <label className="text-xs font-bold text-slate-400 uppercase leading-none">{label}</label>
+                                                <label className="text-xs font-bold text-black uppercase leading-none">{label}</label>
                                                 <div className="flex items-center gap-2 h-5">
-                                                    <Calendar className="w-3 h-3 text-slate-300" />
-                                                    <input type="text" className="text-xs font-bold text-slate-700 outline-none bg-transparent w-full" placeholder="15.8.21" />
+                                                    <Calendar className="w-3 h-3 text-black" />
+                                                    <input type="text" className="text-xs text-black outline-none bg-transparent w-full" placeholder="15.8.21" />
                                                 </div>
                                             </div>
                                         ))}
@@ -577,8 +579,8 @@ export default function UserManagement() {
                                     <div className="flex items-center justify-between pt-2">
                                         <div className="flex bg-slate-100 p-0.5 rounded-sm overflow-hidden border border-slate-200">
                                             <button className="px-2 py-1 bg-slate-600 text-white text-xs font-bold rounded-sm"> Both</button>
-                                            <button className="px-2 py-1 text-slate-600 text-xs font-bold">Seller</button>
-                                            <button className="px-2 py-1 text-slate-600 text-xs font-bold">Customer</button>
+                                            <button className="px-2 py-1 text-black text-xs font-bold">Seller</button>
+                                            <button className="px-2 py-1 text-black text-xs font-bold">Customer</button>
                                         </div>
                                         <div className="flex gap-2">
                                             <button onClick={() => setShowSearchModal(false)} className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-600 text-white text-xs font-bold rounded-sm shadow-sm"><X className="w-3 h-3" /> Hide Search</button>
@@ -598,21 +600,22 @@ export default function UserManagement() {
                     isModalOpen && (
                         <div className="fixed inset-0 z-[110] flex items-center justify-center p-2">
                             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={handleCloseModal} className="absolute inset-0 bg-black/10" />
-                            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white border border-slate-900 w-full max-w-5xl rounded-sm shadow-2xl relative z-10 flex flex-col max-h-[98vh] overflow-hidden font-['Tahoma','Verdana',sans-serif]">
-                                <div className="bg-indigo-50/50 px-4 py-2 border-b border-slate-200">
-                                    <span className="text-xs font-bold text-slate-500 uppercase">User Info <span className="text-slate-400 capitalize font-normal">(Edit or Add)</span></span>
+                            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white border border-slate-900 w-full max-w-[98vw] rounded-sm shadow-2xl relative z-10 flex flex-col h-[98vh] overflow-hidden font-['Tahoma','Verdana',sans-serif]">
+                                <div className="bg-indigo-50/50 px-4 py-2 border-b border-slate-200 flex items-center justify-between">
+                                    <span className="text-xs font-bold text-black uppercase">User Info <span className="text-black capitalize font-normal">(Edit or Add)</span></span>
+                                    <button onClick={handleCloseModal} className="hover:bg-indigo-100 p-1 rounded-sm"><X className="w-4 h-4 text-black" /></button>
                                 </div>
 
                                 <form onSubmit={handleSubmit} className="p-2.5 space-y-2.5 overflow-y-auto no-scrollbar">
                                     {/* Top Row: Basic Info and Mobile Info Combined for Horizontal Flow */}
                                     <div className="grid grid-cols-[1fr_1fr_1fr_1.2fr_1fr] gap-2">
                                         <div className="flex flex-col gap-0.5 border border-slate-200 p-1.5 rounded-sm relative">
-                                            <label className="text-xs font-bold text-slate-400 uppercase leading-none">Person Name</label>
-                                            <input className="text-xs font-bold text-slate-800 outline-none w-full bg-transparent h-5" value={formData.name} onChange={(e) => handleInputChange('name', e.target.value)} />
+                                            <label className="text-xs font-bold text-black uppercase leading-none">Person Name</label>
+                                            <input className="text-xs font-bold text-black outline-none w-full bg-transparent h-5" value={formData.name} onChange={(e) => handleInputChange('name', e.target.value)} />
                                         </div>
                                         <div className="flex flex-col gap-0.5 border border-slate-200 p-1.5 rounded-sm bg-white">
-                                            <label className="text-xs font-bold text-slate-400 uppercase leading-none">Account Status</label>
-                                            <select className="text-xs font-bold text-slate-800 outline-none w-full bg-transparent h-5 appearance-none" value={formData.accountStatus} onChange={(e) => handleInputChange('accountStatus', e.target.value)}>
+                                            <label className="text-xs font-bold text-black uppercase leading-none">Account Status</label>
+                                            <select className="text-xs font-bold text-black outline-none w-full bg-transparent h-5 appearance-none" value={formData.accountStatus} onChange={(e) => handleInputChange('accountStatus', e.target.value)}>
                                                 <option value="active">Active</option>
                                                 <option value="inactive">UnActive</option>
                                                 <option value="review">Review</option>
@@ -622,17 +625,17 @@ export default function UserManagement() {
                                             </select>
                                         </div>
                                         <div className="flex flex-col gap-0.5 border border-slate-200 p-1.5 rounded-sm">
-                                            <label className="text-xs font-bold text-slate-400 uppercase leading-none">Email</label>
-                                            <input className="text-xs font-bold text-slate-800 outline-none w-full bg-transparent h-5" value={formData.email} onChange={(e) => handleInputChange('email', e.target.value)} />
+                                            <label className="text-xs font-bold text-black uppercase leading-none">Email</label>
+                                            <input className="text-xs font-bold text-black outline-none w-full bg-transparent h-5" value={formData.email} onChange={(e) => handleInputChange('email', e.target.value)} />
                                         </div>
                                         <div className="flex flex-col gap-0.5 border border-slate-200 p-1.5 rounded-sm bg-white">
                                             <div className="flex items-center gap-1 mb-0.5">
-                                                <span className="text-xs font-bold text-slate-900 leading-none">Verified By</span>
+                                                <span className="text-xs font-bold text-black leading-none">Verified By</span>
                                                 <div className="flex bg-slate-100 p-0.5 rounded-sm">
                                                     <span className="px-1 py-0.5 bg-blue-500 text-white text-xs font-bold rounded-[1px]">Select</span>
                                                 </div>
                                             </div>
-                                            <select className="text-xs font-bold text-slate-600 outline-none w-full bg-transparent h-4" value={formData.verifiedBy} onChange={(e) => handleInputChange('verifiedBy', e.target.value)}>
+                                            <select className="text-xs font-bold text-black outline-none w-full bg-transparent h-4" value={formData.verifiedBy} onChange={(e) => handleInputChange('verifiedBy', e.target.value)}>
                                                 <option value="Mobile">Mobile</option>
                                                 <option value="Email">Email</option>
                                                 <option value="Google">Google</option>
@@ -640,8 +643,8 @@ export default function UserManagement() {
                                             </select>
                                         </div>
                                         <div className="flex flex-col gap-0.5 border border-slate-200 p-1.5 rounded-sm bg-white">
-                                            <label className="text-xs font-bold text-slate-400 uppercase leading-none">Location</label>
-                                            <select className="text-xs font-bold text-slate-800 outline-none w-full bg-transparent h-5 appearance-none" value={formData.location} onChange={(e) => handleInputChange('location', e.target.value)}>
+                                            <label className="text-xs font-bold text-black uppercase leading-none">Location</label>
+                                            <select className="text-xs font-bold text-black outline-none w-full bg-transparent h-5 appearance-none" value={formData.location} onChange={(e) => handleInputChange('location', e.target.value)}>
                                                 <option value="">Select Location</option>
                                                 {locations.map(loc => (
                                                     <option key={loc._id} value={loc.name}>{loc.name}</option>
@@ -654,10 +657,10 @@ export default function UserManagement() {
                                     <div className="grid grid-cols-[repeat(6,1fr)_1.5fr_1.5fr] gap-2">
                                         {/* DOB - Date Picker */}
                                         <div className="flex flex-col gap-0.5 border border-slate-200 p-1.5 rounded-sm bg-white">
-                                            <label className="text-xs font-bold text-slate-400 uppercase leading-none">DOB</label>
+                                            <label className="text-xs font-bold text-black uppercase leading-none">DOB</label>
                                             <input
                                                 type="date"
-                                                className="text-xs font-bold text-slate-800 outline-none w-full bg-transparent h-4 p-0 appearance-none"
+                                                className="text-xs font-bold text-black outline-none w-full bg-transparent h-4 p-0 appearance-none"
                                                 value={formData.dob}
                                                 onChange={(e) => handleInputChange('dob', e.target.value)}
                                             />
@@ -671,9 +674,9 @@ export default function UserManagement() {
                                             { label: 'Exp', key: 'jobExperience', type: 'select', opts: ['Select', '1 Year', '2 Years', '5+ Years'] }
                                         ].map((f) => (
                                             <div key={f.key} className="flex flex-col gap-0.5 border border-slate-200 p-1.5 rounded-sm bg-white">
-                                                <label className="text-xs font-bold text-slate-400 uppercase leading-none">{f.label}</label>
+                                                <label className="text-xs font-bold text-black uppercase leading-none">{f.label}</label>
                                                 <select
-                                                    className="text-xs font-bold text-slate-800 outline-none w-full bg-transparent h-4 appearance-none"
+                                                    className="text-xs font-bold text-black outline-none w-full bg-transparent h-4 appearance-none"
                                                     value={formData[f.key as keyof UserFormData] as string}
                                                     onChange={(e) => handleInputChange(f.key as keyof UserFormData, e.target.value)}
                                                 >
@@ -684,7 +687,7 @@ export default function UserManagement() {
 
                                         {/* Editable Verified Mobile */}
                                         <div className="flex flex-col gap-0.5 border border-slate-200 p-1.5 rounded-sm bg-white">
-                                            <label className="text-xs font-bold text-slate-400 uppercase leading-none">Verified Mobile</label>
+                                            <label className="text-xs font-bold text-black uppercase leading-none">Verified Mobile</label>
                                             <div className="flex items-center justify-between h-4 px-0.5">
                                                 <div className="flex items-center gap-1 text-blue-500 font-bold text-xs w-full">
                                                     <ShieldCheck className="w-2.5 h-2.5 shrink-0" />
@@ -700,25 +703,25 @@ export default function UserManagement() {
 
                                         {/* Editable Password */}
                                         <div className="flex flex-col gap-0.5 border border-slate-200 p-1.5 rounded-sm bg-white">
-                                            <label className="text-xs font-bold text-slate-400 uppercase leading-none italic font-serif">Password</label>
+                                            <label className="text-xs font-bold text-black uppercase leading-none italic font-serif">Password</label>
                                             <input
                                                 type="text"
                                                 value={formData.password}
                                                 onChange={(e) => handleInputChange('password', e.target.value)}
                                                 placeholder="******"
-                                                className="text-xs font-bold text-slate-800 outline-none w-full bg-transparent h-4"
+                                                className="text-xs font-bold text-black outline-none w-full bg-transparent h-4"
                                             />
                                         </div>
                                     </div>
 
                                     <div className="grid grid-cols-[1fr_2fr] gap-3">
                                         <div className="flex flex-col gap-0.5 border border-slate-200 p-1.5 rounded-sm bg-white h-12">
-                                            <label className="text-xs font-bold text-slate-400 uppercase leading-none">Note</label>
-                                            <textarea className="text-xs font-bold text-slate-700 outline-none w-full bg-transparent h-full resize-none leading-tight" value={formData.note} onChange={(e) => handleInputChange('note', e.target.value)} />
+                                            <label className="text-xs font-bold text-black uppercase leading-none">Note</label>
+                                            <textarea className="text-xs font-bold text-black outline-none w-full bg-transparent h-full resize-none leading-tight" value={formData.note} onChange={(e) => handleInputChange('note', e.target.value)} />
                                         </div>
 
                                         <div className="flex flex-col gap-0.5 border border-slate-200 p-1.5 rounded-sm bg-white min-h-[48px]">
-                                            <label className="text-xs font-bold text-slate-400 uppercase leading-none">New Mobile number</label>
+                                            <label className="text-xs font-bold text-black uppercase leading-none">New Mobile number</label>
 
                                             {/* List of additional numbers */}
                                             {formData.additionalMobiles && formData.additionalMobiles.length > 0 && (
@@ -743,7 +746,7 @@ export default function UserManagement() {
 
                                             <div className="flex items-center gap-2 mt-auto">
                                                 <input
-                                                    className="text-xs font-bold text-slate-800 outline-none w-full bg-transparent border-b border-slate-100"
+                                                    className="text-xs font-bold text-black outline-none w-full bg-transparent border-b border-slate-100"
                                                     placeholder="01XXX XXXXXX"
                                                     value={tempMobile}
                                                     onChange={(e) => setTempMobile(e.target.value)}
@@ -769,20 +772,20 @@ export default function UserManagement() {
 
                                     {/* Merchant Section: Compact Heading */}
                                     <div className="bg-slate-100 px-3 py-1 border-y border-slate-200 mx-[-0.625rem]">
-                                        <span className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
+                                        <span className="text-xs font-bold text-black uppercase flex items-center gap-2">
                                             <Store className="w-3 h-3" /> Merchant Information
                                         </span>
                                     </div>
 
                                     <div className="grid grid-cols-[1.2fr_1fr_1fr_1fr_1fr_0.8fr] gap-2">
                                         <div className="border border-slate-200 p-1.5 rounded-sm relative bg-white">
-                                            <label className="text-xs font-bold text-slate-300 uppercase absolute top-[-4px] left-1.5 bg-white px-0.5">Store Name</label>
-                                            <input className="text-xs font-bold text-slate-800 outline-none w-full h-5 mt-1" value={formData.storeName} onChange={(e) => handleInputChange('storeName', e.target.value)} />
+                                            <label className="text-xs font-bold text-black uppercase absolute top-[-4px] left-1.5 bg-white px-0.5">Store Name</label>
+                                            <input className="text-xs font-bold text-black outline-none w-full h-5 mt-1" value={formData.storeName} onChange={(e) => handleInputChange('storeName', e.target.value)} />
                                         </div>
                                         <div className="border border-slate-200 p-1.5 rounded-sm relative flex flex-col justify-center gap-0.5 bg-white">
-                                            <label className="text-xs font-bold text-slate-400 uppercase absolute top-[-4px] left-1.5 bg-white px-0.5">Show Button</label>
+                                            <label className="text-xs font-bold text-black uppercase absolute top-[-4px] left-1.5 bg-white px-0.5">Show Button</label>
                                             <select
-                                                className="text-xs font-bold text-slate-700 outline-none w-full bg-transparent mt-1"
+                                                className="text-xs font-bold text-black outline-none w-full bg-transparent mt-1"
                                                 value={formData.actionType}
                                                 onChange={(e) => handleInputChange('actionType', e.target.value)}
                                             >
@@ -792,22 +795,22 @@ export default function UserManagement() {
                                             </select>
                                         </div>
                                         <div className="border border-slate-200 p-1.5 rounded-sm relative bg-white flex flex-col justify-center">
-                                            <label className="text-xs font-bold text-slate-400 uppercase absolute top-[-4px] left-1.5 bg-white px-0.5">M-Verified By</label>
-                                            <select className="text-xs font-bold text-slate-700 outline-none bg-transparent mt-1" value={formData.merchantVerifiedBy} onChange={(e) => handleInputChange('merchantVerifiedBy', e.target.value)}>
+                                            <label className="text-xs font-bold text-black uppercase absolute top-[-4px] left-1.5 bg-white px-0.5">M-Verified By</label>
+                                            <select className="text-xs font-bold text-black outline-none bg-transparent mt-1" value={formData.merchantVerifiedBy} onChange={(e) => handleInputChange('merchantVerifiedBy', e.target.value)}>
                                                 <option value="Mobile">Mobile</option>
                                                 <option value="NID">NID</option>
                                             </select>
                                         </div>
                                         <div className="border border-slate-200 p-1.5 rounded-sm relative bg-white flex flex-col justify-center">
-                                            <label className="text-xs font-bold text-slate-400 uppercase absolute top-[-4px] left-1.5 bg-white px-0.5">Type</label>
-                                            <select className="text-xs font-bold text-slate-700 outline-none bg-transparent mt-1" value={formData.merchantType} onChange={(e) => handleInputChange('merchantType', e.target.value)}>
+                                            <label className="text-xs font-bold text-black uppercase absolute top-[-4px] left-1.5 bg-white px-0.5">Type</label>
+                                            <select className="text-xs font-bold text-black outline-none bg-transparent mt-1" value={formData.merchantType} onChange={(e) => handleInputChange('merchantType', e.target.value)}>
                                                 <option>Free</option>
                                                 <option>Premium</option>
                                             </select>
                                         </div>
                                         <div className="border border-slate-200 p-1.5 rounded-sm relative bg-white flex flex-col justify-center">
-                                            <label className="text-xs font-bold text-slate-400 uppercase absolute top-[-4px] left-1.5 bg-white px-0.5">Category</label>
-                                            <select className="text-xs font-bold text-slate-700 outline-none bg-transparent mt-1" value={formData.category} onChange={(e) => handleInputChange('category', e.target.value)}>
+                                            <label className="text-xs font-bold text-black uppercase absolute top-[-4px] left-1.5 bg-white px-0.5">Category</label>
+                                            <select className="text-xs font-bold text-black outline-none bg-transparent mt-1" value={formData.category} onChange={(e) => handleInputChange('category', e.target.value)}>
                                                 <option value="">Select</option>
                                                 {categories.map(cat => (
                                                     <option key={cat._id} value={cat.name}>{cat.name}</option>
@@ -815,17 +818,17 @@ export default function UserManagement() {
                                             </select>
                                         </div>
                                         <div className="border border-slate-200 p-1.5 rounded-sm relative flex flex-col justify-center bg-white">
-                                            <label className="text-xs font-bold text-slate-300 uppercase absolute top-[-4px] left-1.5 bg-white px-0.5">Rating</label>
-                                            <input className="text-xs font-bold text-slate-800 outline-none w-full h-5 mt-1" value={formData.rating} onChange={(e) => handleInputChange('rating', e.target.value)} />
+                                            <label className="text-xs font-bold text-black uppercase absolute top-[-4px] left-1.5 bg-white px-0.5">Rating</label>
+                                            <input className="text-xs font-bold text-black outline-none w-full h-5 mt-1" value={formData.rating} onChange={(e) => handleInputChange('rating', e.target.value)} />
                                         </div>
                                     </div>
 
                                     <div className="border border-slate-200 p-1.5 rounded-sm relative flex items-center gap-2 bg-white">
-                                        <label className="text-xs font-bold text-slate-400 uppercase absolute top-[-5px] left-2 bg-white px-1">Page Username</label>
-                                        <span className="text-xs text-slate-400 italic">shadamon.com/</span>
-                                        <input className="text-xs font-bold text-slate-800 outline-none flex-1 border-b border-slate-100 bg-transparent h-5" value={formData.pageName} onChange={(e) => handleInputChange('pageName', e.target.value)} />
+                                        <label className="text-xs font-bold text-black uppercase absolute top-[-5px] left-2 bg-white px-1">Page Username</label>
+                                        <span className="text-xs text-black italic">shadamon.com/</span>
+                                        <input className="text-xs font-bold text-black outline-none flex-1 border-b border-slate-100 bg-transparent h-5" value={formData.pageName} onChange={(e) => handleInputChange('pageName', e.target.value)} />
                                         <div className="flex gap-1">
-                                            <button className="bg-slate-50 text-slate-600 px-2 py-0.5 rounded-[1px] text-xs font-bold border border-slate-200 hover:bg-slate-100 transition-colors">Change</button>
+                                            <button className="bg-slate-50 text-black px-2 py-0.5 rounded-[1px] text-xs font-bold border border-slate-200 hover:bg-slate-100 transition-colors">Change</button>
                                             <button className="bg-indigo-600 text-white px-3 py-0.5 rounded-[1px] text-xs font-bold shadow-sm">Save</button>
                                         </div>
                                     </div>
@@ -840,7 +843,7 @@ export default function UserManagement() {
                                             ].map(u => (
                                                 <div key={u.label} className="flex items-center gap-2">
                                                     <div className="flex flex-col">
-                                                        <span className="text-xs font-bold text-slate-400 leading-none mb-1">{u.label}</span>
+                                                        <span className="text-xs font-bold text-black leading-none mb-1">{u.label}</span>
                                                         <label className="w-[80px] h-[50px] border border-dashed border-slate-300 rounded-sm bg-white flex items-center justify-center relative overflow-hidden group cursor-pointer hover:border-blue-400 transition-colors">
                                                             <input
                                                                 type="file"
@@ -860,7 +863,7 @@ export default function UserManagement() {
                                                                     }}
                                                                 />
                                                             ) : (
-                                                                <ImageIcon className="w-5 h-5 text-slate-300 group-hover:text-blue-400" />
+                                                                <ImageIcon className="w-5 h-5 text-black group-hover:text-blue-400" />
                                                             )}
                                                             <div className="absolute top-0.5 right-0.5 flex gap-0.5">
                                                                 <div className="bg-slate-200 text-white p-0.5 rounded-full"><Minus className="w-2 h-2" /></div>

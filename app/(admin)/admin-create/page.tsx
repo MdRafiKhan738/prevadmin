@@ -197,7 +197,7 @@ export default function AdminCreatePage() {
                     <span className="text-indigo-600 font-bold text-sm tracking-tight">Manage Admin Users</span>
                 </div>
 
-                <div className="text-slate-900 text-xs font-medium">
+                <div className="text-black text-xs font-medium">
                     Total Users <span className="font-bold">({admins.length})</span>
                 </div>
 
@@ -211,7 +211,7 @@ export default function AdminCreatePage() {
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
                         <button className="bg-white px-2 border-l border-slate-200 hover:bg-slate-50">
-                            <Search className="w-3.5 h-3.5 text-slate-800" />
+                            <Search className="w-3.5 h-3.5 text-black" />
                         </button>
                     </div>
                     <button
@@ -239,7 +239,7 @@ export default function AdminCreatePage() {
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs">
                         <thead>
-                            <tr className="bg-white text-slate-900 font-bold border-b border-slate-200">
+                            <tr className="bg-white text-black font-bold border-b border-slate-200">
                                 <th className="px-4 py-3 font-extrabold w-1/4">Staff name</th>
                                 <th className="px-4 py-3 font-extrabold w-32">#</th>
                                 <th className="px-4 py-3 font-extrabold">Staff type</th>
@@ -247,11 +247,11 @@ export default function AdminCreatePage() {
                                 <th className="px-4 py-3 font-extrabold">Entry date</th>
                                 <th className="px-4 py-3 font-extrabold">Modify date</th>
                                 <th className="px-4 py-3 text-center w-12">
-                                    <Trash2 className="w-4 h-4 mx-auto text-slate-900" />
+                                    <Trash2 className="w-4 h-4 mx-auto text-black" />
                                 </th>
                             </tr>
                         </thead>
-                        <tbody className="text-slate-600 font-medium">
+                        <tbody className="text-black">
                             {isLoading ? (
                                 <tr>
                                     <td colSpan={7} className="py-20 text-center">
@@ -265,9 +265,9 @@ export default function AdminCreatePage() {
                                             onClick={() => handleEdit(admin)}
                                             className="border border-slate-400 p-0.5 rounded-sm hover:bg-slate-100"
                                         >
-                                            <Edit2 className="w-2.5 h-2.5 text-slate-800" />
+                                            <Edit2 className="w-2.5 h-2.5 text-black" />
                                         </button>
-                                        <span className="text-blue-500 font-bold">{admin.staffName || admin.email.split('@')[0]}</span>
+                                        <span className="text-blue-500">{admin.staffName || admin.email.split('@')[0]}</span>
                                     </td>
                                     <td className="px-4 py-2">
                                         <button
@@ -288,16 +288,16 @@ export default function AdminCreatePage() {
                                                 setPermissions({ ...defaultPerms, ...(admin.permissions || {}) });
                                                 setShowPermissionModal(true);
                                             }}
-                                            className="text-cyan-500 font-bold flex items-center gap-1.5 hover:underline"
+                                            className="text-cyan-500 flex items-center gap-1.5 hover:underline"
                                         >
                                             <Shuffle className="w-3.5 h-3.5 rotate-90" /> Permission
                                         </button>
                                     </td>
-                                    <td className="px-4 py-2 text-slate-800">{admin.staffType || 'Administrator'}</td>
+                                    <td className="px-4 py-2 text-black">{admin.staffType || 'Administrator'}</td>
                                     <td className="px-4 py-2 text-center">
                                         <CheckCircle2 className="w-4 h-4 text-green-500 mx-auto fill-green-50" />
                                     </td>
-                                    <td className="px-4 py-2 text-slate-500">
+                                    <td className="px-4 py-2 text-black">
                                         {admin.createdAt ? (
                                             <div className="flex flex-col">
                                                 <span>{new Date(admin.createdAt).toLocaleDateString()}</span>
@@ -305,7 +305,7 @@ export default function AdminCreatePage() {
                                             </div>
                                         ) : 'N/A'}
                                     </td>
-                                    <td className="px-4 py-2 text-slate-500">
+                                    <td className="px-4 py-2 text-black">
                                         {admin.updatedAt ? (
                                             <div className="flex flex-col">
                                                 <span>{new Date(admin.updatedAt).toLocaleDateString()}</span>
@@ -316,7 +316,7 @@ export default function AdminCreatePage() {
                                     <td className="px-4 py-2 text-center">
                                         <button
                                             onClick={() => handleDelete(admin._id)}
-                                            className="text-slate-900 hover:text-red-500 transition-colors"
+                                            className="text-black hover:text-red-500 transition-colors"
                                         >
                                             <Trash2 className="w-4 h-4 mx-auto" strokeWidth={2.5} />
                                         </button>
@@ -343,18 +343,18 @@ export default function AdminCreatePage() {
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="bg-white border border-slate-900 w-full max-w-[360px] rounded-sm shadow-2xl relative z-10"
+                            className="bg-white border border-slate-900 w-full max-w-[98vw] h-[98vh] rounded-sm shadow-2xl relative z-10 flex flex-col"
                         >
                             <div className="flex justify-between items-center p-2 border-b border-slate-200 bg-slate-50">
-                                <div className="flex items-center gap-2 font-bold text-xs text-slate-800">
+                                <div className="flex items-center gap-2 font-bold text-xs text-black">
                                     <Shuffle className="w-3.5 h-3.5" /> User Permission
                                 </div>
-                                <button onClick={() => setShowPermissionModal(false)} className="hover:bg-slate-200 p-1 rounded transition-colors text-slate-400">
+                                <button onClick={() => setShowPermissionModal(false)} className="hover:bg-slate-200 p-1 rounded transition-colors text-black">
                                     <X className="w-4 h-4" />
                                 </button>
                             </div>
                             <div className="p-4">
-                                <p className="text-xs text-slate-500 font-bold mb-3">Select staff permission:</p>
+                                <p className="text-xs text-black font-bold mb-3">Select staff permission:</p>
                                 <div className="grid grid-cols-1 gap-1 max-h-[40vh] overflow-y-auto pr-1 custom-scrollbar">
                                     {Object.entries(permissions).map(([name, checked]) => (
                                         <label key={name} className="flex items-center gap-2 cursor-pointer group hover:bg-slate-50 p-1 rounded transition-colors">
@@ -364,7 +364,7 @@ export default function AdminCreatePage() {
                                                 onChange={() => setPermissions(prev => ({ ...prev, [name]: !prev[name] }))}
                                                 className="w-3.5 h-3.5 accent-blue-600 border border-slate-400 rounded-sm"
                                             />
-                                            <span className="text-xs font-medium text-slate-700">{name}</span>
+                                            <span className="text-xs font-medium text-black">{name}</span>
                                         </label>
                                     ))}
                                 </div>
@@ -402,20 +402,20 @@ export default function AdminCreatePage() {
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="bg-white border border-slate-900 w-full max-w-[480px] rounded-sm shadow-2xl relative z-10"
+                            className="bg-white border border-slate-900 w-full max-w-[98vw] h-[98vh] rounded-sm shadow-2xl relative z-10 flex flex-col"
                         >
                             <div className="flex justify-between items-center p-2 border-b border-slate-200 bg-slate-50">
-                                <div className="flex items-center gap-2 font-bold text-xs text-slate-800">
+                                <div className="flex items-center gap-2 font-bold text-xs text-black">
                                     <CircleDot className="w-3.5 h-3.5" /> {editingAdminId ? 'Staff Edit' : 'New Staff'}
                                 </div>
-                                <button onClick={() => setShowCreateModal(false)} className="hover:bg-slate-200 p-1 rounded transition-colors text-slate-400">
+                                <button onClick={() => setShowCreateModal(false)} className="hover:bg-slate-200 p-1 rounded transition-colors text-black">
                                     <X className="w-4 h-4" />
                                 </button>
                             </div>
                             <form onSubmit={handleCreateSubmit} className="p-4 text-xs">
                                 <div className="grid grid-cols-2 gap-x-6 gap-y-4">
                                     <div className="space-y-1">
-                                        <label className="text-slate-700 font-bold">Staff name:</label>
+                                        <label className="text-black font-bold">Staff name:</label>
                                         <input
                                             type="text"
                                             className="w-full border border-slate-300 px-2 py-1.5 outline-none font-medium focus:border-blue-500 focus:ring-1 focus:ring-blue-100 transition-all rounded-sm"
@@ -425,7 +425,7 @@ export default function AdminCreatePage() {
                                         />
                                     </div>
                                     <div className="space-y-1">
-                                        <label className="text-slate-700 font-bold">Staff type:</label>
+                                        <label className="text-black font-bold">Staff type:</label>
                                         <select
                                             className="w-full border border-slate-300 px-1 py-1.5 outline-none font-medium bg-white focus:border-blue-500 rounded-sm"
                                             value={formData.staffType}
@@ -437,7 +437,7 @@ export default function AdminCreatePage() {
                                         </select>
                                     </div>
                                     <div className="space-y-1">
-                                        <label className="text-slate-700 font-bold">Email:</label>
+                                        <label className="text-black font-bold">Email:</label>
                                         <input
                                             type="email"
                                             className="w-full border border-slate-300 px-2 py-1.5 outline-none font-medium bg-[#f9fbff] focus:border-blue-500 rounded-sm"
@@ -447,7 +447,7 @@ export default function AdminCreatePage() {
                                         />
                                     </div>
                                     <div className="space-y-1">
-                                        <label className="text-slate-700 font-bold">Password:</label>
+                                        <label className="text-black font-bold">Password:</label>
                                         <input
                                             type="password"
                                             className="w-full border border-slate-300 px-2 py-1.5 outline-none font-medium bg-[#f9fbff] focus:border-blue-500 rounded-sm"
@@ -458,31 +458,31 @@ export default function AdminCreatePage() {
                                         />
                                     </div>
                                     <div className="space-y-1">
-                                        <label className="text-slate-700 font-bold">Entry date:</label>
+                                        <label className="text-black font-bold">Entry date:</label>
                                         <div className="flex border border-slate-300 rounded-sm bg-slate-50">
                                             <input
                                                 type="text"
-                                                className="flex-1 px-2 py-1.5 outline-none font-medium bg-transparent text-slate-500 cursor-not-allowed"
+                                                className="flex-1 px-2 py-1.5 outline-none font-medium bg-transparent text-black cursor-not-allowed"
                                                 value={editingAdminId ? (admins.find(a => a._id === editingAdminId)?.createdAt ? new Date(admins.find(a => a._id === editingAdminId)!.createdAt!).toLocaleString() : 'N/A') : formData.entryDate}
                                                 readOnly
                                             />
                                         </div>
                                     </div>
                                     <div className="space-y-1">
-                                        <label className="text-slate-700 font-bold">Modify date:</label>
+                                        <label className="text-black font-bold">Modify date:</label>
                                         <div className="flex border border-slate-300 rounded-sm bg-slate-50">
                                             <input
                                                 type="text"
-                                                className="flex-1 px-2 py-1.5 outline-none font-medium bg-transparent text-slate-500 cursor-not-allowed"
+                                                className="flex-1 px-2 py-1.5 outline-none font-medium bg-transparent text-black cursor-not-allowed"
                                                 value={editingAdminId && admins.find(a => a._id === editingAdminId)?.updatedAt ? new Date(admins.find(a => a._id === editingAdminId)!.updatedAt!).toLocaleString() : 'N/A'}
                                                 readOnly
                                             />
                                         </div>
                                     </div>
                                     <div className="space-y-1">
-                                        <label className="text-slate-700 font-bold">Publishing status:</label>
+                                        <label className="text-black font-bold">Publishing status:</label>
                                         <div className="flex items-center gap-6 py-2">
-                                            <label className="flex items-center gap-2 cursor-pointer font-bold text-slate-800">
+                                            <label className="flex items-center gap-2 cursor-pointer font-bold text-black">
                                                 <input
                                                     type="radio"
                                                     name="status"
@@ -491,7 +491,7 @@ export default function AdminCreatePage() {
                                                     className="w-4 h-4 accent-blue-600"
                                                 /> Yes
                                             </label>
-                                            <label className="flex items-center gap-2 cursor-pointer font-medium text-slate-600">
+                                            <label className="flex items-center gap-2 cursor-pointer font-medium text-black">
                                                 <input
                                                     type="radio"
                                                     name="status"
@@ -513,7 +513,7 @@ export default function AdminCreatePage() {
                                     <button
                                         type="button"
                                         onClick={() => setShowCreateModal(false)}
-                                        className="bg-white text-slate-600 px-6 py-2 text-xs font-bold rounded-sm border border-slate-300 hover:bg-slate-50 shadow-sm transition-all"
+                                        className="bg-white text-black px-6 py-2 text-xs font-bold rounded-sm border border-slate-300 hover:bg-slate-50 shadow-sm transition-all"
                                     >
                                         Cancel
                                     </button>

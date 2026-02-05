@@ -428,8 +428,8 @@ export default function PostManagement() {
             case 'active': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
             case 'pending': return 'bg-amber-100 text-amber-700 border-amber-200';
             case 'rejected': return 'bg-rose-100 text-rose-700 border-rose-200';
-            case 'expired': return 'bg-slate-100 text-slate-700 border-slate-200';
-            default: return 'bg-slate-100 text-slate-600 border-slate-200';
+            case 'expired': return 'bg-slate-100 text-black border-slate-200';
+            default: return 'bg-slate-100 text-black border-slate-200';
         }
     };
 
@@ -449,14 +449,14 @@ export default function PostManagement() {
                         >
                             All Post ({ads.length})
                         </button>
-                        <span className="text-slate-300">|</span>
+                        <span className="text-black">|</span>
                         <button
                             onClick={() => setActiveTab('pending')}
                             className={cn("hover:text-indigo-600 transition-colors", activeTab === 'pending' && "text-indigo-600 border-b-2 border-indigo-600")}
                         >
                             Inapprove ({ads.filter(a => a.status === 'pending').length})
                         </button>
-                        <span className="text-slate-300">|</span>
+                        <span className="text-black">|</span>
                         <button
                             onClick={() => setActiveTab('today')}
                             className={cn("hover:text-indigo-600 transition-colors", activeTab === 'today' && "text-indigo-600 border-b-2 border-indigo-600")}
@@ -468,7 +468,7 @@ export default function PostManagement() {
                                 ).length
                             })
                         </button>
-                        <span className="text-slate-300">|</span>
+                        <span className="text-black">|</span>
                         <button
                             onClick={() => setActiveTab('running')}
                             className={cn("hover:text-indigo-600 transition-colors", activeTab === 'running' && "text-indigo-600 border-b-2 border-indigo-600")}
@@ -518,7 +518,7 @@ export default function PostManagement() {
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
-                            <tr className="bg-white text-slate-900 border-b border-slate-200 text-xs">
+                            <tr className="bg-white text-black border-b border-slate-200 text-xs">
                                 <th className="px-2 py-2 w-8">
                                     <input
                                         type="checkbox"
@@ -527,23 +527,23 @@ export default function PostManagement() {
                                         onChange={toggleSelectAll}
                                     />
                                 </th>
-                                <th className="px-2 py-2 font-extrabold uppercase whitespace-nowrap">Product Picture</th>
-                                <th className="px-2 py-2 font-extrabold uppercase whitespace-nowrap">Product ID</th>
-                                <th className="px-2 py-2 font-extrabold uppercase whitespace-nowrap text-center">Produ Sts</th>
-                                <th className="px-2 py-2 font-extrabold uppercase whitespace-nowrap">Categorie</th>
-                                <th className="px-2 py-2 font-extrabold uppercase whitespace-nowrap">Location</th>
-                                <th className="px-2 py-2 font-extrabold uppercase whitespace-nowrap">Price</th>
-                                <th className="px-2 py-2 font-extrabold uppercase whitespace-nowrap">AD Type</th>
-                                <th className="px-2 py-2 font-extrabold uppercase whitespace-nowrap">PWR Target</th>
-                                <th className="px-2 py-2 font-extrabold uppercase whitespace-nowrap">Target/D</th>
-                                <th className="px-2 py-2 font-extrabold uppercase whitespace-nowrap">Rep</th>
-                                <th className="px-2 py-2 font-extrabold uppercase whitespace-nowrap">Lgs</th>
-                                <th className="px-2 py-2 font-extrabold uppercase whitespace-nowrap">Sen/Ed By</th>
-                                <th className="px-2 py-2 font-extrabold uppercase whitespace-nowrap">Date</th>
-                                <th className="px-2 py-2 font-extrabold uppercase whitespace-nowrap text-right pr-4">Action</th>
+                                <th className="px-1 py-1.5 font-extrabold uppercase whitespace-nowrap">Product Picture</th>
+                                <th className="px-1 py-1.5 font-extrabold uppercase whitespace-nowrap">Product ID</th>
+                                <th className="px-1 py-1.5 font-extrabold uppercase whitespace-nowrap text-center">Produ Sts</th>
+                                <th className="px-1 py-1.5 font-extrabold uppercase whitespace-nowrap">Categorie</th>
+                                <th className="px-1 py-1.5 font-extrabold uppercase whitespace-nowrap">Location</th>
+                                <th className="px-1 py-1.5 font-extrabold uppercase whitespace-nowrap">Price</th>
+                                <th className="px-1 py-1.5 font-extrabold uppercase whitespace-nowrap">AD Type</th>
+                                <th className="px-1 py-1.5 font-extrabold uppercase whitespace-nowrap">PWR Target</th>
+                                <th className="px-1 py-1.5 font-extrabold uppercase whitespace-nowrap">Target/D</th>
+                                <th className="px-1 py-1.5 font-extrabold uppercase whitespace-nowrap">Rep</th>
+                                <th className="px-1 py-1.5 font-extrabold uppercase whitespace-nowrap">Lgs</th>
+                                <th className="px-1 py-1.5 font-extrabold uppercase whitespace-nowrap">Sen/Ed By</th>
+                                <th className="px-1 py-1.5 font-extrabold uppercase whitespace-nowrap">Date</th>
+                                <th className="px-1 py-1.5 font-extrabold uppercase whitespace-nowrap text-right pr-2">Action</th>
                             </tr>
                         </thead>
-                        <tbody className="text-slate-600 font-bold text-xs">
+                        <tbody className="text-black text-xs">
                             {loading ? (
                                 <tr>
                                     <td colSpan={14} className="py-20 text-center">
@@ -552,12 +552,12 @@ export default function PostManagement() {
                                 </tr>
                             ) : filteredAds.length === 0 ? (
                                 <tr>
-                                    <td colSpan={14} className="py-20 text-center text-slate-400">No posts found</td>
+                                    <td colSpan={14} className="py-20 text-center text-black">No posts found</td>
                                 </tr>
                             ) : (
                                 filteredAds.map((ad, idx) => (
                                     <tr key={ad._id} className={cn("border-b border-slate-100 hover:bg-slate-50 transition-colors h-10", selectedAds.includes(ad._id) && "bg-rose-50/50")}>
-                                        <td className="px-2 py-1">
+                                        <td className="px-1 py-1">
                                             <input
                                                 type="checkbox"
                                                 className="w-3 h-3 cursor-pointer"
@@ -565,7 +565,7 @@ export default function PostManagement() {
                                                 onChange={() => toggleSelectAd(ad._id)}
                                             />
                                         </td>
-                                        <td className="px-2 py-1">
+                                        <td className="px-1 py-1">
                                             <div className="flex items-center gap-1">
                                                 {ad.images.slice(0, 3).map((img, i) => (
                                                     <div key={i} className="relative w-7 h-7 rounded-[2px] border border-slate-200 overflow-hidden shrink-0 group/img">
@@ -598,56 +598,59 @@ export default function PostManagement() {
                                                         </div>
                                                     </div>
                                                 ))}
-                                                <button className="text-slate-400 hover:text-slate-600 ml-0.5">
+                                                <button className="text-black hover:text-black ml-0.5">
                                                     <ChevronRight className="w-3 h-3" />
                                                 </button>
                                             </div>
                                         </td>
-                                        <td className="px-2 py-1 text-slate-800 font-bold whitespace-nowrap">{ad._id.slice(-8)}</td>
-                                        <td className="px-2 py-1">
+                                        <td className="px-1 py-1 text-black whitespace-nowrap">{ad._id.slice(-8)}</td>
+                                        <td className="px-1 py-1">
                                             <select
                                                 value={ad.status}
                                                 onChange={(e) => updateStatus(ad._id, e.target.value)}
-                                                className="border-[1.5px] border-slate-900 rounded-px px-1 py-0 h-6 w-full max-w-[70px] bg-white text-xs font-black outline-none shadow-sm uppercase leading-none"
+                                                className="border-[1.5px] border-slate-900 rounded-px px-1 py-0 h-6 w-full max-w-[70px] bg-white text-xs outline-none shadow-sm uppercase leading-none"
                                             >
-                                                <option value="pending">Review</option>
                                                 <option value="active">Active</option>
-                                                <option value="rejected">Rejected</option>
-                                                <option value="expired">Expired</option>
+                                                <option value="notification">Notification</option>
+                                                <option value="pause">Pause</option>
+                                                <option value="review">Review/Processing</option>
+                                                <option value="rejected">Delete (Reason)</option>
+                                                <option value="atv_msg">Product Atv+Msg</option>
+                                                <option value="unatv_msg">Prodt Unatv+Msg</option>
                                             </select>
                                         </td>
-                                        <td className="px-2 py-1 leading-tight">
+                                        <td className="px-1 py-1 leading-tight">
                                             <div className="flex flex-col gap-1">
                                                 <select
                                                     value={ad.category}
                                                     onChange={(e) => updateAdField(ad._id, 'category', e.target.value)}
-                                                    className="bg-transparent text-slate-900 border-none outline-none font-bold cursor-pointer w-full text-xs"
+                                                    className="bg-transparent text-black border-none outline-none cursor-pointer w-full text-xs"
                                                 >
                                                     <option value="">Select Category</option>
                                                     {categories.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
                                                 </select>
-                                                <span className="text-slate-500 font-normal">{ad.subCategory}</span>
+                                                <span className="text-black font-normal">{ad.subCategory}</span>
                                             </div>
                                         </td>
-                                        <td className="px-2 py-1 text-slate-500 leading-tight">
+                                        <td className="px-1 py-1 text-black leading-tight">
                                             <div className="flex flex-col">
                                                 <span>{ad.location}</span>
                                                 <span className="font-normal">{ad.subLocation}</span>
                                             </div>
                                         </td>
-                                        <td className="px-2 py-1 font-black text-rose-500">{ad.price || '00'}</td>
-                                        <td className="px-2 py-1 text-emerald-600 capitalize font-black">{ad.adType}</td>
-                                        <td className="px-2 py-1">
+                                        <td className="px-1 py-1 text-rose-500">{ad.price || '00'}</td>
+                                        <td className="px-1 py-1 text-emerald-600 capitalize">{ad.adType}</td>
+                                        <td className="px-1 py-1">
                                             <div className="flex gap-[2px] h-3 items-center">
                                                 {['bg-blue-600', 'bg-yellow-400', 'bg-red-600', 'bg-green-600'].map((color, i) => (
                                                     <div key={i} className={cn("w-[2px] h-[10px] rounded-[1px]", color)} />
                                                 ))}
                                             </div>
                                         </td>
-                                        <td className="px-2 py-1 text-slate-500 font-bold whitespace-nowrap">
+                                        <td className="px-1 py-1 text-black whitespace-nowrap">
                                             {ad.adType === 'Promoted' ? `${ad.targetValue || 0}/${ad.deliveryCount || 0}` : '0'}
                                         </td>
-                                        <td className="px-2 py-1">
+                                        <td className="px-1 py-1">
                                             <div className="flex flex-col items-center gap-[2px]">
                                                 <div className="flex gap-[1.5px]">
                                                     <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
@@ -656,32 +659,32 @@ export default function PostManagement() {
                                                 <div className="w-4 h-1.5 bg-slate-100 rounded-[1px]" />
                                             </div>
                                         </td>
-                                        <td className="px-2 py-1">
+                                        <td className="px-1 py-1">
                                             <div className="flex flex-col items-center">
                                                 <ImageIcon className="w-2.5 h-2.5 text-cyan-500" />
                                                 <Save className="w-2.5 h-2.5 text-orange-500" />
                                             </div>
                                         </td>
-                                        <td className="px-2 py-1 leading-[1.1]">
+                                        <td className="px-1 py-1 leading-[1.1]">
                                             <div className="flex flex-col text-xs">
-                                                <span className="text-slate-400">{ad.senBy || 'N/A'}</span>
-                                                <span className="text-slate-800">{ad.edBy || 'N/A'}</span>
+                                                <span className="text-black">{ad.senBy || 'N/A'}</span>
+                                                <span className="text-black">{ad.edBy || 'N/A'}</span>
                                             </div>
                                         </td>
-                                        <td className="px-2 py-1 whitespace-nowrap">
+                                        <td className="px-1 py-1 whitespace-nowrap">
                                             <div className="flex flex-col text-xs leading-tight">
                                                 <span>{new Date(ad.createdAt).toLocaleDateString()}</span>
-                                                <span className="text-slate-400">{new Date(ad.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                                <span className="text-black">{new Date(ad.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                             </div>
                                         </td>
-                                        <td className="px-2 py-1">
+                                        <td className="px-1 py-1">
                                             <div className="flex items-center justify-end gap-1 px-1">
                                                 <button
                                                     onClick={() => {
                                                         setSelectedAd(ad);
                                                         setShowShortViewModal(true);
                                                     }}
-                                                    className="bg-emerald-500 text-white w-8 h-5 flex items-center justify-center rounded-sm text-xs font-black shadow-sm uppercase"
+                                                    className="bg-emerald-500 text-white px-2 h-5 flex items-center justify-center rounded-sm text-xs shadow-sm uppercase min-w-max"
                                                 >
                                                     Short
                                                 </button>
@@ -691,7 +694,7 @@ export default function PostManagement() {
                                                         setEditFormData(ad);
                                                         setShowEditModal(true);
                                                     }}
-                                                    className="bg-emerald-600 text-white w-8 h-5 flex items-center justify-center rounded-sm text-xs font-black shadow-sm uppercase"
+                                                    className="bg-emerald-600 text-white px-2 h-5 flex items-center justify-center rounded-sm text-xs shadow-sm uppercase min-w-max"
                                                 >
                                                     Detail
                                                 </button>
@@ -710,91 +713,85 @@ export default function PostManagement() {
                 {showSearchModal && (
                     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowSearchModal(false)} className="absolute inset-0 bg-black/20 backdrop-blur-sm" />
-                        <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white border-[1.5px] border-slate-900 w-full max-w-4xl rounded-sm shadow-2xl relative z-10">
-                            <div className="p-4 border-b border-slate-200">
-                                <h2 className="text-sm font-bold text-slate-900">Search By Item</h2>
+                        <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white border border-slate-900 w-full max-w-[98vw] rounded-sm shadow-2xl relative z-10 p-4 font-['Tahoma','Verdana',sans-serif]">
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="text-xs font-bold text-black">Searching</span>
+                                <button onClick={() => setShowSearchModal(false)}><X className="w-4 h-4 text-black" /></button>
                             </div>
-                            <div className="p-4 grid grid-cols-5 gap-x-3 gap-y-3">
-                                <div className="space-y-1">
-                                    <label className="text-slate-700 font-bold block">Product Tracing ID</label>
-                                    <input type="text" placeholder="Tracing ID..." className="w-full border border-slate-300 px-2 py-1 outline-none font-medium h-7 text-xs" />
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="text-slate-700 font-bold block">Mobile</label>
-                                    <input type="text" placeholder="Mobile..." className="w-full border border-slate-300 px-2 py-1 outline-none font-medium h-7 text-xs" />
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="text-slate-700 font-bold block">Email</label>
-                                    <input type="text" placeholder="Email..." className="w-full border border-slate-300 px-2 py-1 outline-none font-medium h-7 text-xs" />
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="text-slate-700 font-bold block">Active Status</label>
-                                    <select className="w-full border border-slate-300 px-1 py-1 outline-none font-medium h-7 text-xs">
-                                        <option>Select</option>
-                                        <option>Active</option>
-                                        <option>Pending</option>
-                                    </select>
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="text-slate-700 font-bold block">Categorie</label>
-                                    <select
-                                        className="w-full border border-slate-300 px-1 py-1 outline-none font-medium h-7 text-xs"
-                                        value={searchKeys.categoryId}
-                                        onChange={(e) => setSearchKeys({ ...searchKeys, categoryId: e.target.value, subCategoryId: '' })}
-                                    >
-                                        <option value="">Select Category</option>
-                                        {categories.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
-                                    </select>
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="text-slate-700 font-bold block">Sub Categorie</label>
-                                    <select
-                                        className="w-full border border-slate-300 px-1 py-1 outline-none font-medium h-7 text-xs"
-                                        value={searchKeys.subCategoryId}
-                                        onChange={(e) => setSearchKeys({ ...searchKeys, subCategoryId: e.target.value })}
-                                    >
-                                        <option value="">Select Sub Category</option>
-                                        {categories.find(c => c.name === searchKeys.categoryId)?.subcategories.map((s, i) => (
-                                            <option key={i} value={s.name}>{s.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="text-slate-700 font-bold block">Location</label>
-                                    <select
-                                        className="w-full border border-slate-300 px-1 py-1 outline-none font-medium h-7 text-xs"
-                                        value={searchKeys.locationId}
-                                        onChange={(e) => setSearchKeys({ ...searchKeys, locationId: e.target.value, subLocationId: '' })}
-                                    >
-                                        <option value="">Select Location</option>
-                                        {locations.map(l => <option key={l._id} value={l.name}>{l.name}</option>)}
-                                    </select>
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="text-slate-700 font-bold block">Sub Location</label>
-                                    <select
-                                        className="w-full border border-slate-300 px-1 py-1 outline-none font-medium h-7 text-xs"
-                                        value={searchKeys.subLocationId}
-                                        onChange={(e) => setSearchKeys({ ...searchKeys, subLocationId: e.target.value })}
-                                    >
-                                        <option value="">Select Sub Location</option>
-                                        {locations.find(l => l.name === searchKeys.locationId)?.subLocations.map((s, i) => (
-                                            <option key={i} value={s.name}>{s.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="text-slate-700 font-bold block">Registration Date From</label>
-                                    <div className="flex border border-slate-300 h-7 text-xs">
-                                        <input type="text" className="flex-1 px-1 outline-none font-medium" />
-                                        <button className="px-1 border-l border-slate-200 bg-slate-50"><Calendar className="w-3 h-3" /></button>
+
+                            <div className="border border-slate-200 p-3 space-y-4">
+                                <div className="grid grid-cols-4 gap-3">
+                                    <div className="flex flex-col gap-0.5 border border-slate-200 p-1.5 rounded-sm">
+                                        <label className="text-xs font-bold text-black uppercase leading-none">Categorie</label>
+                                        <select
+                                            className="text-xs text-black outline-none w-full bg-transparent h-4"
+                                            value={searchKeys.categoryId}
+                                            onChange={(e) => setSearchKeys({ ...searchKeys, categoryId: e.target.value, subCategoryId: '' })}
+                                        >
+                                            <option value="">Select Categorie</option>
+                                            {categories.map((c, i) => (
+                                                <option key={i} value={c._id}>{c.name}</option>
+                                            ))}
+                                        </select>
                                     </div>
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="text-slate-700 font-bold block">Registration Date To</label>
-                                    <div className="flex border border-slate-300 h-7 text-xs">
-                                        <input type="text" className="flex-1 px-1 outline-none font-medium" />
-                                        <button className="px-1 border-l border-slate-200 bg-slate-50"><Calendar className="w-3 h-3" /></button>
+                                    <div className="flex flex-col gap-0.5 border border-slate-200 p-1.5 rounded-sm">
+                                        <label className="text-xs font-bold text-black uppercase leading-none">Sub Categorie</label>
+                                        <select className="text-xs text-black outline-none w-full bg-transparent h-4">
+                                            <option value="">Select Sub Categorie</option>
+                                            {categories.find(c => c._id === searchKeys.categoryId)?.subcategories.map((s, i) => (
+                                                <option key={i} value={s.name}>{s.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="flex flex-col gap-0.5 border border-slate-200 p-1.5 rounded-sm">
+                                        <label className="text-xs font-bold text-black uppercase leading-none">Location</label>
+                                        <select
+                                            className="text-xs text-black outline-none w-full bg-transparent h-4"
+                                            value={searchKeys.locationId}
+                                            onChange={(e) => setSearchKeys({ ...searchKeys, locationId: e.target.value, subLocationId: '' })}
+                                        >
+                                            <option value="">Select Location</option>
+                                            {locations.map((l, i) => (
+                                                <option key={i} value={l.name}>{l.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="flex flex-col gap-0.5 border border-slate-200 p-1.5 rounded-sm">
+                                        <label className="text-xs font-bold text-black uppercase leading-none">Sub Location</label>
+                                        <select className="text-xs font-bold text-black outline-none w-full bg-transparent h-4">
+                                            <option value="">Select Sub Location</option>
+                                            {locations.find(l => l.name === searchKeys.locationId)?.subLocations.map((s, i) => (
+                                                <option key={i} value={s.name}>{s.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-black font-bold block">Registration Date From</label>
+                                        <div className="flex border border-slate-300 h-7 text-xs">
+                                            <input type="text" className="flex-1 px-1 outline-none font-medium" />
+                                            <button className="px-1 border-l border-slate-200 bg-slate-50"><Calendar className="w-3 h-3" /></button>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-black font-bold block">Registration Date till</label>
+                                        <div className="flex border border-slate-300 h-7 text-xs">
+                                            <input type="text" className="flex-1 px-1 outline-none font-medium" />
+                                            <button className="px-1 border-l border-slate-200 bg-slate-50"><Calendar className="w-3 h-3" /></button>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-black font-bold block">Login Date from</label>
+                                        <div className="flex border border-slate-300 h-7 text-xs">
+                                            <input type="text" className="flex-1 px-1 outline-none font-medium" />
+                                            <button className="px-1 border-l border-slate-200 bg-slate-50"><Calendar className="w-3 h-3" /></button>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-black font-bold block">Login Date till</label>
+                                        <div className="flex border border-slate-300 h-7 text-xs">
+                                            <input type="text" className="flex-1 px-1 outline-none font-medium" />
+                                            <button className="px-1 border-l border-slate-200 bg-slate-50"><Calendar className="w-3 h-3" /></button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -816,16 +813,16 @@ export default function PostManagement() {
                 {showEditModal && (
                     <div className="fixed inset-0 z-[110] flex items-center justify-center p-2">
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowEditModal(false)} className="absolute inset-0 bg-black/10" />
-                        <motion.div initial={{ scale: 0.98, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.98, opacity: 0 }} className="bg-white border-[1px] border-slate-300 w-full max-w-[1100px] rounded-sm shadow-xl relative z-10 flex flex-col max-h-[98vh] text-xs font-['Tahoma','Verdana',sans-serif]">
+                        <motion.div initial={{ scale: 0.98, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.98, opacity: 0 }} className="bg-white border-[1px] border-slate-300 w-full max-w-[98vw] rounded-sm shadow-xl relative z-10 flex flex-col h-[98vh] text-xs font-['Tahoma','Verdana',sans-serif]">
                             {/* Top Bar Navigation */}
                             <div className="p-1 px-2 flex items-center justify-between border-b bg-white">
                                 <div className="flex items-center gap-1.5">
-                                    <LayoutGrid className="w-3.5 h-3.5 text-slate-800" />
-                                    <span className="text-slate-400">/</span>
-                                    <span className="font-bold text-slate-600">{selectedAd?._id ? "Edit Post" : "Add Post"}</span>
+                                    <LayoutGrid className="w-3.5 h-3.5 text-black" />
+                                    <span className="text-black">/</span>
+                                    <span className="font-bold text-black">{selectedAd?._id ? "Edit Post" : "Add Post"}</span>
                                     <span className="bg-emerald-600 text-white px-1 ml-2 rounded-[2px] text-xs py-0.5 font-bold">Publish</span>
                                 </div>
-                                <button onClick={() => setShowEditModal(false)} className="hover:bg-slate-100 p-0.5 rounded"><X className="w-3.5 h-3.5 text-slate-400" /></button>
+                                <button onClick={() => setShowEditModal(false)} className="hover:bg-slate-100 p-0.5 rounded"><X className="w-3.5 h-3.5 text-black" /></button>
                             </div>
 
                             <div className="flex-1 overflow-y-auto p-3 grid grid-cols-[1.2fr_1.8fr] gap-3 bg-white">
@@ -834,27 +831,27 @@ export default function PostManagement() {
                                     <div className="border border-slate-200 p-2 rounded-sm space-y-2">
                                         <input
                                             placeholder="Heading"
-                                            className="w-full border border-slate-200 px-2 h-7 outline-none font-bold text-xs placeholder:text-slate-300"
+                                            className="w-full border border-slate-200 px-2 h-7 outline-none font-bold text-xs placeholder:text-black"
                                             value={editFormData.headline || ''}
                                             onChange={(e) => handleEditChange('headline', e.target.value)}
                                         />
                                         <div className="space-y-0.5">
-                                            <div className="text-xs text-slate-400">Description Present</div>
+                                            <div className="text-xs text-black">Description Present</div>
                                             <textarea
-                                                className="w-full border border-slate-200 p-1.5 outline-none text-xs h-24 resize-none bg-white text-slate-400"
+                                                className="w-full border border-slate-200 p-1.5 outline-none text-xs h-24 resize-none bg-white text-black"
                                                 value={editFormData.description || ''}
                                                 readOnly
                                             />
                                         </div>
                                         <div className="space-y-0.5">
-                                            <div className="text-xs text-slate-400">Description Edit</div>
+                                            <div className="text-xs text-black">Description Edit</div>
                                             <textarea
                                                 className="w-full border border-slate-200 p-1.5 outline-none text-xs h-32 resize-none bg-white"
                                                 value={editFormData.description || ''}
                                                 onChange={(e) => handleEditChange('description', e.target.value)}
                                             />
                                         </div>
-                                        <div className="flex items-center gap-3 justify-end text-xs text-slate-400 pr-1">
+                                        <div className="flex items-center gap-3 justify-end text-xs text-black pr-1">
                                             <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" className="w-3 h-3 border-slate-300" /> Accept</label>
                                             <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" className="w-3 h-3 border-slate-300" /> Reject</label>
                                         </div>
@@ -882,13 +879,13 @@ export default function PostManagement() {
                                             <div className="relative">
                                                 <input
                                                     type="text"
-                                                    className="border border-slate-200 h-7 outline-none text-xs w-48 px-2 bg-slate-50 font-bold text-slate-500"
+                                                    className="border border-slate-200 h-7 outline-none text-xs w-48 px-2 bg-slate-50 font-bold text-black"
                                                     value={selectedAd ? (selectedAd._id) : "Auto Value"}
                                                     readOnly
                                                 />
-                                                <span className="absolute -top-3 left-0 text-xs text-slate-400">Merchant ID (Auto)</span>
+                                                <span className="absolute -top-3 left-0 text-xs text-black">Merchant ID (Auto)</span>
                                             </div>
-                                            <div className="ml-0.5 flex items-center justify-center h-7 text-slate-400 font-bold text-lg">+</div>
+                                            <div className="ml-0.5 flex items-center justify-center h-7 text-black font-bold text-lg">+</div>
                                             <div className="ml-4 flex-1 grid grid-cols-2 gap-1.5">
                                                 <input
                                                     placeholder="Price (Payble)"
@@ -902,7 +899,7 @@ export default function PostManagement() {
                                                 />
                                             </div>
                                         </div>
-                                        <div className="text-center text-slate-400 font-bold border-t border-dashed pt-1 cursor-pointer hover:text-slate-600 text-xs">
+                                        <div className="text-center text-black font-bold border-t border-dashed pt-1 cursor-pointer hover:text-black text-xs">
                                             + catagory wise another feature
                                         </div>
                                     </div>
@@ -925,7 +922,7 @@ export default function PostManagement() {
                                 <div className="flex flex-col gap-2">
                                     <div className="grid grid-cols-[1fr_1fr_1fr_1fr] gap-2 border border-slate-200 p-2 rounded-sm bg-white">
                                         <div className="flex flex-col gap-0.5">
-                                            <label className="text-xs text-slate-400 font-bold italic">Show Till (Date)</label>
+                                            <label className="text-xs text-black font-bold italic">Show Till (Date)</label>
                                             <input
                                                 type="date"
                                                 className="border border-slate-200 h-6 outline-none text-xs px-1 w-full"
@@ -934,8 +931,8 @@ export default function PostManagement() {
                                             />
                                         </div>
                                         <div className="flex flex-col gap-0.5">
-                                            <label className="text-xs text-slate-400">Post Entry</label>
-                                            <div className="text-xs font-bold text-slate-900 leading-tight">
+                                            <label className="text-xs text-black">Post Entry</label>
+                                            <div className="text-xs font-bold text-black leading-tight">
                                                 {selectedAd?._id ? (
                                                     <>
                                                         {new Date(selectedAd.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}<br />
@@ -950,8 +947,8 @@ export default function PostManagement() {
                                             </div>
                                         </div>
                                         <div className="flex flex-col gap-0.5">
-                                            <label className="text-xs text-slate-400">Post Modify</label>
-                                            <div className="text-xs font-bold text-slate-900 leading-tight">
+                                            <label className="text-xs text-black">Post Modify</label>
+                                            <div className="text-xs font-bold text-black leading-tight">
                                                 {selectedAd?.updatedAt ? (
                                                     <>
                                                         {new Date(selectedAd.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}<br />
@@ -963,12 +960,12 @@ export default function PostManagement() {
                                                         {new Date(selectedAd.createdAt).toLocaleDateString()}
                                                     </>
                                                 ) : (
-                                                    <span className="text-slate-300 font-normal">--:--<br />--/--/--</span>
+                                                    <span className="text-black font-normal">--:--<br />--/--/--</span>
                                                 )}
                                             </div>
                                         </div>
                                         <div className="flex flex-col gap-0.5 relative">
-                                            <label className="text-xs text-slate-400">Promote Type</label>
+                                            <label className="text-xs text-black">Promote Type</label>
                                             <select
                                                 className="border border-slate-200 h-6 outline-none text-xs px-1 bg-white"
                                                 value={editFormData.adType || 'Free'}
@@ -979,8 +976,8 @@ export default function PostManagement() {
                                             </select>
                                         </div>
                                         <div className="flex flex-col gap-0.5">
-                                            <label className="text-xs text-slate-400 font-bold">Marchent ID</label>
-                                            <div className="text-xs font-bold text-slate-800">{selectedAd?._id || 'Auto value'}</div>
+                                            <label className="text-xs text-black font-bold">Marchent ID</label>
+                                            <div className="text-xs font-bold text-black">{selectedAd?._id || 'Auto value'}</div>
                                         </div>
                                     </div>
 
@@ -988,7 +985,7 @@ export default function PostManagement() {
                                         <div className="flex flex-col gap-2">
                                             <div className="flex flex-col gap-0.5">
                                                 <div className="flex items-center gap-1">
-                                                    <span className="text-xs text-slate-400">Product Status</span>
+                                                    <span className="text-xs text-black">Product Status</span>
                                                     <ArrowLeft className="w-2.5 h-2.5 text-blue-500 rotate-[30deg]" />
                                                 </div>
                                                 <select
@@ -1007,21 +1004,21 @@ export default function PostManagement() {
                                             </div>
                                             <div className="grid grid-cols-2 gap-2">
                                                 <div className="flex flex-col gap-0.5">
-                                                    <label className="text-xs text-slate-400">Total View</label>
-                                                    <div className="h-7 border border-slate-200 flex items-center px-1.5 text-xs font-bold text-slate-600">{editFormData.views || 0}</div>
+                                                    <label className="text-xs text-black">Total View</label>
+                                                    <div className="h-7 border border-slate-200 flex items-center px-1.5 text-xs font-bold text-black">{editFormData.views || 0}</div>
                                                 </div>
                                                 <div className="flex flex-col gap-0.5">
-                                                    <div className="flex items-center gap-1 uppercase text-xs font-bold text-slate-400">Promot <span className="text-xs">Amount & Date List</span></div>
+                                                    <div className="flex items-center gap-1 uppercase text-xs font-bold text-black">Promot <span className="text-xs">Amount & Date List</span></div>
                                                     <div className="h-7 border border-slate-200 flex items-center justify-center gap-1 bg-slate-50">
-                                                        <RotateCcw className="w-2.5 h-2.5 text-slate-400" />
-                                                        <Calendar className="w-2.5 h-2.5 text-slate-400" />
+                                                        <RotateCcw className="w-2.5 h-2.5 text-black" />
+                                                        <Calendar className="w-2.5 h-2.5 text-black" />
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                         <div className="flex flex-col gap-2">
                                             <div className="flex flex-col gap-0.5">
-                                                <label className="text-xs text-slate-400">Notification Dialogue</label>
+                                                <label className="text-xs text-black">Notification Dialogue</label>
                                                 <input
                                                     className="w-full border border-slate-200 h-7 text-xs outline-none px-2"
                                                     value={editFormData.notificationDialogue || ''}
@@ -1030,15 +1027,15 @@ export default function PostManagement() {
                                             </div>
                                             <div className="grid grid-cols-[1fr_1fr_0.8fr] gap-1.5">
                                                 <div className="flex flex-col gap-0.5">
-                                                    <label className="text-xs text-slate-400 whitespace-nowrap">View From</label>
-                                                    <div className="flex border border-slate-200 h-7 items-center justify-center bg-slate-50"><Calendar className="w-3 h-3 text-slate-400" /></div>
+                                                    <label className="text-xs text-black whitespace-nowrap">View From</label>
+                                                    <div className="flex border border-slate-200 h-7 items-center justify-center bg-slate-50"><Calendar className="w-3 h-3 text-black" /></div>
                                                 </div>
                                                 <div className="flex flex-col gap-0.5">
-                                                    <label className="text-xs text-slate-400 whitespace-nowrap">View Till</label>
-                                                    <div className="flex border border-slate-200 h-7 items-center justify-center bg-slate-50"><Calendar className="w-3 h-3 text-slate-400" /></div>
+                                                    <label className="text-xs text-black whitespace-nowrap">View Till</label>
+                                                    <div className="flex border border-slate-200 h-7 items-center justify-center bg-slate-50"><Calendar className="w-3 h-3 text-black" /></div>
                                                 </div>
                                                 <div className="flex flex-col gap-0.5">
-                                                    <label className="text-xs text-slate-400">Result</label>
+                                                    <label className="text-xs text-black">Result</label>
                                                     <div className="h-7 border border-slate-200 bg-slate-50"></div>
                                                 </div>
                                             </div>
@@ -1046,7 +1043,7 @@ export default function PostManagement() {
                                     </div>
 
                                     <div className="border border-slate-200 p-2 rounded-sm space-y-1 bg-white">
-                                        <label className="text-xs text-slate-400">Note</label>
+                                        <label className="text-xs text-black">Note</label>
                                         <input
                                             className="w-full border border-slate-200 h-7 text-xs outline-none px-2"
                                             value={editFormData.note || ''}
@@ -1055,12 +1052,12 @@ export default function PostManagement() {
                                     </div>
 
                                     <div className="border border-slate-200 p-2 rounded-sm bg-white">
-                                        <div className="text-xs font-bold text-slate-800 mb-2">Photo Zone</div>
+                                        <div className="text-xs font-bold text-black mb-2">Photo Zone</div>
                                         <div className="flex gap-2.5 items-start">
                                             {[...Array(5)].map((_, i) => (
                                                 <div key={i} className="flex flex-col gap-1">
                                                     <div className="flex items-center gap-3">
-                                                        <label className="text-xs text-slate-400 cursor-pointer hover:text-emerald-600 transition-colors uppercase font-bold">
+                                                        <label className="text-xs text-black cursor-pointer hover:text-emerald-600 transition-colors uppercase font-bold">
                                                             Choose File
                                                             <input
                                                                 type="file"
@@ -1071,7 +1068,7 @@ export default function PostManagement() {
                                                         </label>
                                                         <label className="flex items-center gap-0.5 cursor-pointer leading-none">
                                                             <input type="checkbox" className="w-2.5 h-2.5" />
-                                                            <span className="text-xs text-slate-400 whitespace-nowrap">Long Img?</span>
+                                                            <span className="text-xs text-black whitespace-nowrap">Long Img?</span>
                                                         </label>
                                                     </div>
                                                     <div className="w-[78px] h-[52px] border border-slate-200 rounded-[1px] bg-slate-50 relative overflow-hidden flex items-center justify-center group/p">
@@ -1105,19 +1102,19 @@ export default function PostManagement() {
                                                                 </div>
                                                             </>
                                                         ) : (
-                                                            <ImageIcon className="w-4 h-4 text-slate-200" />
+                                                            <ImageIcon className="w-4 h-4 text-white" />
                                                         )}
                                                     </div>
                                                 </div>
                                             ))}
                                             <div className="flex items-end h-[52px]">
-                                                <ChevronRight className="w-4 h-4 text-slate-300 ml-1" />
+                                                <ChevronRight className="w-4 h-4 text-black ml-1" />
                                             </div>
                                         </div>
                                     </div>
 
                                     <div className="border border-slate-200 p-2 rounded-sm space-y-1.5 bg-white">
-                                        <div className="text-xs font-extrabold text-slate-800 uppercase">Approve photo</div>
+                                        <div className="text-xs font-extrabold text-black uppercase">Approve photo</div>
                                         <table className="w-full text-xs">
                                             <thead>
                                                 <tr className="border-b border-slate-100 italic">
@@ -1142,7 +1139,7 @@ export default function PostManagement() {
                                                                 />
                                                             </div>
                                                         </td>
-                                                        <td className="py-1 text-center font-bold text-slate-800 text-xs">Product</td>
+                                                        <td className="py-1 text-center font-bold text-black text-xs">Product</td>
                                                         <td className="py-1 text-center px-4">
                                                             <button className="bg-[#f0ad4e] text-white px-3 py-1 rounded-[1px] font-bold text-xs w-full shadow-sm">Accept</button>
                                                         </td>
@@ -1175,26 +1172,26 @@ export default function PostManagement() {
                             <div className="flex items-center justify-between mb-4 pb-2 border-b">
                                 <div className="flex items-center gap-2">
                                     <ArrowLeft className="w-3 h-3 text-rose-500" />
-                                    <span className="text-xs font-bold text-slate-800">/ Short View</span>
+                                    <span className="text-xs font-bold text-black">/ Short View</span>
                                     <span className="bg-emerald-600 text-white px-1 rounded-sm text-xs py-0.5">Publish</span>
                                 </div>
-                                <button onClick={() => setShowShortViewModal(false)}><X className="w-3.5 h-3.5 text-slate-400" /></button>
+                                <button onClick={() => setShowShortViewModal(false)}><X className="w-3.5 h-3.5 text-black" /></button>
                             </div>
 
                             <div className="space-y-4">
                                 <div className="space-y-1">
-                                    <label className="text-xs font-bold text-slate-400 uppercase">Heading</label>
-                                    <div className="text-xs font-bold text-slate-900 border-b pb-1">{selectedAd.headline}</div>
+                                    <label className="text-xs font-bold text-black uppercase">Heading</label>
+                                    <div className="text-xs font-bold text-black border-b pb-1">{selectedAd.headline}</div>
                                 </div>
 
                                 <div className="space-y-1">
-                                    <label className="text-xs font-bold text-slate-400 uppercase">Description Present</label>
-                                    <div className="text-xs text-slate-600 max-h-16 overflow-y-auto bg-slate-50 p-1.5 border border-slate-200">{selectedAd.description}</div>
+                                    <label className="text-xs font-bold text-black uppercase">Description Present</label>
+                                    <div className="text-xs text-black max-h-16 overflow-y-auto bg-slate-50 p-1.5 border border-slate-200">{selectedAd.description}</div>
                                 </div>
 
                                 <div className="space-y-1">
                                     <label className="text-xs font-bold text-indigo-500 uppercase italic">Description Edit</label>
-                                    <div className="text-xs text-slate-600 h-16 bg-indigo-50/20 p-1.5 border border-slate-200">Present</div>
+                                    <div className="text-xs text-black h-16 bg-indigo-50/20 p-1.5 border border-slate-200">Present</div>
                                 </div>
 
                                 <div className="flex justify-end gap-3 text-xs font-bold">
@@ -1222,23 +1219,23 @@ export default function PostManagement() {
 
                                 <div className="grid grid-cols-2 gap-2">
                                     <div className="space-y-1">
-                                        <label className="text-xs text-slate-400">Category</label>
+                                        <label className="text-xs text-black">Category</label>
                                         <div className="w-full border border-slate-200 h-6 text-xs flex items-center px-1 bg-slate-50 font-bold">{selectedAd.category}</div>
                                     </div>
                                     <div className="space-y-1">
-                                        <label className="text-xs text-slate-400">Sub Category</label>
+                                        <label className="text-xs text-black">Sub Category</label>
                                         <div className="w-full border border-slate-200 h-6 text-xs flex items-center px-1 bg-slate-50">{selectedAd.subCategory || 'N/A'}</div>
                                     </div>
                                     <div className="space-y-1">
-                                        <label className="text-xs text-slate-400">Location</label>
+                                        <label className="text-xs text-black">Location</label>
                                         <div className="w-full border border-slate-200 h-6 text-xs flex items-center px-1 bg-slate-50 font-bold">{selectedAd.location}</div>
                                     </div>
                                     <div className="space-y-1">
-                                        <label className="text-xs text-slate-400">Sub Location</label>
+                                        <label className="text-xs text-black">Sub Location</label>
                                         <div className="w-full border border-slate-200 h-6 text-xs flex items-center px-1 bg-slate-50">{selectedAd.subLocation || 'N/A'}</div>
                                     </div>
                                     <div className="col-span-2">
-                                        <label className="text-xs text-slate-400">Price (Payable)</label>
+                                        <label className="text-xs text-black">Price (Payable)</label>
                                         <div className="w-full border border-slate-200 h-6 text-xs flex items-center px-1 font-bold text-emerald-600">৳ {selectedAd.price || '0'}</div>
                                     </div>
                                 </div>

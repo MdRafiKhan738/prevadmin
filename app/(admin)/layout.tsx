@@ -26,16 +26,16 @@ export default function AdminLayout({
                         onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
                         className="p-1.5 hover:bg-slate-50 rounded transition-colors"
                     >
-                        <Menu className="w-4 h-4 text-slate-700" />
+                        <Menu className="w-4 h-4 text-black" />
                     </button>
-                    <span className="font-black text-sm tracking-[0.1em] text-slate-900">SHADAMON</span>
+                    <span className="font-black text-sm tracking-[0.1em] text-black">SHADAMON</span>
                 </div>
 
                 <div className="flex items-center gap-2">
-                    <button className="p-1.5 hover:bg-slate-50 rounded-full transition-colors text-slate-700">
+                    <button className="p-1.5 hover:bg-slate-50 rounded-full transition-colors text-black">
                         <Moon className="w-4 h-4 fill-slate-700" />
                     </button>
-                    <button className="p-1 hover:bg-slate-50 rounded-full transition-colors text-slate-700">
+                    <button className="p-1 hover:bg-slate-50 rounded-full transition-colors text-black">
                         <div className="w-6 h-6 bg-slate-100 rounded-full flex items-center justify-center border border-slate-200">
                             <User className="w-3.5 h-3.5" />
                         </div>
@@ -54,7 +54,7 @@ export default function AdminLayout({
                 <main
                     className={cn(
                         "flex-1 min-h-screen transition-all duration-300 ease-in-out",
-                        isSidebarCollapsed ? "pl-20" : "pl-64"
+                        isSidebarCollapsed ? "pl-12" : "pl-53"
                     )}
                 >
                     <div className="w-full p-3 pt-4">

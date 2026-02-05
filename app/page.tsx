@@ -27,10 +27,10 @@ export default function Home() {
         className="max-w-2xl space-y-8"
       >
         <div className="space-y-4">
-          <h1 className="text-5xl font-extrabold text-slate-900 tracking-tight">
+          <h1 className="text-5xl font-extrabold text-black tracking-tight">
             Shadamon
           </h1>
-          <p className="text-xl text-slate-500 max-w-lg mx-auto leading-relaxed">
+          <p className="text-xl text-black max-w-lg mx-auto leading-relaxed">
             The ultimate marketing platform for modern businesses. Scale your reach, analyze your data, and grow faster.
           </p>
         </div>
@@ -46,7 +46,7 @@ export default function Home() {
         </div>
       </motion.div>
 
-      <div className="fixed bottom-0 w-full p-6 text-center text-slate-400 text-sm">
+      <div className="fixed bottom-0 w-full p-6 text-center text-black text-sm">
         &copy; {new Date().getFullYear()} Shadamon Inc. All rights reserved.
       </div>
     </div>

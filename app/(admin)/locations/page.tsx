@@ -53,7 +53,7 @@ export default function LocationsPage() {
 
     // Form States - SubLocation (Main Modal)
     const [subLocForm, setSubLocForm] = useState({
-        name: '',
+        names: [''], // Multiple names support
         location: '',
         mapLink: '',
         order: 1,
@@ -99,7 +99,7 @@ export default function LocationsPage() {
 
         try {
             const formData = new FormData();
-            formData.append('name', subLocForm.name);
+            subLocForm.names.filter((n: string) => n.trim()).forEach((n: string) => formData.append('name', n));
             formData.append('location', subLocForm.location);
             formData.append('mapLink', subLocForm.mapLink);
             formData.append('order', String(subLocForm.order));
@@ -122,7 +122,7 @@ export default function LocationsPage() {
             fetchAllData();
             // Reset form
             setSubLocForm({
-                name: '',
+                names: [''],
                 location: '',
                 mapLink: '',
                 order: 1,
@@ -194,7 +194,7 @@ export default function LocationsPage() {
     const handleEditSubLoc = (sl: SubLocation) => {
         setEditingSubLocId(sl._id);
         setSubLocForm({
-            name: sl.name,
+            names: [sl.name],
             location: sl.location._id,
             mapLink: sl.mapLink || '',
             order: sl.order,
@@ -218,7 +218,7 @@ export default function LocationsPage() {
     const openNewSubLoc = () => {
         setEditingSubLocId(null);
         setSubLocForm({
-            name: '',
+            names: [''],
             location: '',
             mapLink: '',
             order: 1,
@@ -247,10 +247,10 @@ export default function LocationsPage() {
     return (
         <div className="bg-[#f1f5f9] min-h-screen p-4 font-['Tahoma','Verdana',sans-serif]">
             {/* Breadcrumb Area */}
-            <div className="flex items-center gap-1.5 text-xs text-slate-500 mb-3 ml-1">
+            <div className="flex items-center gap-1.5 text-xs text-black mb-3 ml-1">
                 <Home className="w-3 h-3" />
                 <span>/</span>
-                <span className="text-slate-500">Manage Location</span>
+                <span className="text-black">Manage Location</span>
             </div>
 
             {/* Header Area */}
@@ -262,7 +262,7 @@ export default function LocationsPage() {
                     <span className="text-indigo-600 font-bold text-sm tracking-tight">Location</span>
                 </div>
 
-                <div className="text-slate-900 text-xs font-medium">
+                <div className="text-black text-xs font-medium">
                     Total Location <span className="font-bold">({subLocations.length})</span>
                 </div>
 
@@ -282,7 +282,7 @@ export default function LocationsPage() {
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
                         <button className="bg-white px-2 border-l border-slate-200 hover:bg-slate-50">
-                            <Search className="w-3.5 h-3.5 text-slate-800" />
+                            <Search className="w-3.5 h-3.5 text-black" />
                         </button>
                     </div>
                 </div>
@@ -293,7 +293,7 @@ export default function LocationsPage() {
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs border-collapse">
                         <thead>
-                            <tr className="bg-white text-slate-800 font-bold border-b border-slate-100">
+                            <tr className="bg-white text-black font-bold border-b border-slate-100">
                                 <th className="px-5 py-3 font-bold w-1/4">Sub Location name</th>
                                 <th className="px-5 py-3 font-bold">Location name</th>
                                 <th className="px-5 py-3 font-bold text-center w-24">Order</th>
@@ -304,15 +304,15 @@ export default function LocationsPage() {
                                 <th className="px-5 py-3 text-center w-12"><Trash2 className="w-3.5 h-3.5 mx-auto" strokeWidth={3} /></th>
                             </tr>
                         </thead>
-                        <tbody className="text-slate-600 font-medium">
+                        <tbody className="text-black">
                             {isLoading ? (
                                 <tr><td colSpan={8} className="py-20 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-blue-500" /></td></tr>
                             ) : filteredSubLocations.length === 0 ? (
-                                <tr><td colSpan={8} className="py-12 text-center text-slate-400 italic">No locations found</td></tr>
+                                <tr><td colSpan={8} className="py-12 text-center text-black italic">No locations found</td></tr>
                             ) : filteredSubLocations.map((sl) => (
                                 <tr key={sl._id} className="border-b border-slate-50 hover:bg-slate-50 transition-colors">
-                                    <td className="px-5 py-2.5 text-slate-900 font-bold">{sl.name}</td>
-                                    <td className="px-5 py-2.5 text-slate-700 font-bold">{sl.location?.name}</td>
+                                    <td className="px-5 py-2.5 text-black">{sl.name}</td>
+                                    <td className="px-5 py-2.5 text-black">{sl.location?.name}</td>
                                     <td className="px-5 py-2.5 text-center">{sl.order}</td>
                                     <td className="px-5 py-2.5 text-center">
                                         {sl.status ? (
@@ -321,17 +321,17 @@ export default function LocationsPage() {
                                             <XCircle className="w-4 h-4 text-[#e74c3c] mx-auto fill-rose-50" />
                                         )}
                                     </td>
-                                    <td className="px-5 py-2.5 text-slate-500">
+                                    <td className="px-5 py-2.5 text-black">
                                         {new Date(sl.createdAt).toLocaleDateString('en-GB') + ' ' + new Date(sl.createdAt).toLocaleTimeString('en-GB')}
                                     </td>
-                                    <td className="px-5 py-2.5 text-slate-500">{sl.createdBy?.adminName || 'System'}</td>
+                                    <td className="px-5 py-2.5 text-black">{sl.createdBy?.adminName || 'System'}</td>
                                     <td className="px-5 py-2.5 text-center">
-                                        <button onClick={() => handleEditSubLoc(sl)} className="text-slate-800 hover:text-indigo-600 transition-colors">
+                                        <button onClick={() => handleEditSubLoc(sl)} className="text-black hover:text-indigo-600 transition-colors">
                                             <Edit2 className="w-3.5 h-3.5 mx-auto" strokeWidth={3} />
                                         </button>
                                     </td>
                                     <td className="px-5 py-2.5 text-center">
-                                        <button onClick={() => handleDelete(sl._id, 'sub')} className="text-slate-800 hover:text-rose-500 transition-colors">
+                                        <button onClick={() => handleDelete(sl._id, 'sub')} className="text-black hover:text-rose-500 transition-colors">
                                             <Trash2 className="w-3.5 h-3.5 mx-auto" strokeWidth={3} />
                                         </button>
                                     </td>
@@ -353,13 +353,13 @@ export default function LocationsPage() {
                             initial={{ scale: 0.98, opacity: 0, y: 10 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.98, opacity: 0, y: 10 }}
-                            className="bg-white border border-slate-900 w-full max-w-[850px] rounded-sm shadow-2xl relative z-10 flex flex-col"
+                            className="bg-white border border-slate-900 w-full max-w-[98vw] h-[98vh] rounded-sm shadow-2xl relative z-10 flex flex-col"
                         >
                             <div className="flex justify-between items-center p-2 border-b border-slate-200 bg-slate-50">
-                                <div className="flex items-center gap-2 font-bold text-xs text-slate-800 uppercase">
+                                <div className="flex items-center gap-2 font-bold text-xs text-black uppercase">
                                     <CircleDot className="w-4 h-4" /> {editingSubLocId ? 'Edit Location & Sublocation' : 'New Location & Sublocation Create'}
                                 </div>
-                                <button onClick={() => setShowMainModal(false)} className="hover:bg-slate-200 p-1 rounded transition-colors text-slate-400">
+                                <button onClick={() => setShowMainModal(false)} className="hover:bg-slate-200 p-1 rounded transition-colors text-black">
                                     <X className="w-4 h-4" />
                                 </button>
                             </div>
@@ -369,11 +369,40 @@ export default function LocationsPage() {
                                 <form onSubmit={handleSubLocSubmit} className="flex-1 space-y-3 text-xs">
                                     <div className="flex gap-4">
                                         <div className="flex-1 space-y-3">
-                                            <div className="flex gap-1 items-center">
-                                                <input type="text" placeholder="Sub Location Name" className="flex-1 border border-slate-300 px-2 py-1.5 outline-none font-medium"
-                                                    value={subLocForm.name} onChange={e => setSubLocForm({ ...subLocForm, name: e.target.value })} required />
-                                                <button type="button" className="p-1 px-2 border border-slate-900 bg-white hover:bg-slate-50"><Plus className="w-3 h-3 stroke-[3]" /></button>
-                                                <button type="button" className="p-1 px-2 border border-slate-900 bg-white hover:bg-slate-50"><Minus className="w-3 h-3 stroke-[3]" /></button>
+                                            <div className="flex flex-col gap-1.5">
+                                                {subLocForm.names.map((name, index) => (
+                                                    <div key={index} className="flex gap-1 items-center">
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Sub Location Name"
+                                                            className="flex-1 border border-slate-300 px-2 py-1.5 outline-none font-medium"
+                                                            value={name}
+                                                            onChange={e => {
+                                                                const newNames = [...subLocForm.names];
+                                                                newNames[index] = e.target.value;
+                                                                setSubLocForm({ ...subLocForm, names: newNames });
+                                                            }}
+                                                            required
+                                                        />
+                                                        {index === subLocForm.names.length - 1 ? (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setSubLocForm({ ...subLocForm, names: [...subLocForm.names, ''] })}
+                                                                className="p-1 px-2 border border-slate-900 bg-white hover:bg-slate-50"
+                                                            >
+                                                                <Plus className="w-3 h-3 stroke-[3]" />
+                                                            </button>
+                                                        ) : (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setSubLocForm({ ...subLocForm, names: subLocForm.names.filter((_, i) => i !== index) })}
+                                                                className="p-1 px-2 border border-slate-900 bg-white hover:bg-slate-50"
+                                                            >
+                                                                <Minus className="w-3 h-3 stroke-[3]" />
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                ))}
                                             </div>
 
                                             <select className="w-full border border-slate-300 px-2 py-1.5 outline-none font-medium bg-white"
@@ -385,7 +414,7 @@ export default function LocationsPage() {
                                             <input type="number" placeholder="Ordering" className="w-full border border-slate-300 px-2 py-1.5 outline-none font-medium"
                                                 value={subLocForm.order} onChange={e => setSubLocForm({ ...subLocForm, order: Number(e.target.value) })} />
 
-                                            <div className="bg-[#f0f0f0] border border-slate-300 text-slate-500 px-2 py-1.5 text-center">
+                                            <div className="bg-[#f0f0f0] border border-slate-300 text-black px-2 py-1.5 text-center">
                                                 {new Date().toLocaleDateString('en-GB') + ' ' + new Date().toLocaleTimeString('en-GB')}
                                             </div>
 
@@ -394,15 +423,15 @@ export default function LocationsPage() {
                                                     Choose File
                                                     <input type="file" className="hidden" onChange={e => setSubLocForm({ ...subLocForm, image: e.target.files?.[0] || null })} />
                                                 </label>
-                                                <span className="text-slate-400 self-center truncate max-w-[100px]">{subLocForm.image ? subLocForm.image.name : 'No file chosen'}</span>
+                                                <span className="text-black self-center truncate max-w-[100px]">{subLocForm.image ? subLocForm.image.name : 'No file chosen'}</span>
                                             </div>
 
                                             <div className="flex items-center gap-4 py-1">
-                                                <span className="text-slate-900 font-bold">Status</span>
-                                                <label className="flex items-center gap-1.5 cursor-pointer font-bold text-slate-800">
+                                                <span className="text-black font-bold">Status</span>
+                                                <label className="flex items-center gap-1.5 cursor-pointer font-bold text-black">
                                                     <input type="radio" checked={subLocForm.status} onChange={() => setSubLocForm({ ...subLocForm, status: true })} className="w-3 h-3 accent-blue-600" /> Yes
                                                 </label>
-                                                <label className="flex items-center gap-1.5 cursor-pointer font-bold text-slate-800">
+                                                <label className="flex items-center gap-1.5 cursor-pointer font-bold text-black">
                                                     <input type="radio" checked={!subLocForm.status} onChange={() => setSubLocForm({ ...subLocForm, status: false })} className="w-3 h-3 accent-blue-600" /> No
                                                 </label>
                                             </div>
@@ -418,16 +447,16 @@ export default function LocationsPage() {
                                         <button type="submit" className="bg-[#127ef3] text-white flex-1 py-1.5 font-bold rounded-sm border border-blue-800 hover:bg-blue-600 shadow-inner">
                                             {isSaving ? 'Processing...' : 'Save'}
                                         </button>
-                                        <button type="button" onClick={() => setShowMainModal(false)} className="bg-white text-slate-600 px-6 py-1.5 font-bold rounded-sm border border-slate-300 hover:bg-slate-50">
+                                        <button type="button" onClick={() => setShowMainModal(false)} className="bg-white text-black px-6 py-1.5 font-bold rounded-sm border border-slate-300 hover:bg-slate-50">
                                             Cancel
                                         </button>
                                     </div>
                                 </form>
 
                                 {/* Right Column Table */}
-                                <div className="w-[340px] border-l border-slate-200 pl-6 flex flex-col gap-2">
+                                <div className="w-[450px] border-l border-slate-200 pl-6 flex flex-col gap-2">
                                     <div className="flex justify-between items-center px-1">
-                                        <span className="text-xs font-bold text-slate-500 uppercase tracking-tighter">Create Location</span>
+                                        <span className="text-xs font-bold text-black uppercase tracking-tighter">Create Location</span>
                                         <button onClick={openNewLoc} className="bg-white border border-slate-400 p-0.5 px-2 hover:bg-slate-50">
                                             <Plus className="w-3 h-3 stroke-[3]" />
                                         </button>
@@ -447,14 +476,14 @@ export default function LocationsPage() {
                                             <tbody className="divide-y divide-slate-100">
                                                 {locations.map(l => (
                                                     <tr key={l._id}>
-                                                        <td className="px-2 py-1.5 font-bold text-slate-800">{l.name}</td>
+                                                        <td className="px-2 py-1.5 font-bold text-black">{l.name}</td>
                                                         <td className="px-2 py-1.5">Text</td>
                                                         <td className="px-2 py-1.5 text-center">{l.order}</td>
                                                         <td className="px-2 py-1.5 text-center">
-                                                            <CheckCircle2 className={cn("w-3 h-3 mx-auto", l.status ? "text-green-500" : "text-slate-300")} />
+                                                            <CheckCircle2 className={cn("w-3 h-3 mx-auto", l.status ? "text-green-500" : "text-black")} />
                                                         </td>
-                                                        <td className="px-1 py-1.5"><Edit2 onClick={() => handleEditLoc(l)} className="w-3 h-3 text-slate-800 cursor-pointer" /></td>
-                                                        <td className="px-1 py-1.5"><Trash2 onClick={() => handleDelete(l._id, 'loc')} className="w-3 h-3 text-slate-800 cursor-pointer" /></td>
+                                                        <td className="px-1 py-1.5"><Edit2 onClick={() => handleEditLoc(l)} className="w-3 h-3 text-black cursor-pointer" /></td>
+                                                        <td className="px-1 py-1.5"><Trash2 onClick={() => handleDelete(l._id, 'loc')} className="w-3 h-3 text-black cursor-pointer" /></td>
                                                     </tr>
                                                 ))}
                                             </tbody>
@@ -470,12 +499,12 @@ export default function LocationsPage() {
                                         initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
                                         className="absolute -bottom-5 left-0 w-full p-4 flex justify-center z-[110]"
                                     >
-                                        <div className="bg-white border border-slate-900 w-full max-w-[700px] shadow-2xl rounded-sm">
+                                        <div className="bg-white border border-slate-900 w-full max-w-[98vw] h-[98vh] shadow-2xl rounded-sm flex flex-col">
                                             <div className="flex justify-between items-center p-2 border-b border-slate-200 bg-slate-50">
-                                                <div className="flex items-center gap-2 font-bold text-xs text-slate-800 uppercase">
+                                                <div className="flex items-center gap-2 font-bold text-xs text-black uppercase">
                                                     <CircleDot className="w-4 h-4" /> {editingLocId ? 'Edit Location Name' : 'Location Name'}
                                                 </div>
-                                                <button onClick={() => setShowLocationModal(false)} className="text-slate-400 p-1"><X className="w-4 h-4" /></button>
+                                                <button onClick={() => setShowLocationModal(false)} className="text-black p-1"><X className="w-4 h-4" /></button>
                                             </div>
                                             <form onSubmit={handleLocSubmit} className="p-6 grid grid-cols-2 gap-x-12 gap-y-4 text-xs">
                                                 <input type="text" placeholder="Location Name" className="w-full border border-slate-300 px-2 py-1.5 outline-none font-medium"
@@ -486,19 +515,19 @@ export default function LocationsPage() {
                                                         Choose File
                                                         <input type="file" className="hidden" onChange={e => setLocForm({ ...locForm, image: e.target.files?.[0] || null })} />
                                                     </label>
-                                                    <span className="text-slate-400 self-center truncate max-w-[150px]">{locForm.image ? locForm.image.name : 'No file chosen'}</span>
+                                                    <span className="text-black self-center truncate max-w-[150px]">{locForm.image ? locForm.image.name : 'No file chosen'}</span>
                                                 </div>
 
-                                                <div className="bg-[#f0f0f0] border border-slate-300 text-slate-500 px-2 py-1.5 text-center">
+                                                <div className="bg-[#f0f0f0] border border-slate-300 text-black px-2 py-1.5 text-center">
                                                     {new Date().toLocaleDateString('en-GB') + ' ' + new Date().toLocaleTimeString('en-GB')}
                                                 </div>
 
                                                 <div className="flex items-center gap-4">
-                                                    <span className="text-slate-900 font-bold">Status</span>
-                                                    <label className="flex items-center gap-1.5 cursor-pointer font-bold text-slate-800">
+                                                    <span className="text-black font-bold">Status</span>
+                                                    <label className="flex items-center gap-1.5 cursor-pointer font-bold text-black">
                                                         <input type="radio" checked={locForm.status} onChange={() => setLocForm({ ...locForm, status: true })} className="w-3 h-3 accent-blue-600" /> Yes
                                                     </label>
-                                                    <label className="flex items-center gap-1.5 cursor-pointer font-bold text-slate-800">
+                                                    <label className="flex items-center gap-1.5 cursor-pointer font-bold text-black">
                                                         <input type="radio" checked={!locForm.status} onChange={() => setLocForm({ ...locForm, status: false })} className="w-3 h-3 accent-blue-600" /> No
                                                     </label>
                                                 </div>
@@ -510,7 +539,7 @@ export default function LocationsPage() {
                                                     <button type="submit" className="bg-[#127ef3] text-white flex-1 py-2 font-bold rounded-sm border border-blue-800 shadow-inner px-12">
                                                         Save
                                                     </button>
-                                                    <button type="button" onClick={() => setShowLocationModal(false)} className="bg-white text-slate-600 px-8 py-2 font-bold rounded-sm border border-slate-300">
+                                                    <button type="button" onClick={() => setShowLocationModal(false)} className="bg-white text-black px-8 py-2 font-bold rounded-sm border border-slate-300">
                                                         Cancel
                                                     </button>
                                                 </div>
