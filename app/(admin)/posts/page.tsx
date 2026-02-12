@@ -62,10 +62,16 @@ interface Ad {
     features?: Record<string, any>;
 }
 
+interface SubCategory {
+    _id: string;
+    name: string;
+    features?: any[];
+}
+
 interface Category {
     _id: string;
     name: string;
-    subcategories: { name: string }[];
+    subcategories: SubCategory[];
 }
 
 interface Location {
