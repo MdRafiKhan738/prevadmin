@@ -13,6 +13,7 @@ import { twMerge } from 'tailwind-merge';
 import Cookies from 'js-cookie';
 import toast from 'react-hot-toast';
 import { API_BASE_URL } from '../../../utils/apiConfig';
+import { getImageUrl } from '../../../utils/imageUrl';
 
 function cn(...inputs: (string | undefined | null | false)[]) {
     return twMerge(clsx(inputs));
@@ -294,6 +295,7 @@ export default function LocationsPage() {
                     <table className="w-full text-left text-xs border-collapse">
                         <thead>
                             <tr className="bg-white text-black font-bold border-b border-slate-100">
+                                <th className="px-5 py-3 font-bold w-12 text-center">Image</th>
                                 <th className="px-5 py-3 font-bold w-1/4">Sub Location name</th>
                                 <th className="px-5 py-3 font-bold">Location name</th>
                                 <th className="px-5 py-3 font-bold text-center w-24">Order</th>
@@ -311,6 +313,17 @@ export default function LocationsPage() {
                                 <tr><td colSpan={8} className="py-12 text-center text-black italic">No locations found</td></tr>
                             ) : filteredSubLocations.map((sl) => (
                                 <tr key={sl._id} className="border-b border-slate-50 hover:bg-slate-50 transition-colors">
+                                    <td className="px-5 py-2.5 text-center">
+                                        {sl.image ? (
+                                            <div className="w-8 h-8 rounded border border-slate-200 overflow-hidden mx-auto bg-white">
+                                                <img src={getImageUrl(sl.image)} alt="" className="w-full h-full object-cover" loading="lazy" />
+                                            </div>
+                                        ) : (
+                                            <div className="w-8 h-8 rounded border border-slate-200 bg-slate-50 mx-auto flex items-center justify-center">
+                                                <span className="text-[10px] text-slate-400">No img</span>
+                                            </div>
+                                        )}
+                                    </td>
                                     <td className="px-5 py-2.5 text-black">{sl.name}</td>
                                     <td className="px-5 py-2.5 text-black">{sl.location?.name}</td>
                                     <td className="px-5 py-2.5 text-center">{sl.order}</td>
@@ -426,6 +439,17 @@ export default function LocationsPage() {
                                                 <span className="text-black self-center truncate max-w-[100px]">{subLocForm.image ? subLocForm.image.name : 'No file chosen'}</span>
                                             </div>
 
+                                            {/* Image Preview */}
+                                            <div className="mt-2 h-20 w-20 border border-slate-200 self-end overflow-hidden bg-white rounded-sm flex items-center justify-center">
+                                                {subLocForm.image ? (
+                                                    <img src={URL.createObjectURL(subLocForm.image)} className="w-full h-full object-cover" />
+                                                ) : (editingSubLocId && subLocations.find(s => s._id === editingSubLocId)?.image) ? (
+                                                    <img src={getImageUrl(subLocations.find(s => s._id === editingSubLocId)?.image)} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <div className="text-[10px] text-slate-400">Preview</div>
+                                                )}
+                                            </div>
+
                                             <div className="flex items-center gap-4 py-1">
                                                 <span className="text-black font-bold">Status</span>
                                                 <label className="flex items-center gap-1.5 cursor-pointer font-bold text-black">
@@ -465,6 +489,7 @@ export default function LocationsPage() {
                                         <table className="w-full text-xs text-left border-collapse">
                                             <thead className="bg-[#f8f9fa] border-b border-slate-200 sticky top-0">
                                                 <tr>
+                                                    <th className="px-2 py-2 font-bold whitespace-nowrap text-center w-10">Image</th>
                                                     <th className="px-2 py-2 font-bold whitespace-nowrap italic">Catagory Name</th>
                                                     <th className="px-2 py-2 font-bold italic">Inpute</th>
                                                     <th className="px-2 py-2 font-bold text-center italic">Order</th>
@@ -476,6 +501,15 @@ export default function LocationsPage() {
                                             <tbody className="divide-y divide-slate-100">
                                                 {locations.map(l => (
                                                     <tr key={l._id}>
+                                                        <td className="px-2 py-1.5 align-middle">
+                                                            {l.image ? (
+                                                                <div className="w-6 h-6 rounded border border-slate-200 overflow-hidden mx-auto bg-white">
+                                                                    <img src={getImageUrl(l.image)} alt="" className="w-full h-full object-cover" loading="lazy" />
+                                                                </div>
+                                                            ) : (
+                                                                <div className="w-6 h-6 rounded border border-slate-200 bg-slate-50 mx-auto" />
+                                                            )}
+                                                        </td>
                                                         <td className="px-2 py-1.5 font-bold text-black">{l.name}</td>
                                                         <td className="px-2 py-1.5">Text</td>
                                                         <td className="px-2 py-1.5 text-center">{l.order}</td>
@@ -516,6 +550,17 @@ export default function LocationsPage() {
                                                         <input type="file" className="hidden" onChange={e => setLocForm({ ...locForm, image: e.target.files?.[0] || null })} />
                                                     </label>
                                                     <span className="text-black self-center truncate max-w-[150px]">{locForm.image ? locForm.image.name : 'No file chosen'}</span>
+                                                </div>
+
+                                                {/* Edit Preview */}
+                                                <div className="w-16 h-16 border border-slate-200 mt-2 bg-white rounded-sm overflow-hidden flex items-center justify-center">
+                                                    {locForm.image ? (
+                                                        <img src={URL.createObjectURL(locForm.image)} className="w-full h-full object-cover" />
+                                                    ) : (editingLocId && locations.find(l => l._id === editingLocId)?.image) ? (
+                                                        <img src={getImageUrl(locations.find(l => l._id === editingLocId)?.image)} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <div className="text-[10px] text-slate-400">Preview</div>
+                                                    )}
                                                 </div>
 
                                                 <div className="bg-[#f0f0f0] border border-slate-300 text-black px-2 py-1.5 text-center">

@@ -13,6 +13,7 @@ import { twMerge } from 'tailwind-merge';
 import Cookies from 'js-cookie';
 import toast from 'react-hot-toast';
 import { API_BASE_URL } from '../../../utils/apiConfig';
+import { getImageUrl } from '../../../utils/imageUrl';
 
 function cn(...inputs: (string | undefined | null | false)[]) {
     return twMerge(clsx(inputs));
@@ -386,6 +387,7 @@ export default function CategoriesPage() {
                     <table className="w-full text-left text-xs border-collapse">
                         <thead>
                             <tr className="bg-white text-black font-bold border-b border-slate-100">
+                                <th className="px-5 py-3 font-bold w-12 text-center">Image</th>
                                 <th className="px-5 py-3 font-bold w-1/4">Sub Category name</th>
                                 <th className="px-5 py-3 font-bold">Category name</th>
                                 <th className="px-5 py-3 font-bold">Button Type</th>
@@ -405,6 +407,17 @@ export default function CategoriesPage() {
                                 <tr><td colSpan={8} className="py-12 text-center text-black italic">No subcategories found</td></tr>
                             ) : filteredSubCategories.map((sc) => (
                                 <tr key={sc._id} className="border-b border-slate-50 hover:bg-slate-50 transition-colors">
+                                    <td className="px-5 py-2.5 text-center">
+                                        {sc.image ? (
+                                            <div className="w-8 h-8 rounded border border-slate-200 overflow-hidden mx-auto bg-white">
+                                                <img src={getImageUrl(sc.image)} alt="" className="w-full h-full object-cover" loading="lazy" />
+                                            </div>
+                                        ) : (
+                                            <div className="w-8 h-8 rounded border border-slate-200 bg-slate-50 mx-auto flex items-center justify-center">
+                                                <span className="text-[10px] text-slate-400">No img</span>
+                                            </div>
+                                        )}
+                                    </td>
                                     <td className="px-5 py-2.5 text-black">{sc.name}</td>
                                     <td className="px-5 py-2.5 text-black">{sc.category?.name}</td>
                                     <td className="px-5 py-2.5 text-black">
@@ -661,6 +674,17 @@ export default function CategoriesPage() {
                                             </label>
                                             <span className="text-black self-center truncate max-w-[100px]">{subCatForm.image ? subCatForm.image.name : 'No file chosen'}</span>
                                         </div>
+
+                                        {/* Image Preview */}
+                                        <div className="mt-2 h-20 w-20 border border-slate-200 self-end overflow-hidden bg-white rounded-sm flex items-center justify-center">
+                                            {subCatForm.image ? (
+                                                <img src={URL.createObjectURL(subCatForm.image)} className="w-full h-full object-cover" />
+                                            ) : (editingSubCatId && subCategories.find(s => s._id === editingSubCatId)?.image) ? (
+                                                <img src={getImageUrl(subCategories.find(s => s._id === editingSubCatId)?.image)} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <div className="text-[10px] text-slate-400">Preview</div>
+                                            )}
+                                        </div>
                                     </div>
 
                                     {/* Status */}
@@ -700,6 +724,7 @@ export default function CategoriesPage() {
                                             <table className="w-full text-xs text-left border-collapse">
                                                 <thead className="bg-[#f8f9fa] border-b border-slate-200">
                                                     <tr>
+                                                        <th className="px-2 py-2 font-bold whitespace-nowrap text-center w-10">Icon</th>
                                                         <th className="px-2 py-2 font-bold whitespace-nowrap">Catagorie Name</th>
                                                         <th className="px-2 py-2 font-bold">Inpute</th>
                                                         <th className="px-2 py-2 font-bold text-center">Order</th>
@@ -711,6 +736,15 @@ export default function CategoriesPage() {
                                                 <tbody className="divide-y divide-slate-100">
                                                     {categories.map(c => (
                                                         <tr key={c._id}>
+                                                            <td className="px-2 py-1.5 align-middle">
+                                                                {c.icon ? (
+                                                                    <div className="w-6 h-6 rounded border border-slate-200 overflow-hidden mx-auto bg-white">
+                                                                        <img src={getImageUrl(c.icon)} alt="" className="w-full h-full object-cover" loading="lazy" />
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className="w-6 h-6 rounded border border-slate-200 bg-slate-50 mx-auto" />
+                                                                )}
+                                                            </td>
                                                             <td className="px-2 py-1.5 font-bold text-black">{c.name}</td>
                                                             <td className="px-2 py-1.5">{c.inputType}</td>
                                                             <td className="px-2 py-1.5 text-center">{c.order}</td>
@@ -791,6 +825,17 @@ export default function CategoriesPage() {
                                                         <input type="file" className="hidden" onChange={e => setCatForm({ ...catForm, icon: e.target.files?.[0] || null })} />
                                                     </label>
                                                     <span className="text-black self-center">{catForm.icon ? catForm.icon.name : 'No file chosen'}</span>
+                                                </div>
+
+                                                {/* Edit Preview */}
+                                                <div className="w-16 h-16 border border-slate-200 mt-2 bg-white rounded-sm overflow-hidden flex items-center justify-center">
+                                                    {catForm.icon ? (
+                                                        <img src={URL.createObjectURL(catForm.icon)} className="w-full h-full object-cover" />
+                                                    ) : (editingCatId && categories.find(c => c._id === editingCatId)?.icon) ? (
+                                                        <img src={getImageUrl(categories.find(c => c._id === editingCatId)?.icon)} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <div className="text-[10px] text-slate-400">Icon</div>
+                                                    )}
                                                 </div>
                                                 <div className="space-y-1">
                                                     <div className="border border-slate-200 px-2 py-1.5 bg-[#f4f4f4] text-black">

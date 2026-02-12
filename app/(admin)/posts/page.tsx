@@ -14,6 +14,7 @@ import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { API_BASE_URL } from '../../../utils/apiConfig';
 import toast from 'react-hot-toast';
+import { getImageUrl } from '../../../utils/imageUrl';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -58,6 +59,7 @@ interface Ad {
     deliveryCount: number;
     targetValue: number;
     photoStatus: 'pending' | 'approved' | 'rejected';
+    features?: Record<string, any>;
 }
 
 interface Category {
@@ -320,7 +322,8 @@ export default function PostManagement() {
             actionType: selectedAd.actionType,
             adType: selectedAd.adType,
             photoStatus: selectedAd.photoStatus,
-            images: [...selectedAd.images]
+            images: [...selectedAd.images],
+            features: { ...(selectedAd.features || {}) }
         });
         setIsEditing(true);
     };
@@ -569,7 +572,7 @@ export default function PostManagement() {
                                             <div className="flex items-center gap-1">
                                                 {ad.images.slice(0, 3).map((img, i) => (
                                                     <div key={i} className="relative w-7 h-7 rounded-[2px] border border-slate-200 overflow-hidden shrink-0 group/img">
-                                                        <img src={`${API_BASE_URL}${img}`} className="w-full h-full object-cover" />
+                                                        <img src={getImageUrl(img)} className="w-full h-full object-cover" loading="lazy" />
                                                         <div className="absolute top-0 right-0 flex flex-col gap-[0.5px] p-[1px] bg-white/40 backdrop-blur-[1px] rounded-bl-sm">
                                                             <button
                                                                 onClick={(e) => {
@@ -899,8 +902,41 @@ export default function PostManagement() {
                                                 />
                                             </div>
                                         </div>
-                                        <div className="text-center text-black font-bold border-t border-dashed pt-1 cursor-pointer hover:text-black text-xs">
-                                            + catagory wise another feature
+                                        <div className="border-t border-dashed pt-2 space-y-2">
+                                            <div className="text-[10px] font-bold text-slate-400 uppercase">Features / Attributes</div>
+                                            {categories.find(c => c.name === editFormData.category)?.subcategories.find((s: any) => s.name === editFormData.subCategory)?.features?.map((feature: any) => (
+                                                <div key={feature._id} className="flex items-center gap-2">
+                                                    <label className="text-xs text-black w-24 shrink-0 truncate">{feature.name}</label>
+                                                    {feature.buttonItemNames && feature.buttonItemNames.length > 0 ? (
+                                                        <select
+                                                            className="flex-1 border border-slate-200 h-6 outline-none text-xs bg-white px-1"
+                                                            value={editFormData.features?.[feature.name] || ''}
+                                                            onChange={(e) => setEditFormData(prev => ({
+                                                                ...prev,
+                                                                features: { ...prev.features, [feature.name]: e.target.value }
+                                                            }))}
+                                                        >
+                                                            <option value="">Select {feature.name}</option>
+                                                            {feature.buttonItemNames.map((item: string) => (
+                                                                <option key={item} value={item}>{item}</option>
+                                                            ))}
+                                                        </select>
+                                                    ) : (
+                                                        <input
+                                                            className="flex-1 border border-slate-200 h-6 px-2 outline-none text-xs"
+                                                            placeholder={feature.boxFadeName || feature.name}
+                                                            value={editFormData.features?.[feature.name] || ''}
+                                                            onChange={(e) => setEditFormData(prev => ({
+                                                                ...prev,
+                                                                features: { ...prev.features, [feature.name]: e.target.value }
+                                                            }))}
+                                                        />
+                                                    )}
+                                                </div>
+                                            ))}
+                                            {(!editFormData.subCategory || !(categories.find(c => c.name === editFormData.category)?.subcategories.find((s: any) => s.name === editFormData.subCategory)?.features?.length)) && (
+                                                <div className="text-center text-slate-400 py-1 italic">No features for this subcategory</div>
+                                            )}
                                         </div>
                                     </div>
 
@@ -1076,13 +1112,12 @@ export default function PostManagement() {
                                                             <>
                                                                 <img
                                                                     src={
-                                                                        selectedFiles[i] // If a new file is present at this index, show its preview
+                                                                        selectedFiles[i]
                                                                             ? URL.createObjectURL(selectedFiles[i])
-                                                                            : (editFormData.images?.[i]?.startsWith('data:')
-                                                                                ? editFormData.images[i]
-                                                                                : `${API_BASE_URL}${editFormData.images?.[i]}`)
+                                                                            : getImageUrl(editFormData.images?.[i] || '')
                                                                     }
                                                                     className="w-full h-full object-cover"
+                                                                    loading="lazy"
                                                                 />
                                                                 <div className="absolute top-0 right-0 flex gap-0.5 p-0.5 opacity-0 group-hover/p:opacity-100 transition-opacity">
                                                                     <div className="bg-[#5cb85c] rounded-full p-0.5 border-[0.5px] border-white shadow-sm cursor-pointer whitespace-nowrap"><Check className="w-2 h-2 text-white" strokeWidth={4} /></div>
@@ -1133,9 +1168,10 @@ export default function PostManagement() {
                                                                     src={
                                                                         selectedFiles[i]
                                                                             ? URL.createObjectURL(selectedFiles[i])
-                                                                            : (img.startsWith('data:') ? img : `${API_BASE_URL}${img}`)
+                                                                            : getImageUrl(img)
                                                                     }
                                                                     className="w-full h-full object-cover"
+                                                                    loading="lazy"
                                                                 />
                                                             </div>
                                                         </td>
@@ -1243,7 +1279,7 @@ export default function PostManagement() {
                                 <div className="flex gap-1.5 overflow-x-auto py-1">
                                     {selectedAd.images.map((img, i) => (
                                         <div key={i} className="w-12 h-12 border border-slate-200 rounded overflow-hidden shrink-0 relative">
-                                            <img src={`${API_BASE_URL}${img}`} className="w-full h-full object-cover" />
+                                            <img src={getImageUrl(img)} className="w-full h-full object-cover" loading="lazy" />
                                             <div className="absolute top-0 right-0 p-0.5 flex gap-0.5">
                                                 <div className="bg-emerald-500 w-2 h-2 rounded-full border border-white" />
                                                 <div className="bg-rose-500 w-2 h-2 rounded-full border border-white" />

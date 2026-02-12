@@ -14,6 +14,7 @@ import Cookies from 'js-cookie';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { API_BASE_URL } from '../../../utils/apiConfig';
+import { getImageUrl } from '../../../utils/imageUrl';
 import toast from 'react-hot-toast';
 
 function cn(...inputs: (string | undefined | null | false)[]) {
@@ -853,9 +854,10 @@ export default function UserManagement() {
                                                             />
                                                             {formData[u.key as keyof UserFormData] ? (
                                                                 <img
-                                                                    src={formData[u.key as keyof UserFormData]?.toString().startsWith('data:') ? formData[u.key as keyof UserFormData] as string : `${API_BASE_URL}${formData[u.key as keyof UserFormData]}`}
+                                                                    src={getImageUrl(formData[u.key as keyof UserFormData] as string)}
                                                                     alt={u.label}
                                                                     className="w-full h-full object-cover"
+                                                                    loading="lazy"
                                                                     onError={(e) => {
                                                                         const target = e.target as HTMLImageElement;
                                                                         target.onerror = null;
