@@ -467,7 +467,7 @@ export default function PromotedAdsPage() {
                                 />
                             </div>
 
-                            <div className="space-y-1">
+                            {/* <div className="space-y-1">
                                 <select
                                     className="w-full border border-slate-300 px-2 h-8 outline-none text-xs bg-white"
                                     value={manualPromote.adType}
@@ -488,7 +488,7 @@ export default function PromotedAdsPage() {
                                     />
                                     <Calendar className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-black" />
                                 </div>
-                            </div>
+                            </div> */}
                         </div>
                     </div>
 

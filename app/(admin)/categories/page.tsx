@@ -387,7 +387,6 @@ export default function CategoriesPage() {
                     <table className="w-full text-left text-xs border-collapse">
                         <thead>
                             <tr className="bg-white text-black font-bold border-b border-slate-100">
-                                <th className="px-5 py-3 font-bold w-12 text-center">Image</th>
                                 <th className="px-5 py-3 font-bold w-1/4">Sub Category name</th>
                                 <th className="px-5 py-3 font-bold">Category name</th>
                                 <th className="px-5 py-3 font-bold">Button Type</th>
@@ -407,17 +406,6 @@ export default function CategoriesPage() {
                                 <tr><td colSpan={8} className="py-12 text-center text-black italic">No subcategories found</td></tr>
                             ) : filteredSubCategories.map((sc) => (
                                 <tr key={sc._id} className="border-b border-slate-50 hover:bg-slate-50 transition-colors">
-                                    <td className="px-5 py-2.5 text-center">
-                                        {sc.image ? (
-                                            <div className="w-8 h-8 rounded border border-slate-200 overflow-hidden mx-auto bg-white">
-                                                <img src={getImageUrl(sc.image)} alt="" className="w-full h-full object-cover" loading="lazy" />
-                                            </div>
-                                        ) : (
-                                            <div className="w-8 h-8 rounded border border-slate-200 bg-slate-50 mx-auto flex items-center justify-center">
-                                                <span className="text-[10px] text-slate-400">No img</span>
-                                            </div>
-                                        )}
-                                    </td>
                                     <td className="px-5 py-2.5 text-black">{sc.name}</td>
                                     <td className="px-5 py-2.5 text-black">{sc.category?.name}</td>
                                     <td className="px-5 py-2.5 text-black">
@@ -479,9 +467,9 @@ export default function CategoriesPage() {
                                 </button>
                             </div>
 
-                            <div className="p-4 flex gap-6 overflow-hidden">
+                            <div className="p-4 flex gap-6 overflow-hidden flex-1">
                                 {/* Left/Middle Column Form */}
-                                <form onSubmit={handleSubCatSubmit} className="flex-1 grid grid-cols-2 gap-x-6 gap-y-3 text-xs">
+                                <form onSubmit={handleSubCatSubmit} className="flex-1 grid grid-cols-2 gap-x-6 gap-y-3 text-xs overflow-y-auto pr-4 custom-scrollbar">
                                     {/* Sub Category Name */}
                                     <div className="space-y-1 col-span-1">
                                         <label className="text-black font-bold">Sub Catagorie Name</label>
@@ -598,7 +586,7 @@ export default function CategoriesPage() {
                                     {/* Feature Name */}
                                     <div className="space-y-1 col-span-1">
                                         <label className="text-black font-bold">Feature Name</label>
-                                        <div className="flex flex-col gap-1.5">
+                                        <div className="flex flex-col gap-1.5 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
                                             {subCatForm.features.map((featureId, index) => (
                                                 <div key={index} className="flex gap-1">
                                                     <select
@@ -720,17 +708,17 @@ export default function CategoriesPage() {
                                                 <Plus className="w-3 h-3 stroke-[3]" />
                                             </button>
                                         </div>
-                                        <div className="border border-slate-200 rounded-sm">
+                                        <div className="border border-slate-200 rounded-sm max-h-[280px] overflow-y-auto custom-scrollbar">
                                             <table className="w-full text-xs text-left border-collapse">
-                                                <thead className="bg-[#f8f9fa] border-b border-slate-200">
+                                                <thead className="bg-[#f8f9fa] border-b border-slate-200 sticky top-0 z-10 transition-colors shadow-sm">
                                                     <tr>
-                                                        <th className="px-2 py-2 font-bold whitespace-nowrap text-center w-10">Icon</th>
-                                                        <th className="px-2 py-2 font-bold whitespace-nowrap">Catagorie Name</th>
-                                                        <th className="px-2 py-2 font-bold">Inpute</th>
-                                                        <th className="px-2 py-2 font-bold text-center">Order</th>
-                                                        <th className="px-2 py-2 font-bold text-center">Status</th>
-                                                        <th className="w-6 px-1 py-2 text-center"></th>
-                                                        <th className="w-6 px-1 py-2 text-center"></th>
+                                                        <th className="px-2 py-2 font-bold whitespace-nowrap text-center w-10 bg-[#f8f9fa]">Icon</th>
+                                                        <th className="px-2 py-2 font-bold whitespace-nowrap bg-[#f8f9fa]">Catagorie Name</th>
+                                                        <th className="px-2 py-2 font-bold bg-[#f8f9fa]">Inpute</th>
+                                                        <th className="px-2 py-2 font-bold text-center bg-[#f8f9fa]">Order</th>
+                                                        <th className="px-2 py-2 font-bold text-center bg-[#f8f9fa]">Status</th>
+                                                        <th className="w-6 px-1 py-2 text-center bg-[#f8f9fa]"></th>
+                                                        <th className="w-6 px-1 py-2 text-center bg-[#f8f9fa]"></th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-slate-100">
@@ -768,16 +756,16 @@ export default function CategoriesPage() {
                                                 <Plus className="w-3 h-3 stroke-[3]" />
                                             </button>
                                         </div>
-                                        <div className="border border-slate-200 rounded-sm">
+                                        <div className="border border-slate-200 rounded-sm max-h-[350px] overflow-y-auto custom-scrollbar">
                                             <table className="w-full text-xs text-left border-collapse">
-                                                <thead className="bg-[#f8f9fa] border-b border-slate-200">
+                                                <thead className="bg-[#f8f9fa] border-b border-slate-200 sticky top-0 z-10 transition-colors shadow-sm">
                                                     <tr>
-                                                        <th className="px-2 py-2 font-bold whitespace-nowrap">Feature name</th>
-                                                        <th className="px-2 py-2 font-bold">Category</th>
-                                                        <th className="px-2 py-2 font-bold text-center">Order</th>
-                                                        <th className="px-2 py-2 font-bold text-center">Status</th>
-                                                        <th className="w-6 px-1 py-2 text-center"></th>
-                                                        <th className="w-6 px-1 py-2 text-center"></th>
+                                                        <th className="px-2 py-2 font-bold whitespace-nowrap bg-[#f8f9fa]">Feature name</th>
+                                                        <th className="px-2 py-2 font-bold bg-[#f8f9fa]">Category</th>
+                                                        <th className="px-2 py-2 font-bold text-center bg-[#f8f9fa]">Order</th>
+                                                        <th className="px-2 py-2 font-bold text-center bg-[#f8f9fa]">Status</th>
+                                                        <th className="w-6 px-1 py-2 text-center bg-[#f8f9fa]"></th>
+                                                        <th className="w-6 px-1 py-2 text-center bg-[#f8f9fa]"></th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-slate-100">
@@ -986,6 +974,6 @@ export default function CategoriesPage() {
                     background: #94a3b8;
                 }
             `}</style>
-        </div>
+        </div >
     );
 }

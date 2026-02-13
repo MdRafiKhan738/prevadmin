@@ -7,8 +7,10 @@ import {
     Search, LayoutGrid, Eye, CheckCircle, XCircle, Trash2,
     ImageIcon, User, Phone, MapPin, ExternalLink,
     Loader2, Check, HelpCircle, Calendar, AlertCircle, X,
-    Edit3, Save, RotateCcw, ArrowLeft, Plus, Edit2, CheckCircle2, ChevronRight
+    Edit3, Save, RotateCcw, ArrowLeft, Plus, Edit2, CheckCircle2, ChevronRight, ChevronLeft,
+    Bell, Camera
 } from 'lucide-react';
+import { RiCameraFill } from 'react-icons/ri';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -58,8 +60,13 @@ interface Ad {
     views: number;
     deliveryCount: number;
     targetValue: number;
-    photoStatus: 'pending' | 'approved' | 'rejected';
+    dailyDeliveryCount: number;
+    dailyViewsCount: number;
     features?: Record<string, any>;
+    isReported?: boolean;
+    photoStatus: 'pending' | 'approved' | 'rejected';
+    userUpdated?: boolean;
+    userNewPhotos?: boolean;
 }
 
 interface SubCategory {
@@ -78,6 +85,70 @@ interface Location {
     _id: string;
     name: string;
     subLocations: { name: string }[];
+}
+
+function PhotoSlider({ images, adId, photoStatus, updateAdField, setHoveredImage }: any) {
+    const [startIndex, setStartIndex] = React.useState(0);
+    const visibleImages = images.slice(startIndex, startIndex + 3);
+
+    return (
+        <div className="flex items-center gap-1">
+            {images.length > 3 && startIndex > 0 && (
+                <button
+                    onClick={(e) => { e.stopPropagation(); setStartIndex(prev => Math.max(0, prev - 1)); }}
+                    className="p-0.5 hover:bg-slate-200 rounded shrink-0"
+                >
+                    <ChevronLeft className="w-3 h-3 text-black" />
+                </button>
+            )}
+            <div className="flex items-center gap-1">
+                {visibleImages.map((img: string, i: number) => (
+                    <div
+                        key={img + i}
+                        className="relative w-12 h-12 rounded-[2px] border border-slate-200 overflow-hidden shrink-0 group/img cursor-pointer"
+                        onMouseEnter={() => setHoveredImage(img)}
+                        onMouseLeave={() => setHoveredImage(null)}
+                    >
+                        <img src={getImageUrl(img)} className="w-full h-full object-cover" loading="lazy" />
+                        <div className="absolute top-0 right-0 flex flex-col gap-[0.5px] p-[1px] bg-white/40 backdrop-blur-[1px] rounded-bl-sm opacity-0 group-hover/img:opacity-100 transition-opacity">
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    updateAdField(adId, 'photoStatus', 'approved');
+                                }}
+                                className={cn(
+                                    "flex items-center justify-center rounded-full border-[0.5px] border-white transition-all shadow-sm",
+                                    photoStatus === 'approved' ? "bg-emerald-500 w-[11px] h-[11px]" : "bg-slate-300 w-[9px] h-[9px] hover:bg-emerald-300 opacity-80"
+                                )}
+                            >
+                                <Check className={cn("text-white shrink-0", photoStatus === 'approved' ? "w-[8px] h-[8px]" : "w-[6px] h-[6px]")} strokeWidth={5} />
+                            </button>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    updateAdField(adId, 'photoStatus', 'rejected');
+                                }}
+                                className={cn(
+                                    "flex items-center justify-center rounded-full border-[0.5px] border-white transition-all shadow-sm",
+                                    photoStatus === 'rejected' ? "bg-rose-500 w-[11px] h-[11px]" : "bg-slate-300 w-[9px] h-[9px] hover:bg-rose-300 opacity-80"
+                                )}
+                            >
+                                <X className={cn("text-white shrink-0", photoStatus === 'rejected' ? "w-[8px] h-[8px]" : "w-[6px] h-[6px]")} strokeWidth={5} />
+                            </button>
+                        </div>
+                    </div>
+                ))}
+            </div>
+            {images.length > 3 && startIndex + 3 < images.length && (
+                <button
+                    onClick={(e) => { e.stopPropagation(); setStartIndex(prev => Math.min(images.length - 3, prev + 1)); }}
+                    className="p-0.5 hover:bg-slate-200 rounded shrink-0"
+                >
+                    <ChevronRight className="w-3 h-3 text-black" />
+                </button>
+            )}
+        </div>
+    );
 }
 
 export default function PostManagement() {
@@ -99,6 +170,7 @@ export default function PostManagement() {
     const [showSearchModal, setShowSearchModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [showShortViewModal, setShowShortViewModal] = useState(false);
+    const [hoveredImage, setHoveredImage] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'today' | 'running'>('all');
     const [searchKeys, setSearchKeys] = useState<any>({
         categoryId: '',
@@ -218,14 +290,34 @@ export default function PostManagement() {
     const updateAdField = async (id: string, field: string, value: any) => {
         try {
             const token = Cookies.get('adminToken');
-            await axios.put(`${API_BASE_URL}/api/ads/admin/${id}/update`, { [field]: value }, {
+            const res = await axios.put(`${API_BASE_URL}/api/ads/admin/${id}/update`, { [field]: value }, {
                 headers: { 'x-auth-token': token }
             });
-            // Update UI
-            setAds(prev => prev.map(ad => ad._id === id ? { ...ad, [field]: value } : ad));
+            // Update UI with response data which contains updated edBy
+            if (res.data.success && res.data.data) {
+                setAds(prev => prev.map(ad => ad._id === id ? res.data.data : ad));
+            } else {
+                setAds(prev => prev.map(ad => ad._id === id ? { ...ad, [field]: value } : ad));
+            }
         } catch (error) {
             console.error("Update failed", error);
             alert(`Failed to update ${field}`);
+        }
+    };
+
+    const markAdAsSeen = async (adId: string) => {
+        try {
+            const token = Cookies.get('adminToken');
+            const res = await axios.put(`${API_BASE_URL}/api/ads/admin/${adId}/see`, {}, {
+                headers: { 'x-auth-token': token }
+            });
+            if (res.data.success) {
+                setAds(prev => prev.map(ad =>
+                    ad._id === adId ? { ...ad, senBy: res.data.data.senBy } : ad
+                ));
+            }
+        } catch (error) {
+            console.error("Failed to mark as seen", error);
         }
     };
 
@@ -327,6 +419,8 @@ export default function PostManagement() {
             url: selectedAd.url,
             actionType: selectedAd.actionType,
             adType: selectedAd.adType,
+            targetValue: selectedAd.targetValue,
+            targetD: selectedAd.targetD,
             photoStatus: selectedAd.photoStatus,
             images: [...selectedAd.images],
             features: { ...(selectedAd.features || {}) }
@@ -528,7 +622,7 @@ export default function PostManagement() {
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-white text-black border-b border-slate-200 text-xs">
-                                <th className="px-2 py-2 w-8">
+                                <th className="px-2 py-2 w-8 border-r border-slate-300 bg-slate-50">
                                     <input
                                         type="checkbox"
                                         className="w-3 h-3 cursor-pointer"
@@ -536,20 +630,20 @@ export default function PostManagement() {
                                         onChange={toggleSelectAll}
                                     />
                                 </th>
-                                <th className="px-1 py-1.5 font-extrabold uppercase whitespace-nowrap">Product Picture</th>
-                                <th className="px-1 py-1.5 font-extrabold uppercase whitespace-nowrap">Product ID</th>
-                                <th className="px-1 py-1.5 font-extrabold uppercase whitespace-nowrap text-center">Produ Sts</th>
-                                <th className="px-1 py-1.5 font-extrabold uppercase whitespace-nowrap">Categorie</th>
-                                <th className="px-1 py-1.5 font-extrabold uppercase whitespace-nowrap">Location</th>
-                                <th className="px-1 py-1.5 font-extrabold uppercase whitespace-nowrap">Price</th>
-                                <th className="px-1 py-1.5 font-extrabold uppercase whitespace-nowrap">AD Type</th>
-                                <th className="px-1 py-1.5 font-extrabold uppercase whitespace-nowrap">PWR Target</th>
-                                <th className="px-1 py-1.5 font-extrabold uppercase whitespace-nowrap">Target/D</th>
-                                <th className="px-1 py-1.5 font-extrabold uppercase whitespace-nowrap">Rep</th>
-                                <th className="px-1 py-1.5 font-extrabold uppercase whitespace-nowrap">Lgs</th>
-                                <th className="px-1 py-1.5 font-extrabold uppercase whitespace-nowrap">Sen/Ed By</th>
-                                <th className="px-1 py-1.5 font-extrabold uppercase whitespace-nowrap">Date</th>
-                                <th className="px-1 py-1.5 font-extrabold uppercase whitespace-nowrap text-right pr-2">Action</th>
+                                <th className="px-1 py-1.5 font-normal uppercase whitespace-nowrap border-r border-slate-300 bg-slate-50">Product Picture</th>
+                                <th className="px-1 py-1.5 font-normal uppercase whitespace-nowrap border-r border-slate-300 bg-slate-50">Product ID</th>
+                                <th className="px-1 py-1.5 font-normal uppercase whitespace-nowrap text-center border-r border-slate-300 bg-slate-50">Produ Sts</th>
+                                <th className="px-1 py-1.5 font-normal uppercase whitespace-nowrap border-r border-slate-300 bg-slate-50">Categorie</th>
+                                <th className="px-1 py-1.5 font-normal uppercase whitespace-nowrap border-r border-slate-300 bg-slate-50">Location</th>
+                                <th className="px-1 py-1.5 font-normal uppercase whitespace-nowrap border-r border-slate-300 bg-slate-50">Price</th>
+                                <th className="px-1 py-1.5 font-normal uppercase whitespace-nowrap border-r border-slate-300 bg-slate-50">AD Type</th>
+                                <th className="px-1 py-1.5 font-normal uppercase whitespace-nowrap border-r border-slate-300 bg-slate-50">P Target</th>
+                                <th className="px-1 py-1.5 font-normal uppercase whitespace-nowrap border-r border-slate-300 bg-slate-50">Target/D</th>
+                                <th className="px-1 py-1.5 font-normal uppercase whitespace-nowrap border-r border-slate-300 bg-slate-50">Rep</th>
+                                {/* <th className="px-1 py-1.5 font-normal uppercase whitespace-nowrap border-r border-slate-300 bg-slate-50">Lgs</th> */}
+                                <th className="px-1 py-1.5 font-normal uppercase whitespace-nowrap border-r border-slate-300 bg-slate-50">Sen/Ed</th>
+                                <th className="px-1 py-1.5 font-normal uppercase whitespace-nowrap border-r border-slate-300 bg-slate-50">Date</th>
+                                <th className="px-1 py-1.5 font-normal uppercase whitespace-nowrap text-right pr-2 bg-slate-50">Action</th>
                             </tr>
                         </thead>
                         <tbody className="text-black text-xs">
@@ -565,475 +659,47 @@ export default function PostManagement() {
                                 </tr>
                             ) : (
                                 filteredAds.map((ad, idx) => (
-                                    <tr key={ad._id} className={cn("border-b border-slate-100 hover:bg-slate-50 transition-colors h-10", selectedAds.includes(ad._id) && "bg-rose-50/50")}>
-                                        <td className="px-1 py-1">
-                                            <input
-                                                type="checkbox"
-                                                className="w-3 h-3 cursor-pointer"
-                                                checked={selectedAds.includes(ad._id)}
-                                                onChange={() => toggleSelectAd(ad._id)}
-                                            />
-                                        </td>
-                                        <td className="px-1 py-1">
-                                            <div className="flex items-center gap-1">
-                                                {ad.images.slice(0, 3).map((img, i) => (
-                                                    <div key={i} className="relative w-7 h-7 rounded-[2px] border border-slate-200 overflow-hidden shrink-0 group/img">
-                                                        <img src={getImageUrl(img)} className="w-full h-full object-cover" loading="lazy" />
-                                                        <div className="absolute top-0 right-0 flex flex-col gap-[0.5px] p-[1px] bg-white/40 backdrop-blur-[1px] rounded-bl-sm">
-                                                            <button
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    updateAdField(ad._id, 'photoStatus', 'approved');
-                                                                }}
-                                                                className={cn(
-                                                                    "flex items-center justify-center rounded-full border-[0.5px] border-white transition-all shadow-sm",
-                                                                    ad.photoStatus === 'approved' ? "bg-emerald-500 w-[11px] h-[11px]" : "bg-slate-300 w-[9px] h-[9px] hover:bg-emerald-300 opacity-80"
-                                                                )}
-                                                            >
-                                                                <Check className={cn("text-white shrink-0", ad.photoStatus === 'approved' ? "w-[8px] h-[8px]" : "w-[6px] h-[6px]")} strokeWidth={5} />
-                                                            </button>
-                                                            <button
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    updateAdField(ad._id, 'photoStatus', 'rejected');
-                                                                }}
-                                                                className={cn(
-                                                                    "flex items-center justify-center rounded-full border-[0.5px] border-white transition-all shadow-sm",
-                                                                    ad.photoStatus === 'rejected' ? "bg-rose-500 w-[11px] h-[11px]" : "bg-slate-300 w-[9px] h-[9px] hover:bg-rose-300 opacity-80"
-                                                                )}
-                                                            >
-                                                                <X className={cn("text-white shrink-0", ad.photoStatus === 'rejected' ? "w-[8px] h-[8px]" : "w-[6px] h-[6px]")} strokeWidth={5} />
-                                                            </button>
-                                                        </div>
+                                    <React.Fragment key={ad._id}>
+                                        <tr className={cn("hover:bg-slate-50 transition-colors h-14", selectedAds.includes(ad._id) && "bg-rose-50/50")}>
+                                            <td className="px-1 py-1 border-r border-b border-slate-300 align-top" rowSpan={2}>
+                                                <input
+                                                    type="checkbox"
+                                                    className="w-3 h-3 cursor-pointer"
+                                                    checked={selectedAds.includes(ad._id)}
+                                                    onChange={() => toggleSelectAd(ad._id)}
+                                                />
+                                            </td>
+                                            <td className="px-1 py-1 border-r border-b border-slate-300 align-top" rowSpan={2}>
+                                                <PhotoSlider
+                                                    images={ad.images}
+                                                    adId={ad._id}
+                                                    photoStatus={ad.photoStatus}
+                                                    updateAdField={updateAdField}
+                                                    setHoveredImage={setHoveredImage}
+                                                />
+                                            </td>
+                                            <td className="px-1 py-1 text-black whitespace-nowrap border-r border-b border-slate-300 align-top" rowSpan={2}>
+                                                <div className="flex flex-col">
+                                                    <span>{ad._id.slice(-8)}</span>
+                                                    <div className="flex gap-1 mt-0.5">
+                                                        {ad.userUpdated && (
+                                                            <div className="bg-white p-0.5 shadow-sm border border-black" title="Updated by User">
+                                                                <Bell className="w-3 h-3 text-black fill-black" />
+                                                            </div>
+                                                        )}
+                                                        {ad.userNewPhotos && (
+                                                            <div className="bg-white p-0.5 shadow-sm border border-black" title="New Photo added by User">
+                                                                <RiCameraFill className="w-3 h-3 text-black" />
+                                                            </div>
+                                                        )}
                                                     </div>
-                                                ))}
-                                                <button className="text-black hover:text-black ml-0.5">
-                                                    <ChevronRight className="w-3 h-3" />
-                                                </button>
-                                            </div>
-                                        </td>
-                                        <td className="px-1 py-1 text-black whitespace-nowrap">{ad._id.slice(-8)}</td>
-                                        <td className="px-1 py-1">
-                                            <select
-                                                value={ad.status}
-                                                onChange={(e) => updateStatus(ad._id, e.target.value)}
-                                                className="border-[1.5px] border-slate-900 rounded-px px-1 py-0 h-6 w-full max-w-[70px] bg-white text-xs outline-none shadow-sm uppercase leading-none"
-                                            >
-                                                <option value="active">Active</option>
-                                                <option value="notification">Notification</option>
-                                                <option value="pause">Pause</option>
-                                                <option value="review">Review/Processing</option>
-                                                <option value="rejected">Delete (Reason)</option>
-                                                <option value="atv_msg">Product Atv+Msg</option>
-                                                <option value="unatv_msg">Prodt Unatv+Msg</option>
-                                            </select>
-                                        </td>
-                                        <td className="px-1 py-1 leading-tight">
-                                            <div className="flex flex-col gap-1">
+                                                </div>
+                                            </td>
+                                            <td className="px-1 py-1 border-r border-b border-slate-300 align-top" rowSpan={2}>
                                                 <select
-                                                    value={ad.category}
-                                                    onChange={(e) => updateAdField(ad._id, 'category', e.target.value)}
-                                                    className="bg-transparent text-black border-none outline-none cursor-pointer w-full text-xs"
-                                                >
-                                                    <option value="">Select Category</option>
-                                                    {categories.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
-                                                </select>
-                                                <span className="text-black font-normal">{ad.subCategory}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-1 py-1 text-black leading-tight">
-                                            <div className="flex flex-col">
-                                                <span>{ad.location}</span>
-                                                <span className="font-normal">{ad.subLocation}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-1 py-1 text-rose-500">{ad.price || '00'}</td>
-                                        <td className="px-1 py-1 text-emerald-600 capitalize">{ad.adType}</td>
-                                        <td className="px-1 py-1">
-                                            <div className="flex gap-[2px] h-3 items-center">
-                                                {['bg-blue-600', 'bg-yellow-400', 'bg-red-600', 'bg-green-600'].map((color, i) => (
-                                                    <div key={i} className={cn("w-[2px] h-[10px] rounded-[1px]", color)} />
-                                                ))}
-                                            </div>
-                                        </td>
-                                        <td className="px-1 py-1 text-black whitespace-nowrap">
-                                            {ad.adType === 'Promoted' ? `${ad.targetValue || 0}/${ad.deliveryCount || 0}` : '0'}
-                                        </td>
-                                        <td className="px-1 py-1">
-                                            <div className="flex flex-col items-center gap-[2px]">
-                                                <div className="flex gap-[1.5px]">
-                                                    <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
-                                                    <div className="w-1.5 h-1.5 bg-rose-500 rounded-full" />
-                                                </div>
-                                                <div className="w-4 h-1.5 bg-slate-100 rounded-[1px]" />
-                                            </div>
-                                        </td>
-                                        <td className="px-1 py-1">
-                                            <div className="flex flex-col items-center">
-                                                <ImageIcon className="w-2.5 h-2.5 text-cyan-500" />
-                                                <Save className="w-2.5 h-2.5 text-orange-500" />
-                                            </div>
-                                        </td>
-                                        <td className="px-1 py-1 leading-[1.1]">
-                                            <div className="flex flex-col text-xs">
-                                                <span className="text-black">{ad.senBy || 'N/A'}</span>
-                                                <span className="text-black">{ad.edBy || 'N/A'}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-1 py-1 whitespace-nowrap">
-                                            <div className="flex flex-col text-xs leading-tight">
-                                                <span>{new Date(ad.createdAt).toLocaleDateString()}</span>
-                                                <span className="text-black">{new Date(ad.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-1 py-1">
-                                            <div className="flex items-center justify-end gap-1 px-1">
-                                                <button
-                                                    onClick={() => {
-                                                        setSelectedAd(ad);
-                                                        setShowShortViewModal(true);
-                                                    }}
-                                                    className="bg-emerald-500 text-white px-2 h-5 flex items-center justify-center rounded-sm text-xs shadow-sm uppercase min-w-max"
-                                                >
-                                                    Short
-                                                </button>
-                                                <button
-                                                    onClick={() => {
-                                                        setSelectedAd(ad);
-                                                        setEditFormData(ad);
-                                                        setShowEditModal(true);
-                                                    }}
-                                                    className="bg-emerald-600 text-white px-2 h-5 flex items-center justify-center rounded-sm text-xs shadow-sm uppercase min-w-max"
-                                                >
-                                                    Detail
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            {/* SEARCH MODAL */}
-            <AnimatePresence>
-                {showSearchModal && (
-                    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowSearchModal(false)} className="absolute inset-0 bg-black/20 backdrop-blur-sm" />
-                        <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white border border-slate-900 w-full max-w-[98vw] rounded-sm shadow-2xl relative z-10 p-4 font-['Tahoma','Verdana',sans-serif]">
-                            <div className="flex items-center justify-between mb-2">
-                                <span className="text-xs font-bold text-black">Searching</span>
-                                <button onClick={() => setShowSearchModal(false)}><X className="w-4 h-4 text-black" /></button>
-                            </div>
-
-                            <div className="border border-slate-200 p-3 space-y-4">
-                                <div className="grid grid-cols-4 gap-3">
-                                    <div className="flex flex-col gap-0.5 border border-slate-200 p-1.5 rounded-sm">
-                                        <label className="text-xs font-bold text-black uppercase leading-none">Categorie</label>
-                                        <select
-                                            className="text-xs text-black outline-none w-full bg-transparent h-4"
-                                            value={searchKeys.categoryId}
-                                            onChange={(e) => setSearchKeys({ ...searchKeys, categoryId: e.target.value, subCategoryId: '' })}
-                                        >
-                                            <option value="">Select Categorie</option>
-                                            {categories.map((c, i) => (
-                                                <option key={i} value={c._id}>{c.name}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div className="flex flex-col gap-0.5 border border-slate-200 p-1.5 rounded-sm">
-                                        <label className="text-xs font-bold text-black uppercase leading-none">Sub Categorie</label>
-                                        <select className="text-xs text-black outline-none w-full bg-transparent h-4">
-                                            <option value="">Select Sub Categorie</option>
-                                            {categories.find(c => c._id === searchKeys.categoryId)?.subcategories.map((s, i) => (
-                                                <option key={i} value={s.name}>{s.name}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div className="flex flex-col gap-0.5 border border-slate-200 p-1.5 rounded-sm">
-                                        <label className="text-xs font-bold text-black uppercase leading-none">Location</label>
-                                        <select
-                                            className="text-xs text-black outline-none w-full bg-transparent h-4"
-                                            value={searchKeys.locationId}
-                                            onChange={(e) => setSearchKeys({ ...searchKeys, locationId: e.target.value, subLocationId: '' })}
-                                        >
-                                            <option value="">Select Location</option>
-                                            {locations.map((l, i) => (
-                                                <option key={i} value={l.name}>{l.name}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div className="flex flex-col gap-0.5 border border-slate-200 p-1.5 rounded-sm">
-                                        <label className="text-xs font-bold text-black uppercase leading-none">Sub Location</label>
-                                        <select className="text-xs font-bold text-black outline-none w-full bg-transparent h-4">
-                                            <option value="">Select Sub Location</option>
-                                            {locations.find(l => l.name === searchKeys.locationId)?.subLocations.map((s, i) => (
-                                                <option key={i} value={s.name}>{s.name}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <label className="text-black font-bold block">Registration Date From</label>
-                                        <div className="flex border border-slate-300 h-7 text-xs">
-                                            <input type="text" className="flex-1 px-1 outline-none font-medium" />
-                                            <button className="px-1 border-l border-slate-200 bg-slate-50"><Calendar className="w-3 h-3" /></button>
-                                        </div>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <label className="text-black font-bold block">Registration Date till</label>
-                                        <div className="flex border border-slate-300 h-7 text-xs">
-                                            <input type="text" className="flex-1 px-1 outline-none font-medium" />
-                                            <button className="px-1 border-l border-slate-200 bg-slate-50"><Calendar className="w-3 h-3" /></button>
-                                        </div>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <label className="text-black font-bold block">Login Date from</label>
-                                        <div className="flex border border-slate-300 h-7 text-xs">
-                                            <input type="text" className="flex-1 px-1 outline-none font-medium" />
-                                            <button className="px-1 border-l border-slate-200 bg-slate-50"><Calendar className="w-3 h-3" /></button>
-                                        </div>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <label className="text-black font-bold block">Login Date till</label>
-                                        <div className="flex border border-slate-300 h-7 text-xs">
-                                            <input type="text" className="flex-1 px-1 outline-none font-medium" />
-                                            <button className="px-1 border-l border-slate-200 bg-slate-50"><Calendar className="w-3 h-3" /></button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="p-4 flex justify-end gap-2 border-t border-slate-200">
-                                <button onClick={() => setShowSearchModal(false)} className="bg-slate-500 text-white px-4 py-1.5 font-bold rounded-sm text-xs shadow-sm flex items-center gap-1">
-                                    <X className="w-3 h-3" /> Hide Search
-                                </button>
-                                <button className="bg-emerald-500 text-white px-4 py-1.5 font-bold rounded-sm text-xs shadow-sm flex items-center gap-1">
-                                    <Search className="w-3 h-3" /> Search
-                                </button>
-                            </div>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
-
-            {/* ADD/EDIT MODAL */}
-            <AnimatePresence>
-                {showEditModal && (
-                    <div className="fixed inset-0 z-[110] flex items-center justify-center p-2">
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowEditModal(false)} className="absolute inset-0 bg-black/10" />
-                        <motion.div initial={{ scale: 0.98, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.98, opacity: 0 }} className="bg-white border-[1px] border-slate-300 w-full max-w-[98vw] rounded-sm shadow-xl relative z-10 flex flex-col h-[98vh] text-xs font-['Tahoma','Verdana',sans-serif]">
-                            {/* Top Bar Navigation */}
-                            <div className="p-1 px-2 flex items-center justify-between border-b bg-white">
-                                <div className="flex items-center gap-1.5">
-                                    <LayoutGrid className="w-3.5 h-3.5 text-black" />
-                                    <span className="text-black">/</span>
-                                    <span className="font-bold text-black">{selectedAd?._id ? "Edit Post" : "Add Post"}</span>
-                                    <span className="bg-emerald-600 text-white px-1 ml-2 rounded-[2px] text-xs py-0.5 font-bold">Publish</span>
-                                </div>
-                                <button onClick={() => setShowEditModal(false)} className="hover:bg-slate-100 p-0.5 rounded"><X className="w-3.5 h-3.5 text-black" /></button>
-                            </div>
-
-                            <div className="flex-1 overflow-y-auto p-3 grid grid-cols-[1.2fr_1.8fr] gap-3 bg-white">
-                                {/* Left Column */}
-                                <div className="flex flex-col gap-2">
-                                    <div className="border border-slate-200 p-2 rounded-sm space-y-2">
-                                        <input
-                                            placeholder="Heading"
-                                            className="w-full border border-slate-200 px-2 h-7 outline-none font-bold text-xs placeholder:text-black"
-                                            value={editFormData.headline || ''}
-                                            onChange={(e) => handleEditChange('headline', e.target.value)}
-                                        />
-                                        <div className="space-y-0.5">
-                                            <div className="text-xs text-black">Description Present</div>
-                                            <textarea
-                                                className="w-full border border-slate-200 p-1.5 outline-none text-xs h-24 resize-none bg-white text-black"
-                                                value={editFormData.description || ''}
-                                                readOnly
-                                            />
-                                        </div>
-                                        <div className="space-y-0.5">
-                                            <div className="text-xs text-black">Description Edit</div>
-                                            <textarea
-                                                className="w-full border border-slate-200 p-1.5 outline-none text-xs h-32 resize-none bg-white"
-                                                value={editFormData.description || ''}
-                                                onChange={(e) => handleEditChange('description', e.target.value)}
-                                            />
-                                        </div>
-                                        <div className="flex items-center gap-3 justify-end text-xs text-black pr-1">
-                                            <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" className="w-3 h-3 border-slate-300" /> Accept</label>
-                                            <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" className="w-3 h-3 border-slate-300" /> Reject</label>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-2">
-                                        {['category', 'subCategory', 'location', 'subLocation'].map((name) => (
-                                            <select
-                                                key={name}
-                                                className="border border-slate-200 h-7 outline-none text-xs bg-white px-1"
-                                                value={editFormData[name as keyof typeof editFormData] as string || ''}
-                                                onChange={(e) => handleEditChange(name, e.target.value)}
-                                            >
-                                                <option value="">{name === 'category' ? 'Categorie' : name === 'subCategory' ? 'Sub Catagoeie' : name === 'location' ? 'Location' : 'Sub Location'}</option>
-                                                {name === 'category' && categories.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
-                                                {name === 'subCategory' && categories.find(c => c.name === editFormData.category)?.subcategories.map((s, i) => <option key={i} value={s.name}>{s.name}</option>)}
-                                                {name === 'location' && locations.map(l => <option key={l._id} value={l.name}>{l.name}</option>)}
-                                                {name === 'subLocation' && locations.find(l => l.name === editFormData.location)?.subLocations.map((s, i) => <option key={i} value={s.name}>{s.name}</option>)}
-                                            </select>
-                                        ))}
-                                    </div>
-
-                                    <div className="border border-slate-200 p-2 rounded-sm space-y-2">
-                                        <div className="flex gap-1.5 items-center">
-                                            <div className="relative">
-                                                <input
-                                                    type="text"
-                                                    className="border border-slate-200 h-7 outline-none text-xs w-48 px-2 bg-slate-50 font-bold text-black"
-                                                    value={selectedAd ? (selectedAd._id) : "Auto Value"}
-                                                    readOnly
-                                                />
-                                                <span className="absolute -top-3 left-0 text-xs text-black">Merchant ID (Auto)</span>
-                                            </div>
-                                            <div className="ml-0.5 flex items-center justify-center h-7 text-black font-bold text-lg">+</div>
-                                            <div className="ml-4 flex-1 grid grid-cols-2 gap-1.5">
-                                                <input
-                                                    placeholder="Price (Payble)"
-                                                    className="border border-slate-200 h-7 px-2 outline-none text-xs w-full"
-                                                    value={editFormData.price || ''}
-                                                    onChange={(e) => handleEditChange('price', e.target.value)}
-                                                />
-                                                <input
-                                                    placeholder="Price (Old)"
-                                                    className="border border-slate-200 h-7 px-2 outline-none text-xs w-full"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="border-t border-dashed pt-2 space-y-2">
-                                            <div className="text-[10px] font-bold text-slate-400 uppercase">Features / Attributes</div>
-                                            {categories.find(c => c.name === editFormData.category)?.subcategories.find((s: any) => s.name === editFormData.subCategory)?.features?.map((feature: any) => (
-                                                <div key={feature._id} className="flex items-center gap-2">
-                                                    <label className="text-xs text-black w-24 shrink-0 truncate">{feature.name}</label>
-                                                    {feature.buttonItemNames && feature.buttonItemNames.length > 0 ? (
-                                                        <select
-                                                            className="flex-1 border border-slate-200 h-6 outline-none text-xs bg-white px-1"
-                                                            value={editFormData.features?.[feature.name] || ''}
-                                                            onChange={(e) => setEditFormData(prev => ({
-                                                                ...prev,
-                                                                features: { ...prev.features, [feature.name]: e.target.value }
-                                                            }))}
-                                                        >
-                                                            <option value="">Select {feature.name}</option>
-                                                            {feature.buttonItemNames.map((item: string) => (
-                                                                <option key={item} value={item}>{item}</option>
-                                                            ))}
-                                                        </select>
-                                                    ) : (
-                                                        <input
-                                                            className="flex-1 border border-slate-200 h-6 px-2 outline-none text-xs"
-                                                            placeholder={feature.boxFadeName || feature.name}
-                                                            value={editFormData.features?.[feature.name] || ''}
-                                                            onChange={(e) => setEditFormData(prev => ({
-                                                                ...prev,
-                                                                features: { ...prev.features, [feature.name]: e.target.value }
-                                                            }))}
-                                                        />
-                                                    )}
-                                                </div>
-                                            ))}
-                                            {(!editFormData.subCategory || !(categories.find(c => c.name === editFormData.category)?.subcategories.find((s: any) => s.name === editFormData.subCategory)?.features?.length)) && (
-                                                <div className="text-center text-slate-400 py-1 italic">No features for this subcategory</div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <div className="flex gap-2 pt-1">
-                                        <button onClick={() => setShowEditModal(false)} className="flex-1 bg-[#d9534f] text-white py-2 font-bold rounded-sm text-xs uppercase">Cancel</button>
-                                        <button
-                                            onClick={() => selectedAd && deleteAd(selectedAd._id)}
-                                            className="flex-1 bg-[#f0ad4e] text-white py-2 font-bold rounded-sm text-xs uppercase"
-                                        >
-                                            Delete
-                                        </button>
-                                        <button onClick={handleSaveEdit} className="grow-[1.5] bg-[#5cb85c] text-white py-2 font-bold rounded-sm text-xs uppercase flex items-center justify-center gap-2">
-                                            {saveLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Save'}
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* Right Column */}
-                                <div className="flex flex-col gap-2">
-                                    <div className="grid grid-cols-[1fr_1fr_1fr_1fr] gap-2 border border-slate-200 p-2 rounded-sm bg-white">
-                                        <div className="flex flex-col gap-0.5">
-                                            <label className="text-xs text-black font-bold italic">Show Till (Date)</label>
-                                            <input
-                                                type="date"
-                                                className="border border-slate-200 h-6 outline-none text-xs px-1 w-full"
-                                                value={editFormData.showTill ? new Date(editFormData.showTill).toISOString().split('T')[0] : ''}
-                                                onChange={(e) => handleEditChange('showTill', e.target.value)}
-                                            />
-                                        </div>
-                                        <div className="flex flex-col gap-0.5">
-                                            <label className="text-xs text-black">Post Entry</label>
-                                            <div className="text-xs font-bold text-black leading-tight">
-                                                {selectedAd?._id ? (
-                                                    <>
-                                                        {new Date(selectedAd.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}<br />
-                                                        {new Date(selectedAd.createdAt).toLocaleDateString()}
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}<br />
-                                                        {new Date().toLocaleDateString()}
-                                                    </>
-                                                )}
-                                            </div>
-                                        </div>
-                                        <div className="flex flex-col gap-0.5">
-                                            <label className="text-xs text-black">Post Modify</label>
-                                            <div className="text-xs font-bold text-black leading-tight">
-                                                {selectedAd?.updatedAt ? (
-                                                    <>
-                                                        {new Date(selectedAd.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}<br />
-                                                        {new Date(selectedAd.updatedAt).toLocaleDateString()}
-                                                    </>
-                                                ) : selectedAd?._id ? (
-                                                    <>
-                                                        {new Date(selectedAd.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}<br />
-                                                        {new Date(selectedAd.createdAt).toLocaleDateString()}
-                                                    </>
-                                                ) : (
-                                                    <span className="text-black font-normal">--:--<br />--/--/--</span>
-                                                )}
-                                            </div>
-                                        </div>
-                                        <div className="flex flex-col gap-0.5 relative">
-                                            <label className="text-xs text-black">Promote Type</label>
-                                            <select
-                                                className="border border-slate-200 h-6 outline-none text-xs px-1 bg-white"
-                                                value={editFormData.adType || 'Free'}
-                                                onChange={(e) => handleEditChange('adType', e.target.value)}
-                                            >
-                                                <option value="Free">Free</option>
-                                                <option value="Promoted">Promoted</option>
-                                            </select>
-                                        </div>
-                                        <div className="flex flex-col gap-0.5">
-                                            <label className="text-xs text-black font-bold">Marchent ID</label>
-                                            <div className="text-xs font-bold text-black">{selectedAd?._id || 'Auto value'}</div>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-[1.5fr_2.5fr] gap-2 border border-slate-200 p-2 rounded-sm bg-white relative">
-                                        <div className="flex flex-col gap-2">
-                                            <div className="flex flex-col gap-0.5">
-                                                <div className="flex items-center gap-1">
-                                                    <span className="text-xs text-black">Product Status</span>
-                                                    <ArrowLeft className="w-2.5 h-2.5 text-blue-500 rotate-[30deg]" />
-                                                </div>
-                                                <select
-                                                    value={editFormData.status || 'pending'}
-                                                    onChange={(e) => handleEditChange('status', e.target.value)}
-                                                    className="w-full border border-slate-300 h-7 text-xs outline-none px-1 bg-white"
+                                                    value={ad.status}
+                                                    onChange={(e) => updateStatus(ad._id, e.target.value)}
+                                                    className="border-[1.5px] border-slate-900 rounded-px px-1 py-0 h-6 w-full max-w-[70px] bg-white text-xs outline-none shadow-sm uppercase leading-none"
                                                 >
                                                     <option value="active">Active</option>
                                                     <option value="notification">Notification</option>
@@ -1043,292 +709,757 @@ export default function PostManagement() {
                                                     <option value="atv_msg">Product Atv+Msg</option>
                                                     <option value="unatv_msg">Prodt Unatv+Msg</option>
                                                 </select>
-                                            </div>
-                                            <div className="grid grid-cols-2 gap-2">
-                                                <div className="flex flex-col gap-0.5">
-                                                    <label className="text-xs text-black">Total View</label>
-                                                    <div className="h-7 border border-slate-200 flex items-center px-1.5 text-xs font-bold text-black">{editFormData.views || 0}</div>
+                                            </td>
+                                            <td className="px-1 py-1 border-r border-b border-slate-300 align-top" rowSpan={2}>
+                                                <div className="flex flex-col gap-1 items-center">
+                                                    <select
+                                                        value={ad.category}
+                                                        onChange={(e) => updateAdField(ad._id, 'category', e.target.value)}
+                                                        className="bg-transparent text-black border-none outline-none cursor-pointer w-full text-xs text-center"
+                                                    >
+                                                        <option value="">Select Category</option>
+                                                        {categories.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
+                                                    </select>
+                                                    <span className="text-black font-normal">{ad.subCategory}</span>
                                                 </div>
-                                                <div className="flex flex-col gap-0.5">
-                                                    <div className="flex items-center gap-1 uppercase text-xs font-bold text-black">Promot <span className="text-xs">Amount & Date List</span></div>
-                                                    <div className="h-7 border border-slate-200 flex items-center justify-center gap-1 bg-slate-50">
-                                                        <RotateCcw className="w-2.5 h-2.5 text-black" />
-                                                        <Calendar className="w-2.5 h-2.5 text-black" />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="flex flex-col gap-2">
-                                            <div className="flex flex-col gap-0.5">
-                                                <label className="text-xs text-black">Notification Dialogue</label>
-                                                <input
-                                                    className="w-full border border-slate-200 h-7 text-xs outline-none px-2"
-                                                    value={editFormData.notificationDialogue || ''}
-                                                    onChange={(e) => handleEditChange('notificationDialogue', e.target.value)}
-                                                />
-                                            </div>
-                                            <div className="grid grid-cols-[1fr_1fr_0.8fr] gap-1.5">
-                                                <div className="flex flex-col gap-0.5">
-                                                    <label className="text-xs text-black whitespace-nowrap">View From</label>
-                                                    <div className="flex border border-slate-200 h-7 items-center justify-center bg-slate-50"><Calendar className="w-3 h-3 text-black" /></div>
-                                                </div>
-                                                <div className="flex flex-col gap-0.5">
-                                                    <label className="text-xs text-black whitespace-nowrap">View Till</label>
-                                                    <div className="flex border border-slate-200 h-7 items-center justify-center bg-slate-50"><Calendar className="w-3 h-3 text-black" /></div>
-                                                </div>
-                                                <div className="flex flex-col gap-0.5">
-                                                    <label className="text-xs text-black">Result</label>
-                                                    <div className="h-7 border border-slate-200 bg-slate-50"></div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                            </td>
 
-                                    <div className="border border-slate-200 p-2 rounded-sm space-y-1 bg-white">
-                                        <label className="text-xs text-black">Note</label>
-                                        <input
-                                            className="w-full border border-slate-200 h-7 text-xs outline-none px-2"
-                                            value={editFormData.note || ''}
-                                            onChange={(e) => handleEditChange('note', e.target.value)}
-                                        />
-                                    </div>
-
-                                    <div className="border border-slate-200 p-2 rounded-sm bg-white">
-                                        <div className="text-xs font-bold text-black mb-2">Photo Zone</div>
-                                        <div className="flex gap-2.5 items-start">
-                                            {[...Array(5)].map((_, i) => (
-                                                <div key={i} className="flex flex-col gap-1">
-                                                    <div className="flex items-center gap-3">
-                                                        <label className="text-xs text-black cursor-pointer hover:text-emerald-600 transition-colors uppercase font-bold">
-                                                            Choose File
-                                                            <input
-                                                                type="file"
-                                                                className="hidden"
-                                                                accept="image/*"
-                                                                onChange={(e) => handleFileChange(e, i)}
-                                                            />
-                                                        </label>
-                                                        <label className="flex items-center gap-0.5 cursor-pointer leading-none">
-                                                            <input type="checkbox" className="w-2.5 h-2.5" />
-                                                            <span className="text-xs text-black whitespace-nowrap">Long Img?</span>
-                                                        </label>
-                                                    </div>
-                                                    <div className="w-[78px] h-[52px] border border-slate-200 rounded-[1px] bg-slate-50 relative overflow-hidden flex items-center justify-center group/p">
-                                                        {editFormData.images?.[i] ? (
-                                                            <>
-                                                                <img
-                                                                    src={
-                                                                        selectedFiles[i]
-                                                                            ? URL.createObjectURL(selectedFiles[i])
-                                                                            : getImageUrl(editFormData.images?.[i] || '')
-                                                                    }
-                                                                    className="w-full h-full object-cover"
-                                                                    loading="lazy"
-                                                                />
-                                                                <div className="absolute top-0 right-0 flex gap-0.5 p-0.5 opacity-0 group-hover/p:opacity-100 transition-opacity">
-                                                                    <div className="bg-[#5cb85c] rounded-full p-0.5 border-[0.5px] border-white shadow-sm cursor-pointer whitespace-nowrap"><Check className="w-2 h-2 text-white" strokeWidth={4} /></div>
-                                                                    <div
-                                                                        onClick={() => {
-                                                                            const newImages = [...(editFormData.images || [])];
-                                                                            newImages[i] = "";
-                                                                            const newFiles = [...selectedFiles];
-                                                                            newFiles[i] = undefined as any;
-                                                                            setEditFormData({ ...editFormData, images: newImages });
-                                                                            setSelectedFiles(newFiles);
-                                                                        }}
-                                                                        className="bg-[#d9534f] rounded-full p-0.5 border-[0.5px] border-white shadow-sm cursor-pointer"
-                                                                    >
-                                                                        <X className="w-2 h-2 text-white" strokeWidth={4} />
-                                                                    </div>
-                                                                </div>
-                                                            </>
-                                                        ) : (
-                                                            <ImageIcon className="w-4 h-4 text-white" />
-                                                        )}
-                                                    </div>
+                                            {/* Dynamic Region - Row 1 */}
+                                            <td className="px-1 py-1 text-black border-r border-slate-300 align-top min-w-[120px]">
+                                                <span className="px-1">{ad.location}</span>
+                                            </td>
+                                            <td className="px-1 py-1 text-rose-500 border-r border-slate-300 align-top">{ad.price || '00'}</td>
+                                            <td className="px-1 py-1 text-emerald-600 capitalize border-r border-slate-300 align-top">{ad.adType}</td>
+                                            <td className="px-1 py-1 border-r border-slate-300 align-top">
+                                                <div className="flex items-center mt-1.5 px-0.5">
+                                                    <div className={cn(
+                                                        "w-4 h-2.5 rounded-[1px] shadow-sm",
+                                                        ad.adType !== 'Promoted' ? "bg-slate-200" :
+                                                            (ad.deliveryCount > ad.targetValue) ? "bg-blue-600" :
+                                                                (ad.deliveryCount === ad.targetValue) ? "bg-purple-600" :
+                                                                    (ad.deliveryCount >= ad.targetValue * 0.7) ? "bg-sky-400" : "bg-black"
+                                                    )} />
                                                 </div>
-                                            ))}
-                                            <div className="flex items-end h-[52px]">
-                                                <ChevronRight className="w-4 h-4 text-black ml-1" />
-                                            </div>
-                                        </div>
-                                    </div>
+                                            </td>
 
-                                    <div className="border border-slate-200 p-2 rounded-sm space-y-1.5 bg-white">
-                                        <div className="text-xs font-extrabold text-black uppercase">Approve photo</div>
-                                        <table className="w-full text-xs">
-                                            <thead>
-                                                <tr className="border-b border-slate-100 italic">
-                                                    <th className="text-left font-bold pb-1 w-1/4">Photo</th>
-                                                    <th className="text-left font-bold pb-1 w-1/4 text-center">Type</th>
-                                                    <th className="text-right font-bold pb-1 w-1/4 px-2 text-center whitespace-nowrap">Accept Request</th>
-                                                    <th className="text-right font-bold pb-1 w-1/4 pr-4">#</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {editFormData.images?.map((img, i) => (
-                                                    <tr key={i} className="border-b border-slate-50 last:border-0">
-                                                        <td className="py-2">
-                                                            <div className="w-[100px] h-[60px] border border-slate-200 rounded-[1px] overflow-hidden">
-                                                                <img
-                                                                    src={
-                                                                        selectedFiles[i]
-                                                                            ? URL.createObjectURL(selectedFiles[i])
-                                                                            : getImageUrl(img)
-                                                                    }
-                                                                    className="w-full h-full object-cover"
-                                                                    loading="lazy"
-                                                                />
-                                                            </div>
-                                                        </td>
-                                                        <td className="py-1 text-center font-bold text-black text-xs">Product</td>
-                                                        <td className="py-1 text-center px-4">
-                                                            <button className="bg-[#f0ad4e] text-white px-3 py-1 rounded-[1px] font-bold text-xs w-full shadow-sm">Accept</button>
-                                                        </td>
-                                                        <td className="py-1 text-right pr-4">
-                                                            <button
-                                                                onClick={() => selectedAd && deleteImage(selectedAd._id, img)}
-                                                                className="bg-[#d9534f] text-white px-2 py-1 rounded-[1px] font-bold text-xs shadow-sm"
-                                                            >
-                                                                Delete
-                                                            </button>
-                                                        </td>
-                                                    </tr>
+                                            {/* Columns 10-15 with rowSpan=2 */}
+                                            <td className="px-1 py-1 text-black whitespace-nowrap border-r border-b border-slate-300 align-top text-center" rowSpan={2}>
+                                                <div className="mt-1 font-medium">
+                                                    {ad.adType === 'Promoted' ? `${ad.targetD || 0}/${ad.dailyDeliveryCount || 0}` : '0/0'}
+                                                </div>
+                                            </td>
+                                            <td className="px-1 py-1 border-r border-b border-slate-300 align-top text-center" rowSpan={2}>
+                                                <div className={cn("mt-1.5 font-bold", ad.isReported ? "text-rose-600" : "text-black")}>
+                                                    {ad.isReported ? "YES" : "-"}
+                                                </div>
+                                            </td>
+                                            {/* <td className="px-1 py-1 border-r border-b border-slate-300 align-top" rowSpan={2}>
+                                                <div className="flex flex-col items-center mt-1">
+                                                    <ImageIcon className="w-2.5 h-2.5 text-cyan-500" />
+                                                    <Save className="w-2.5 h-2.5 text-orange-500" />
+                                                </div>
+                                            </td> */}
+                                            <td className="px-1 py-1 border-r border-b border-slate-300 align-top text-center" rowSpan={2}>
+                                                <div className="mt-1 flex flex-col items-center gap-1">
+                                                    {ad.edBy ? (
+                                                        <>
+                                                            <span className="bg-emerald-600 text-white px-1 py-0.5 rounded-[2px] text-[8px] font-bold uppercase min-w-[30px] leading-none">
+                                                                {ad.edBy.split(' ')[0]}
+                                                            </span>
+                                                            <div className="w-4 h-2.5 rounded-[1px] shadow-sm bg-emerald-500 border border-emerald-600" />
+                                                        </>
+                                                    ) : (
+                                                        <div className={cn(
+                                                            "w-4 h-2.5 rounded-[1px] shadow-sm mt-1.5",
+                                                            ad.senBy ? "bg-amber-400 border border-amber-500" : "bg-rose-500 border border-rose-600"
+                                                        )} />
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="px-1 py-1 whitespace-nowrap border-r border-b border-slate-300 align-top" rowSpan={2}>
+                                                <div className="flex flex-col text-xs leading-tight mt-0.5">
+                                                    <span>{new Date(ad.createdAt).toLocaleDateString()}</span>
+                                                    <span className="text-black">{new Date(ad.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-1 py-1 border-b border-slate-300 align-top" rowSpan={2}>
+                                                <div className="flex flex-col items-end gap-1 px-1">
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelectedAd(ad);
+                                                            setShowShortViewModal(true);
+                                                            markAdAsSeen(ad._id);
+                                                        }}
+                                                        className="bg-emerald-500 text-white px-2 h-5 flex items-center justify-center rounded-sm text-xs shadow-sm uppercase min-w-max"
+                                                    >
+                                                        Short
+                                                    </button>
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelectedAd(ad);
+                                                            setEditFormData(ad);
+                                                            setShowEditModal(true);
+                                                            markAdAsSeen(ad._id);
+                                                        }}
+                                                        className="bg-emerald-600 text-white px-2 h-5 flex items-center justify-center rounded-sm text-xs shadow-sm uppercase min-w-max"
+                                                    >
+                                                        Detail
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {/* Headline Row - Spans exactly across Location, Price, AD Type, PWR Target */}
+                                        < tr className={cn("hover:bg-slate-50 transition-colors h-5", selectedAds.includes(ad._id) && "bg-rose-50/50")}>
+                                            <td colSpan={4} className="px-2 py-0 border-r border-b border-t border-slate-300 text-[12px] text-black truncate max-w-0">
+                                                {ad.headline}
+                                            </td>
+                                        </tr>
+                                    </React.Fragment>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div >
+
+            {/* SEARCH MODAL */}
+            <AnimatePresence>
+                {
+                    showSearchModal && (
+                        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowSearchModal(false)} className="absolute inset-0 bg-black/20 backdrop-blur-sm" />
+                            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white border border-slate-900 w-full max-w-[98vw] rounded-sm shadow-2xl relative z-10 p-4 font-['Tahoma','Verdana',sans-serif]">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-xs font-bold text-black">Searching</span>
+                                    <button onClick={() => setShowSearchModal(false)}><X className="w-4 h-4 text-black" /></button>
+                                </div>
+
+                                <div className="border border-slate-200 p-3 space-y-4">
+                                    <div className="grid grid-cols-4 gap-3">
+                                        <div className="flex flex-col gap-0.5 border border-slate-200 p-1.5 rounded-sm">
+                                            <label className="text-xs font-bold text-black uppercase leading-none">Categorie</label>
+                                            <select
+                                                className="text-xs text-black outline-none w-full bg-transparent h-4"
+                                                value={searchKeys.categoryId}
+                                                onChange={(e) => setSearchKeys({ ...searchKeys, categoryId: e.target.value, subCategoryId: '' })}
+                                            >
+                                                <option value="">Select Categorie</option>
+                                                {categories.map((c, i) => (
+                                                    <option key={i} value={c._id}>{c.name}</option>
                                                 ))}
-                                            </tbody>
-                                        </table>
+                                            </select>
+                                        </div>
+                                        <div className="flex flex-col gap-0.5 border border-slate-200 p-1.5 rounded-sm">
+                                            <label className="text-xs font-bold text-black uppercase leading-none">Sub Categorie</label>
+                                            <select className="text-xs text-black outline-none w-full bg-transparent h-4">
+                                                <option value="">Select Sub Categorie</option>
+                                                {categories.find(c => c._id === searchKeys.categoryId)?.subcategories.map((s, i) => (
+                                                    <option key={i} value={s.name}>{s.name}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div className="flex flex-col gap-0.5 border border-slate-200 p-1.5 rounded-sm">
+                                            <label className="text-xs font-bold text-black uppercase leading-none">Location</label>
+                                            <select
+                                                className="text-xs text-black outline-none w-full bg-transparent h-4"
+                                                value={searchKeys.locationId}
+                                                onChange={(e) => setSearchKeys({ ...searchKeys, locationId: e.target.value, subLocationId: '' })}
+                                            >
+                                                <option value="">Select Location</option>
+                                                {locations.map((l, i) => (
+                                                    <option key={i} value={l.name}>{l.name}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div className="flex flex-col gap-0.5 border border-slate-200 p-1.5 rounded-sm">
+                                            <label className="text-xs font-bold text-black uppercase leading-none">Sub Location</label>
+                                            <select className="text-xs font-bold text-black outline-none w-full bg-transparent h-4">
+                                                <option value="">Select Sub Location</option>
+                                                {locations.find(l => l.name === searchKeys.locationId)?.subLocations.map((s, i) => (
+                                                    <option key={i} value={s.name}>{s.name}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-black font-bold block">Registration Date From</label>
+                                            <div className="flex border border-slate-300 h-7 text-xs">
+                                                <input type="text" className="flex-1 px-1 outline-none font-medium" />
+                                                <button className="px-1 border-l border-slate-200 bg-slate-50"><Calendar className="w-3 h-3" /></button>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-black font-bold block">Registration Date till</label>
+                                            <div className="flex border border-slate-300 h-7 text-xs">
+                                                <input type="text" className="flex-1 px-1 outline-none font-medium" />
+                                                <button className="px-1 border-l border-slate-200 bg-slate-50"><Calendar className="w-3 h-3" /></button>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-black font-bold block">Login Date from</label>
+                                            <div className="flex border border-slate-300 h-7 text-xs">
+                                                <input type="text" className="flex-1 px-1 outline-none font-medium" />
+                                                <button className="px-1 border-l border-slate-200 bg-slate-50"><Calendar className="w-3 h-3" /></button>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-black font-bold block">Login Date till</label>
+                                            <div className="flex border border-slate-300 h-7 text-xs">
+                                                <input type="text" className="flex-1 px-1 outline-none font-medium" />
+                                                <button className="px-1 border-l border-slate-200 bg-slate-50"><Calendar className="w-3 h-3" /></button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
+                                <div className="p-4 flex justify-end gap-2 border-t border-slate-200">
+                                    <button onClick={() => setShowSearchModal(false)} className="bg-slate-500 text-white px-4 py-1.5 font-bold rounded-sm text-xs shadow-sm flex items-center gap-1">
+                                        <X className="w-3 h-3" /> Hide Search
+                                    </button>
+                                    <button className="bg-emerald-500 text-white px-4 py-1.5 font-bold rounded-sm text-xs shadow-sm flex items-center gap-1">
+                                        <Search className="w-3 h-3" /> Search
+                                    </button>
+                                </div>
+                            </motion.div>
+                        </div>
+                    )
+                }
+            </AnimatePresence >
+
+            {/* ADD/EDIT MODAL */}
+            <AnimatePresence>
+                {
+                    showEditModal && (
+                        <div className="fixed inset-0 z-[110] flex items-center justify-center p-2">
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowEditModal(false)} className="absolute inset-0 bg-black/10" />
+                            <motion.div initial={{ scale: 0.98, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.98, opacity: 0 }} className="bg-white border-[1px] border-slate-300 w-full max-w-[98vw] rounded-sm shadow-xl relative z-10 flex flex-col h-[98vh] text-xs font-['Tahoma','Verdana',sans-serif]">
+                                {/* Top Bar Navigation */}
+                                <div className="p-1 px-2 flex items-center justify-between border-b bg-white">
+                                    <div className="flex items-center gap-1.5">
+                                        <LayoutGrid className="w-3.5 h-3.5 text-black" />
+                                        <span className="text-black">/</span>
+                                        <span className="font-bold text-black">{selectedAd?._id ? "Edit Post" : "Add Post"}</span>
+                                        <span className="bg-emerald-600 text-white px-1 ml-2 rounded-[2px] text-xs py-0.5 font-bold">Publish</span>
+                                    </div>
+                                    <button onClick={() => setShowEditModal(false)} className="hover:bg-slate-100 p-0.5 rounded"><X className="w-3.5 h-3.5 text-black" /></button>
+                                </div>
+
+                                <div className="flex-1 overflow-y-auto p-3 grid grid-cols-[1.2fr_1.8fr] gap-3 bg-white">
+                                    {/* Left Column */}
+                                    <div className="flex flex-col gap-2">
+                                        <div className="border border-slate-200 p-2 rounded-sm space-y-2">
+                                            <input
+                                                placeholder="Heading"
+                                                className="w-full border border-slate-200 px-2 h-7 outline-none font-bold text-xs placeholder:text-black"
+                                                value={editFormData.headline || ''}
+                                                onChange={(e) => handleEditChange('headline', e.target.value)}
+                                            />
+                                            <div className="space-y-0.5">
+                                                <div className="text-xs text-black">Description Present</div>
+                                                <textarea
+                                                    className="w-full border border-slate-200 p-1.5 outline-none text-xs h-24 resize-none bg-white text-black"
+                                                    value={editFormData.description || ''}
+                                                    readOnly
+                                                />
+                                            </div>
+                                            <div className="space-y-0.5">
+                                                <div className="text-xs text-black">Description Edit</div>
+                                                <textarea
+                                                    className="w-full border border-slate-200 p-1.5 outline-none text-xs h-32 resize-none bg-white"
+                                                    value={editFormData.description || ''}
+                                                    onChange={(e) => handleEditChange('description', e.target.value)}
+                                                />
+                                            </div>
+                                            <div className="flex items-center gap-3 justify-end text-xs text-black pr-1">
+                                                <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" className="w-3 h-3 border-slate-300" /> Accept</label>
+                                                <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" className="w-3 h-3 border-slate-300" /> Reject</label>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {['category', 'subCategory', 'location', 'subLocation'].map((name) => (
+                                                <select
+                                                    key={name}
+                                                    className="border border-slate-200 h-7 outline-none text-xs bg-white px-1"
+                                                    value={editFormData[name as keyof typeof editFormData] as string || ''}
+                                                    onChange={(e) => handleEditChange(name, e.target.value)}
+                                                >
+                                                    <option value="">{name === 'category' ? 'Categorie' : name === 'subCategory' ? 'Sub Catagoeie' : name === 'location' ? 'Location' : 'Sub Location'}</option>
+                                                    {name === 'category' && categories.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
+                                                    {name === 'subCategory' && categories.find(c => c.name === editFormData.category)?.subcategories.map((s, i) => <option key={i} value={s.name}>{s.name}</option>)}
+                                                    {name === 'location' && locations.map(l => <option key={l._id} value={l.name}>{l.name}</option>)}
+                                                    {name === 'subLocation' && locations.find(l => l.name === editFormData.location)?.subLocations.map((s, i) => <option key={i} value={s.name}>{s.name}</option>)}
+                                                </select>
+                                            ))}
+                                        </div>
+
+                                        <div className="border border-slate-200 p-2 rounded-sm space-y-2">
+                                            <div className="flex gap-1.5 items-center">
+                                                <div className="relative">
+                                                    <input
+                                                        type="text"
+                                                        className="border border-slate-200 h-7 outline-none text-xs w-48 px-2 bg-slate-50 font-bold text-black"
+                                                        value={selectedAd ? (selectedAd._id) : "Auto Value"}
+                                                        readOnly
+                                                    />
+                                                    <span className="absolute -top-3 left-0 text-xs text-black">Merchant ID (Auto)</span>
+                                                </div>
+                                                <div className="ml-0.5 flex items-center justify-center h-7 text-black font-bold text-lg">+</div>
+                                                <div className="ml-4 flex-1 grid grid-cols-2 gap-1.5">
+                                                    <input
+                                                        placeholder="Price (Payble)"
+                                                        className="border border-slate-200 h-7 px-2 outline-none text-xs w-full"
+                                                        value={editFormData.price || ''}
+                                                        onChange={(e) => handleEditChange('price', e.target.value)}
+                                                    />
+                                                    <input
+                                                        placeholder="Price (Old)"
+                                                        className="border border-slate-200 h-7 px-2 outline-none text-xs w-full"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="border-t border-dashed pt-2 space-y-2">
+                                                <div className="text-[10px] font-bold text-slate-400 uppercase">Features / Attributes</div>
+                                                {categories.find(c => c.name === editFormData.category)?.subcategories.find((s: any) => s.name === editFormData.subCategory)?.features?.map((feature: any) => (
+                                                    <div key={feature._id} className="flex items-center gap-2">
+                                                        <label className="text-xs text-black w-24 shrink-0 truncate">{feature.name}</label>
+                                                        {feature.buttonItemNames && feature.buttonItemNames.length > 0 ? (
+                                                            <select
+                                                                className="flex-1 border border-slate-200 h-6 outline-none text-xs bg-white px-1"
+                                                                value={editFormData.features?.[feature.name] || ''}
+                                                                onChange={(e) => setEditFormData(prev => ({
+                                                                    ...prev,
+                                                                    features: { ...prev.features, [feature.name]: e.target.value }
+                                                                }))}
+                                                            >
+                                                                <option value="">Select {feature.name}</option>
+                                                                {feature.buttonItemNames.map((item: string) => (
+                                                                    <option key={item} value={item}>{item}</option>
+                                                                ))}
+                                                            </select>
+                                                        ) : (
+                                                            <input
+                                                                className="flex-1 border border-slate-200 h-6 px-2 outline-none text-xs"
+                                                                placeholder={feature.boxFadeName || feature.name}
+                                                                value={editFormData.features?.[feature.name] || ''}
+                                                                onChange={(e) => setEditFormData(prev => ({
+                                                                    ...prev,
+                                                                    features: { ...prev.features, [feature.name]: e.target.value }
+                                                                }))}
+                                                            />
+                                                        )}
+                                                    </div>
+                                                ))}
+                                                {(!editFormData.subCategory || !(categories.find(c => c.name === editFormData.category)?.subcategories.find((s: any) => s.name === editFormData.subCategory)?.features?.length)) && (
+                                                    <div className="text-center text-slate-400 py-1 italic">No features for this subcategory</div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <div className="flex gap-2 pt-1">
+                                            <button onClick={() => setShowEditModal(false)} className="flex-1 bg-[#d9534f] text-white py-2 font-bold rounded-sm text-xs uppercase">Cancel</button>
+                                            <button
+                                                onClick={() => selectedAd && deleteAd(selectedAd._id)}
+                                                className="flex-1 bg-[#f0ad4e] text-white py-2 font-bold rounded-sm text-xs uppercase"
+                                            >
+                                                Delete
+                                            </button>
+                                            <button onClick={handleSaveEdit} className="grow-[1.5] bg-[#5cb85c] text-white py-2 font-bold rounded-sm text-xs uppercase flex items-center justify-center gap-2">
+                                                {saveLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Save'}
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Right Column */}
+                                    <div className="flex flex-col gap-2">
+                                        <div className="grid grid-cols-[1fr_1fr_1fr_1fr] gap-2 border border-slate-200 p-2 rounded-sm bg-white">
+                                            <div className="flex flex-col gap-0.5">
+                                                <label className="text-xs text-black font-bold italic">Show Till (Date)</label>
+                                                <input
+                                                    type="date"
+                                                    className="border border-slate-200 h-6 outline-none text-xs px-1 w-full"
+                                                    value={editFormData.showTill ? new Date(editFormData.showTill).toISOString().split('T')[0] : ''}
+                                                    onChange={(e) => handleEditChange('showTill', e.target.value)}
+                                                />
+                                            </div>
+                                            <div className="flex flex-col gap-0.5">
+                                                <label className="text-xs text-black">Post Entry</label>
+                                                <div className="text-xs font-bold text-black leading-tight">
+                                                    {selectedAd?._id ? (
+                                                        <>
+                                                            {new Date(selectedAd.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}<br />
+                                                            {new Date(selectedAd.createdAt).toLocaleDateString()}
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}<br />
+                                                            {new Date().toLocaleDateString()}
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div className="flex flex-col gap-0.5">
+                                                <label className="text-xs text-black">Post Modify</label>
+                                                <div className="text-xs font-bold text-black leading-tight">
+                                                    {selectedAd?.updatedAt ? (
+                                                        <>
+                                                            {new Date(selectedAd.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}<br />
+                                                            {new Date(selectedAd.updatedAt).toLocaleDateString()}
+                                                        </>
+                                                    ) : selectedAd?._id ? (
+                                                        <>
+                                                            {new Date(selectedAd.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}<br />
+                                                            {new Date(selectedAd.createdAt).toLocaleDateString()}
+                                                        </>
+                                                    ) : (
+                                                        <span className="text-black font-normal">--:--<br />--/--/--</span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div className="flex flex-col gap-0.5 relative">
+                                                <label className="text-xs text-black">Promote Type</label>
+                                                <select
+                                                    className="border border-slate-200 h-6 outline-none text-xs px-1 bg-white"
+                                                    value={editFormData.adType || 'Free'}
+                                                    onChange={(e) => handleEditChange('adType', e.target.value)}
+                                                >
+                                                    <option value="Free">Free</option>
+                                                    <option value="Promoted">Promoted</option>
+                                                </select>
+                                            </div>
+                                            <div className="flex flex-col gap-0.5">
+                                                <label className="text-xs text-black font-bold">Marchent ID</label>
+                                                <div className="text-xs font-bold text-black">{selectedAd?._id || 'Auto value'}</div>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-[1.5fr_2.5fr] gap-2 border border-slate-200 p-2 rounded-sm bg-white relative">
+                                            <div className="flex flex-col gap-2">
+                                                <div className="flex flex-col gap-0.5">
+                                                    <div className="flex items-center gap-1">
+                                                        <span className="text-xs text-black">Product Status</span>
+                                                        <ArrowLeft className="w-2.5 h-2.5 text-blue-500 rotate-[30deg]" />
+                                                    </div>
+                                                    <select
+                                                        value={editFormData.status || 'pending'}
+                                                        onChange={(e) => handleEditChange('status', e.target.value)}
+                                                        className="w-full border border-slate-300 h-7 text-xs outline-none px-1 bg-white"
+                                                    >
+                                                        <option value="active">Active</option>
+                                                        <option value="notification">Notification</option>
+                                                        <option value="pause">Pause</option>
+                                                        <option value="review">Review/Processing</option>
+                                                        <option value="rejected">Delete (Reason)</option>
+                                                        <option value="atv_msg">Product Atv+Msg</option>
+                                                        <option value="unatv_msg">Prodt Unatv+Msg</option>
+                                                    </select>
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    <div className="flex flex-col gap-0.5">
+                                                        <label className="text-xs text-black">Target Value</label>
+                                                        <input
+                                                            type="number"
+                                                            className="h-7 border border-slate-200 flex items-center px-1.5 text-xs font-bold text-black outline-none"
+                                                            value={editFormData.targetValue || 0}
+                                                            onChange={(e) => handleEditChange('targetValue', parseInt(e.target.value))}
+                                                        />
+                                                    </div>
+                                                    <div className="flex flex-col gap-0.5">
+                                                        <label className="text-xs text-black">Target/D</label>
+                                                        <input
+                                                            className="h-7 border border-slate-200 flex items-center px-1.5 text-xs font-bold text-black outline-none"
+                                                            value={editFormData.targetD || ''}
+                                                            onChange={(e) => handleEditChange('targetD', e.target.value)}
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    <div className="flex flex-col gap-0.5">
+                                                        <label className="text-xs text-black">Delivered (Total / Daily)</label>
+                                                        <div className="h-7 border border-slate-200 flex items-center px-1.5 text-xs font-bold text-black bg-slate-50">
+                                                            {editFormData.deliveryCount || 0} / {editFormData.dailyDeliveryCount || 0}
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex flex-col gap-0.5">
+                                                        <label className="text-xs text-black">Views (Total / Daily)</label>
+                                                        <div className="h-7 border border-slate-200 flex items-center px-1.5 text-xs font-bold text-black bg-slate-50">
+                                                            {editFormData.views || 0} / {editFormData.dailyViewsCount || 0}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="flex flex-col gap-2">
+                                                <div className="flex flex-col gap-0.5">
+                                                    <label className="text-xs text-black">Notification Dialogue</label>
+                                                    <input
+                                                        className="w-full border border-slate-200 h-7 text-xs outline-none px-2"
+                                                        value={editFormData.notificationDialogue || ''}
+                                                        onChange={(e) => handleEditChange('notificationDialogue', e.target.value)}
+                                                    />
+                                                </div>
+                                                <div className="grid grid-cols-[1fr_1fr_0.8fr] gap-1.5">
+                                                    <div className="flex flex-col gap-0.5">
+                                                        <label className="text-xs text-black whitespace-nowrap">View From</label>
+                                                        <div className="flex border border-slate-200 h-7 items-center justify-center bg-slate-50"><Calendar className="w-3 h-3 text-black" /></div>
+                                                    </div>
+                                                    <div className="flex flex-col gap-0.5">
+                                                        <label className="text-xs text-black whitespace-nowrap">View Till</label>
+                                                        <div className="flex border border-slate-200 h-7 items-center justify-center bg-slate-50"><Calendar className="w-3 h-3 text-black" /></div>
+                                                    </div>
+                                                    <div className="flex flex-col gap-0.5">
+                                                        <label className="text-xs text-black">Result</label>
+                                                        <div className="h-7 border border-slate-200 bg-slate-50"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="border border-slate-200 p-2 rounded-sm space-y-1 bg-white">
+                                            <label className="text-xs text-black">Note</label>
+                                            <input
+                                                className="w-full border border-slate-200 h-7 text-xs outline-none px-2"
+                                                value={editFormData.note || ''}
+                                                onChange={(e) => handleEditChange('note', e.target.value)}
+                                            />
+                                        </div>
+
+                                        <div className="border border-slate-200 p-2 rounded-sm bg-white">
+                                            <div className="text-xs font-bold text-black mb-2">Photo Zone</div>
+                                            <div className="flex gap-2.5 items-start">
+                                                {[...Array(5)].map((_, i) => (
+                                                    <div key={i} className="flex flex-col gap-1">
+                                                        <div className="flex items-center gap-3">
+                                                            <label className="text-xs text-black cursor-pointer hover:text-emerald-600 transition-colors uppercase font-bold">
+                                                                Choose File
+                                                                <input
+                                                                    type="file"
+                                                                    className="hidden"
+                                                                    accept="image/*"
+                                                                    onChange={(e) => handleFileChange(e, i)}
+                                                                />
+                                                            </label>
+                                                            <label className="flex items-center gap-0.5 cursor-pointer leading-none">
+                                                                <input type="checkbox" className="w-2.5 h-2.5" />
+                                                                <span className="text-xs text-black whitespace-nowrap">Long Img?</span>
+                                                            </label>
+                                                        </div>
+                                                        <div className="w-[78px] h-[52px] border border-slate-200 rounded-[1px] bg-slate-50 relative overflow-hidden flex items-center justify-center group/p">
+                                                            {editFormData.images?.[i] ? (
+                                                                <>
+                                                                    <img
+                                                                        src={
+                                                                            selectedFiles[i]
+                                                                                ? URL.createObjectURL(selectedFiles[i])
+                                                                                : getImageUrl(editFormData.images?.[i] || '')
+                                                                        }
+                                                                        className="w-full h-full object-cover"
+                                                                        loading="lazy"
+                                                                    />
+                                                                    <div className="absolute top-0 right-0 flex gap-0.5 p-0.5 opacity-0 group-hover/p:opacity-100 transition-opacity">
+                                                                        <div className="bg-[#5cb85c] rounded-full p-0.5 border-[0.5px] border-white shadow-sm cursor-pointer whitespace-nowrap"><Check className="w-2 h-2 text-white" strokeWidth={4} /></div>
+                                                                        <div
+                                                                            onClick={() => {
+                                                                                const newImages = [...(editFormData.images || [])];
+                                                                                newImages[i] = "";
+                                                                                const newFiles = [...selectedFiles];
+                                                                                newFiles[i] = undefined as any;
+                                                                                setEditFormData({ ...editFormData, images: newImages });
+                                                                                setSelectedFiles(newFiles);
+                                                                            }}
+                                                                            className="bg-[#d9534f] rounded-full p-0.5 border-[0.5px] border-white shadow-sm cursor-pointer"
+                                                                        >
+                                                                            <X className="w-2 h-2 text-white" strokeWidth={4} />
+                                                                        </div>
+                                                                    </div>
+                                                                </>
+                                                            ) : (
+                                                                <ImageIcon className="w-4 h-4 text-white" />
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                                <div className="flex items-end h-[52px]">
+                                                    <ChevronRight className="w-4 h-4 text-black ml-1" />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="border border-slate-200 p-2 rounded-sm space-y-1.5 bg-white">
+                                            <div className="text-xs font-extrabold text-black uppercase">Approve photo</div>
+                                            <table className="w-full text-xs">
+                                                <thead>
+                                                    <tr className="border-b border-slate-100 italic">
+                                                        <th className="text-left font-bold pb-1 w-1/4">Photo</th>
+                                                        <th className="text-left font-bold pb-1 w-1/4 text-center">Type</th>
+                                                        <th className="text-right font-bold pb-1 w-1/4 px-2 text-center whitespace-nowrap">Accept Request</th>
+                                                        <th className="text-right font-bold pb-1 w-1/4 pr-4">#</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {editFormData.images?.map((img, i) => (
+                                                        <tr key={i} className="border-b border-slate-50 last:border-0">
+                                                            <td className="py-2">
+                                                                <div className="w-[100px] h-[60px] border border-slate-200 rounded-[1px] overflow-hidden">
+                                                                    <img
+                                                                        src={
+                                                                            selectedFiles[i]
+                                                                                ? URL.createObjectURL(selectedFiles[i])
+                                                                                : getImageUrl(img)
+                                                                        }
+                                                                        className="w-full h-full object-cover"
+                                                                        loading="lazy"
+                                                                    />
+                                                                </div>
+                                                            </td>
+                                                            <td className="py-1 text-center font-bold text-black text-xs">Product</td>
+                                                            <td className="py-1 text-center px-4">
+                                                                <button className="bg-[#f0ad4e] text-white px-3 py-1 rounded-[1px] font-bold text-xs w-full shadow-sm">Accept</button>
+                                                            </td>
+                                                            <td className="py-1 text-right pr-4">
+                                                                <button
+                                                                    onClick={() => selectedAd && deleteImage(selectedAd._id, img)}
+                                                                    className="bg-[#d9534f] text-white px-2 py-1 rounded-[1px] font-bold text-xs shadow-sm"
+                                                                >
+                                                                    Delete
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        </div>
+                    )
+                }
+            </AnimatePresence >
 
             {/* SHORT VIEW MODAL */}
             <AnimatePresence>
-                {showShortViewModal && selectedAd && (
-                    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowShortViewModal(false)} className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-                        <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white border-[1.5px] border-slate-900 w-full max-w-sm rounded-sm shadow-2xl relative z-10 p-4 font-['Tahoma','Verdana',sans-serif]">
-                            <div className="flex items-center justify-between mb-4 pb-2 border-b">
-                                <div className="flex items-center gap-2">
-                                    <ArrowLeft className="w-3 h-3 text-rose-500" />
-                                    <span className="text-xs font-bold text-black">/ Short View</span>
-                                    <span className="bg-emerald-600 text-white px-1 rounded-sm text-xs py-0.5">Publish</span>
-                                </div>
-                                <button onClick={() => setShowShortViewModal(false)}><X className="w-3.5 h-3.5 text-black" /></button>
-                            </div>
-
-                            <div className="space-y-4">
-                                <div className="space-y-1">
-                                    <label className="text-xs font-bold text-black uppercase">Heading</label>
-                                    <div className="text-xs font-bold text-black border-b pb-1">{selectedAd.headline}</div>
+                {
+                    showShortViewModal && selectedAd && (
+                        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowShortViewModal(false)} className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+                            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white border-[1.5px] border-slate-900 w-full max-w-sm rounded-sm shadow-2xl relative z-10 p-4 font-['Tahoma','Verdana',sans-serif]">
+                                <div className="flex items-center justify-between mb-4 pb-2 border-b">
+                                    <div className="flex items-center gap-2">
+                                        <ArrowLeft className="w-3 h-3 text-rose-500" />
+                                        <span className="text-xs font-bold text-black">/ Short View</span>
+                                        <span className="bg-emerald-600 text-white px-1 rounded-sm text-xs py-0.5">Publish</span>
+                                    </div>
+                                    <button onClick={() => setShowShortViewModal(false)}><X className="w-3.5 h-3.5 text-black" /></button>
                                 </div>
 
-                                <div className="space-y-1">
-                                    <label className="text-xs font-bold text-black uppercase">Description Present</label>
-                                    <div className="text-xs text-black max-h-16 overflow-y-auto bg-slate-50 p-1.5 border border-slate-200">{selectedAd.description}</div>
-                                </div>
-
-                                <div className="space-y-1">
-                                    <label className="text-xs font-bold text-indigo-500 uppercase italic">Description Edit</label>
-                                    <div className="text-xs text-black h-16 bg-indigo-50/20 p-1.5 border border-slate-200">Present</div>
-                                </div>
-
-                                <div className="flex justify-end gap-3 text-xs font-bold">
-                                    <label className="flex items-center gap-1 cursor-pointer">
-                                        <input
-                                            type="radio"
-                                            name="short_photo_status"
-                                            className="w-2.5 h-2.5"
-                                            checked={selectedAd.photoStatus === 'approved'}
-                                            onChange={() => updateAdField(selectedAd._id, 'photoStatus', 'approved')}
-                                        />
-                                        Accept
-                                    </label>
-                                    <label className="flex items-center gap-1 cursor-pointer">
-                                        <input
-                                            type="radio"
-                                            name="short_photo_status"
-                                            className="w-2.5 h-2.5"
-                                            checked={selectedAd.photoStatus === 'rejected'}
-                                            onChange={() => updateAdField(selectedAd._id, 'photoStatus', 'rejected')}
-                                        />
-                                        Reject
-                                    </label>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-2">
+                                <div className="space-y-4">
                                     <div className="space-y-1">
-                                        <label className="text-xs text-black">Category</label>
-                                        <div className="w-full border border-slate-200 h-6 text-xs flex items-center px-1 bg-slate-50 font-bold">{selectedAd.category}</div>
+                                        <label className="text-xs font-bold text-black uppercase">Heading</label>
+                                        <div className="text-xs font-bold text-black border-b pb-1">{selectedAd.headline}</div>
                                     </div>
-                                    <div className="space-y-1">
-                                        <label className="text-xs text-black">Sub Category</label>
-                                        <div className="w-full border border-slate-200 h-6 text-xs flex items-center px-1 bg-slate-50">{selectedAd.subCategory || 'N/A'}</div>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <label className="text-xs text-black">Location</label>
-                                        <div className="w-full border border-slate-200 h-6 text-xs flex items-center px-1 bg-slate-50 font-bold">{selectedAd.location}</div>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <label className="text-xs text-black">Sub Location</label>
-                                        <div className="w-full border border-slate-200 h-6 text-xs flex items-center px-1 bg-slate-50">{selectedAd.subLocation || 'N/A'}</div>
-                                    </div>
-                                    <div className="col-span-2">
-                                        <label className="text-xs text-black">Price (Payable)</label>
-                                        <div className="w-full border border-slate-200 h-6 text-xs flex items-center px-1 font-bold text-emerald-600">৳ {selectedAd.price || '0'}</div>
-                                    </div>
-                                </div>
 
-                                <div className="flex gap-1.5 overflow-x-auto py-1">
-                                    {selectedAd.images.map((img, i) => (
-                                        <div key={i} className="w-12 h-12 border border-slate-200 rounded overflow-hidden shrink-0 relative">
-                                            <img src={getImageUrl(img)} className="w-full h-full object-cover" loading="lazy" />
-                                            <div className="absolute top-0 right-0 p-0.5 flex gap-0.5">
-                                                <div className="bg-emerald-500 w-2 h-2 rounded-full border border-white" />
-                                                <div className="bg-rose-500 w-2 h-2 rounded-full border border-white" />
-                                            </div>
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-bold text-black uppercase">Description Present</label>
+                                        <div className="text-xs text-black max-h-16 overflow-y-auto bg-slate-50 p-1.5 border border-slate-200">{selectedAd.description}</div>
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-bold text-indigo-500 uppercase italic">Description Edit</label>
+                                        <div className="text-xs text-black h-16 bg-indigo-50/20 p-1.5 border border-slate-200">Present</div>
+                                    </div>
+
+                                    <div className="flex justify-end gap-3 text-xs font-bold">
+                                        <label className="flex items-center gap-1 cursor-pointer">
+                                            <input
+                                                type="radio"
+                                                name="short_photo_status"
+                                                className="w-2.5 h-2.5"
+                                                checked={selectedAd.photoStatus === 'approved'}
+                                                onChange={() => updateAdField(selectedAd._id, 'photoStatus', 'approved')}
+                                            />
+                                            Accept
+                                        </label>
+                                        <label className="flex items-center gap-1 cursor-pointer">
+                                            <input
+                                                type="radio"
+                                                name="short_photo_status"
+                                                className="w-2.5 h-2.5"
+                                                checked={selectedAd.photoStatus === 'rejected'}
+                                                onChange={() => updateAdField(selectedAd._id, 'photoStatus', 'rejected')}
+                                            />
+                                            Reject
+                                        </label>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div className="space-y-1">
+                                            <label className="text-xs text-black">Category</label>
+                                            <div className="w-full border border-slate-200 h-6 text-xs flex items-center px-1 bg-slate-50 font-bold">{selectedAd.category}</div>
                                         </div>
-                                    ))}
-                                </div>
+                                        <div className="space-y-1">
+                                            <label className="text-xs text-black">Sub Category</label>
+                                            <div className="w-full border border-slate-200 h-6 text-xs flex items-center px-1 bg-slate-50">{selectedAd.subCategory || 'N/A'}</div>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-xs text-black">Location</label>
+                                            <div className="w-full border border-slate-200 h-6 text-xs flex items-center px-1 bg-slate-50 font-bold">{selectedAd.location}</div>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-xs text-black">Sub Location</label>
+                                            <div className="w-full border border-slate-200 h-6 text-xs flex items-center px-1 bg-slate-50">{selectedAd.subLocation || 'N/A'}</div>
+                                        </div>
+                                        <div className="col-span-2">
+                                            <label className="text-xs text-black">Price (Payable)</label>
+                                            <div className="w-full border border-slate-200 h-6 text-xs flex items-center px-1 font-bold text-emerald-600">৳ {selectedAd.price || '0'}</div>
+                                        </div>
+                                    </div>
 
-                                <div className="flex gap-2 pt-2">
-                                    <button onClick={() => setShowShortViewModal(false)} className="flex-1 bg-rose-500 text-white py-1.5 font-bold rounded-sm text-xs shadow-sm hover:bg-rose-600">Cancel</button>
-                                    <button
-                                        onClick={() => {
-                                            if (selectedAd && confirm("Confirm delete ad?")) {
-                                                const id = selectedAd._id;
-                                                axios.delete(`${API_BASE_URL}/api/ads/admin/${id}`, {
-                                                    headers: { 'x-auth-token': Cookies.get('adminToken') }
-                                                }).then(() => {
-                                                    setAds(prev => prev.filter(a => a._id !== id));
+                                    <div className="flex gap-1.5 overflow-x-auto py-1">
+                                        {selectedAd.images.map((img, i) => (
+                                            <div key={i} className="w-12 h-12 border border-slate-200 rounded overflow-hidden shrink-0 relative">
+                                                <img src={getImageUrl(img)} className="w-full h-full object-cover" loading="lazy" />
+                                                <div className="absolute top-0 right-0 p-0.5 flex gap-0.5">
+                                                    <div className="bg-emerald-500 w-2 h-2 rounded-full border border-white" />
+                                                    <div className="bg-rose-500 w-2 h-2 rounded-full border border-white" />
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <div className="flex gap-2 pt-2">
+                                        <button onClick={() => setShowShortViewModal(false)} className="flex-1 bg-rose-500 text-white py-1.5 font-bold rounded-sm text-xs shadow-sm hover:bg-rose-600">Cancel</button>
+                                        <button
+                                            onClick={() => {
+                                                if (selectedAd && confirm("Confirm delete ad?")) {
+                                                    const id = selectedAd._id;
+                                                    axios.delete(`${API_BASE_URL}/api/ads/admin/${id}`, {
+                                                        headers: { 'x-auth-token': Cookies.get('adminToken') }
+                                                    }).then(() => {
+                                                        setAds(prev => prev.filter(a => a._id !== id));
+                                                        setShowShortViewModal(false);
+                                                    });
+                                                }
+                                            }}
+                                            className="flex-1 bg-yellow-500 text-white py-1.5 font-bold rounded-sm text-xs shadow-sm hover:bg-yellow-600"
+                                        >
+                                            Delete
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                if (selectedAd) {
+                                                    updateStatus(selectedAd._id, 'active');
                                                     setShowShortViewModal(false);
-                                                });
-                                            }
-                                        }}
-                                        className="flex-1 bg-yellow-500 text-white py-1.5 font-bold rounded-sm text-xs shadow-sm hover:bg-yellow-600"
-                                    >
-                                        Delete
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            if (selectedAd) {
-                                                updateStatus(selectedAd._id, 'active');
-                                                setShowShortViewModal(false);
-                                            }
-                                        }}
-                                        className="grow-[2] bg-emerald-600 text-white py-1.5 font-bold rounded-sm text-xs shadow-sm hover:bg-emerald-700"
-                                    >
-                                        Publish
-                                    </button>
+                                                }
+                                            }}
+                                            className="grow-[2] bg-emerald-600 text-white py-1.5 font-bold rounded-sm text-xs shadow-sm hover:bg-emerald-700"
+                                        >
+                                            Publish
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
+                            </motion.div>
+                        </div>
+                    )
+                }
+            </AnimatePresence >
 
             <style jsx global>{`
                 .no-scrollbar::-webkit-scrollbar {
@@ -1339,6 +1470,23 @@ export default function PostManagement() {
                     scrollbar-width: none;
                 }
             `}</style>
-        </div>
+
+            {/* Photo Long View Simple Floating Preview */}
+            <AnimatePresence>
+                {hoveredImage && (
+                    <div
+                        className="fixed right-4 top-1/2 -translate-y-1/2 w-[650px] max-h-[95vh] bg-white border-2 border-slate-400 shadow-[0_0_50px_rgba(0,0,0,0.5)] z-[200] flex flex-col rounded-sm overflow-hidden"
+                    >
+                        <div className="flex-1 overflow-y-auto no-scrollbar p-1">
+                            <img
+                                src={getImageUrl(hoveredImage)}
+                                className="w-full h-auto"
+                                alt="Preview"
+                            />
+                        </div>
+                    </div>
+                )}
+            </AnimatePresence>
+        </div >
     );
 }
