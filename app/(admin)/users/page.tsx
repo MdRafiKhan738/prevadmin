@@ -7,7 +7,7 @@ import {
     MoreHorizontal, MapPin, Tag, ShieldCheck, Mail,
     Phone, Store, Calendar, HelpCircle, Loader2, AlertCircle,
     ArrowLeft, XCircle, PlusCircle, MessageSquare, ImageIcon,
-    Minus, CheckCircle2
+    Minus, CheckCircle2, ChevronDown
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Cookies from 'js-cookie';
@@ -32,12 +32,11 @@ interface UserFormData {
     mobile: string;
     mobileVerified: boolean;
     education: string;
-    educationIn: string;
     currentJob: string;
     jobExperience: string;
     note: string;
     storeName: string;
-    actionType: string;
+    actionType: string[];
     accountStatus: string;
     verifiedBy: string;
     location: string;
@@ -52,6 +51,7 @@ interface UserFormData {
     storeLogo?: string;
     storeBanner?: string;
     merchantVerifiedBy: string;
+    merchantTrustStatus: string;
     additionalMobiles?: string[];
 }
 
@@ -69,6 +69,7 @@ export default function UserManagement() {
     const [selectedFiles, setSelectedFiles] = useState<{ [key: string]: File }>({});
     const [locations, setLocations] = useState<any[]>([]);
     const [categories, setCategories] = useState<any[]>([]);
+    const [isActionDropdownOpen, setIsActionDropdownOpen] = useState(false);
 
     const [formData, setFormData] = useState<UserFormData>({
         name: '',
@@ -79,12 +80,11 @@ export default function UserManagement() {
         mobile: '',
         mobileVerified: true,
         education: '',
-        educationIn: '',
         currentJob: '',
         jobExperience: '',
         note: '',
         storeName: '',
-        actionType: 'call',
+        actionType: ['call'],
         accountStatus: 'review',
         verifiedBy: 'Mobile',
         location: '',
@@ -99,6 +99,7 @@ export default function UserManagement() {
         storeLogo: '',
         storeBanner: '',
         merchantVerifiedBy: 'Mobile',
+        merchantTrustStatus: 'Untrusted',
         additionalMobiles: []
     });
     const [tempMobile, setTempMobile] = useState('');
@@ -151,12 +152,11 @@ export default function UserManagement() {
                 mobile: user.mobile || '',
                 mobileVerified: user.mobileVerified ?? true,
                 education: user.education || '',
-                educationIn: user.educationIn || '',
                 currentJob: user.currentJob || '',
                 jobExperience: user.jobExperience || '',
                 note: user.note || '',
                 storeName: user.storeName || '',
-                actionType: user.actionType || 'call',
+                actionType: Array.isArray(user.actionType) ? user.actionType : (typeof user.actionType === 'string' ? [user.actionType] : ['call']),
                 accountStatus: user.accountStatus || 'review',
                 verifiedBy: user.verifiedBy || 'Mobile',
                 location: user.location || '',
@@ -171,6 +171,7 @@ export default function UserManagement() {
                 storeLogo: user.storeLogo || '',
                 storeBanner: user.storeBanner || '',
                 merchantVerifiedBy: user.merchantVerifiedBy || 'Mobile',
+                merchantTrustStatus: user.merchantTrustStatus || 'Untrusted',
                 additionalMobiles: user.additionalMobiles || []
             });
             setTempMobile('');
@@ -185,12 +186,11 @@ export default function UserManagement() {
                 mobile: '',
                 mobileVerified: true,
                 education: '',
-                educationIn: '',
                 currentJob: '',
                 jobExperience: '',
                 note: '',
                 storeName: '',
-                actionType: 'call',
+                actionType: ['call'],
                 accountStatus: 'review',
                 verifiedBy: 'Mobile',
                 location: '',
@@ -205,6 +205,7 @@ export default function UserManagement() {
                 storeLogo: '',
                 storeBanner: '',
                 merchantVerifiedBy: 'Mobile',
+                merchantTrustStatus: 'Untrusted',
                 additionalMobiles: []
             });
             setTempMobile('');
@@ -224,12 +225,11 @@ export default function UserManagement() {
             mobile: '',
             mobileVerified: true,
             education: '',
-            educationIn: '',
             currentJob: '',
             jobExperience: '',
             note: '',
             storeName: '',
-            actionType: 'call',
+            actionType: ['call'],
             accountStatus: 'review',
             verifiedBy: 'Mobile',
             location: '',
@@ -244,10 +244,12 @@ export default function UserManagement() {
             storeLogo: '',
             storeBanner: '',
             merchantVerifiedBy: 'Mobile',
+            merchantTrustStatus: 'Untrusted',
             additionalMobiles: []
         });
         setTempMobile('');
         setSelectedFiles({});
+        setIsActionDropdownOpen(false);
     };
 
     const handleInputChange = (field: keyof UserFormData, value: any) => {
@@ -279,10 +281,15 @@ export default function UserManagement() {
             const data = new FormData();
             Object.keys(formData).forEach(key => {
                 const value = formData[key as keyof UserFormData];
-                if (value !== undefined && key !== 'photo' && key !== 'storeLogo' && key !== 'storeBanner' && key !== 'additionalMobiles') {
+                if (value !== undefined && key !== 'photo' && key !== 'storeLogo' && key !== 'storeBanner' && key !== 'additionalMobiles' && key !== 'actionType') {
                     data.append(key, String(value));
                 }
             });
+
+            // Append actionType
+            if (formData.actionType && formData.actionType.length > 0) {
+                formData.actionType.forEach(at => data.append('actionType[]', at));
+            }
 
             // Append additionalMobiles
             if (formData.additionalMobiles && formData.additionalMobiles.length > 0) {
@@ -603,7 +610,7 @@ export default function UserManagement() {
                             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={handleCloseModal} className="absolute inset-0 bg-black/10" />
                             <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white border border-slate-900 w-full max-w-[98vw] rounded-sm shadow-2xl relative z-10 flex flex-col h-[98vh] overflow-hidden font-['Tahoma','Verdana',sans-serif]">
                                 <div className="bg-indigo-50/50 px-4 py-2 border-b border-slate-200 flex items-center justify-between">
-                                    <span className="text-xs font-bold text-black uppercase">User Info <span className="text-black capitalize font-normal">(Edit or Add)</span></span>
+                                    <span className="text-xs font-normal text-black uppercase">User Info <span className="text-black capitalize font-normal">(Edit or Add)</span></span>
                                     <button onClick={handleCloseModal} className="hover:bg-indigo-100 p-1 rounded-sm"><X className="w-4 h-4 text-black" /></button>
                                 </div>
 
@@ -611,29 +618,32 @@ export default function UserManagement() {
                                     {/* Top Row: Basic Info and Mobile Info Combined for Horizontal Flow */}
                                     <div className="grid grid-cols-[1fr_1fr_1fr_1.2fr_1fr] gap-2">
                                         <div className="flex flex-col gap-0.5 border border-slate-200 p-1.5 rounded-sm relative">
-                                            <label className="text-xs font-bold text-black uppercase leading-none">Person Name</label>
+                                            <label className="text-xs font-normal text-black uppercase leading-none">Person Name</label>
                                             <input className="text-xs font-bold text-black outline-none w-full bg-transparent h-5" value={formData.name} onChange={(e) => handleInputChange('name', e.target.value)} />
                                         </div>
                                         <div className="flex flex-col gap-0.5 border border-slate-200 p-1.5 rounded-sm bg-white">
-                                            <label className="text-xs font-bold text-black uppercase leading-none">Account Status</label>
-                                            <select className="text-xs font-bold text-black outline-none w-full bg-transparent h-5 appearance-none" value={formData.accountStatus} onChange={(e) => handleInputChange('accountStatus', e.target.value)}>
-                                                <option value="active">Active</option>
-                                                <option value="inactive">UnActive</option>
-                                                <option value="review">Review</option>
-                                                <option value="atv_msg">Atv & Msg</option>
-                                                <option value="unatv_msg">UnA & Msg</option>
-                                                <option value="r_delete">R-Delete</option>
-                                            </select>
+                                            <label className="text-xs font-normal text-black uppercase leading-none">Account Status</label>
+                                            <div className="relative flex items-center">
+                                                <select className="text-xs font-bold text-black outline-none w-full bg-transparent h-5 appearance-none cursor-pointer pr-4" value={formData.accountStatus} onChange={(e) => handleInputChange('accountStatus', e.target.value)}>
+                                                    <option value="active">Active</option>
+                                                    <option value="inactive">UnActive</option>
+                                                    <option value="review">Review</option>
+                                                    <option value="atv_msg">Atv & Msg</option>
+                                                    <option value="unatv_msg">UnA & Msg</option>
+                                                    <option value="r_delete">R-Delete</option>
+                                                </select>
+                                                <ChevronDown className="w-2.5 h-2.5 absolute right-0 text-slate-400 pointer-events-none" />
+                                            </div>
                                         </div>
                                         <div className="flex flex-col gap-0.5 border border-slate-200 p-1.5 rounded-sm">
-                                            <label className="text-xs font-bold text-black uppercase leading-none">Email</label>
+                                            <label className="text-xs font-normal text-black uppercase leading-none">Email</label>
                                             <input className="text-xs font-bold text-black outline-none w-full bg-transparent h-5" value={formData.email} onChange={(e) => handleInputChange('email', e.target.value)} />
                                         </div>
                                         <div className="flex flex-col gap-0.5 border border-slate-200 p-1.5 rounded-sm bg-white">
                                             <div className="flex items-center gap-1 mb-0.5">
-                                                <span className="text-xs font-bold text-black leading-none">Verified By</span>
-                                                <div className="flex bg-slate-100 p-0.5 rounded-sm">
-                                                    <span className="px-1 py-0.5 bg-blue-500 text-white text-xs font-bold rounded-[1px]">Select</span>
+                                                <span className="text-xs font-normal text-black leading-none">Verified By</span>
+                                                <div className="flex bg-blue-50 p-0.5 rounded-sm">
+                                                    <span className="px-1 text-blue-600 text-[10px] font-bold rounded-[1px] uppercase">{formData.verifiedBy}</span>
                                                 </div>
                                             </div>
                                             <select className="text-xs font-bold text-black outline-none w-full bg-transparent h-4" value={formData.verifiedBy} onChange={(e) => handleInputChange('verifiedBy', e.target.value)}>
@@ -644,7 +654,7 @@ export default function UserManagement() {
                                             </select>
                                         </div>
                                         <div className="flex flex-col gap-0.5 border border-slate-200 p-1.5 rounded-sm bg-white">
-                                            <label className="text-xs font-bold text-black uppercase leading-none">Location</label>
+                                            <label className="text-xs font-normal text-black uppercase leading-none">Location</label>
                                             <select className="text-xs font-bold text-black outline-none w-full bg-transparent h-5 appearance-none" value={formData.location} onChange={(e) => handleInputChange('location', e.target.value)}>
                                                 <option value="">Select Location</option>
                                                 {locations.map(loc => (
@@ -658,7 +668,7 @@ export default function UserManagement() {
                                     <div className="grid grid-cols-[repeat(6,1fr)_1.5fr_1.5fr] gap-2">
                                         {/* DOB - Date Picker */}
                                         <div className="flex flex-col gap-0.5 border border-slate-200 p-1.5 rounded-sm bg-white">
-                                            <label className="text-xs font-bold text-black uppercase leading-none">DOB</label>
+                                            <label className="text-xs font-normal text-black uppercase leading-none">DOB</label>
                                             <input
                                                 type="date"
                                                 className="text-xs font-bold text-black outline-none w-full bg-transparent h-4 p-0 appearance-none"
@@ -669,26 +679,28 @@ export default function UserManagement() {
 
                                         {[
                                             { label: 'Gender', key: 'gender', type: 'select', opts: ['Male', 'Female', 'Other'] },
-                                            { label: 'Edu', key: 'education', type: 'select', opts: ['Select', 'BSC', 'MSC', 'HSC', 'SSC'] },
-                                            { label: 'In', key: 'educationIn', type: 'select', opts: ['Select', 'CSE', 'EEE', 'BBA'] },
+                                            { label: 'Edu', key: 'education', type: 'select', opts: ['Less than high school', 'SSC', 'Inter', 'Diploma', 'Undergraduate', 'Associate degree', 'Bachelor', 'Masters', 'Doctorate'] },
                                             { label: 'Job', key: 'currentJob', type: 'select', opts: ['Select', 'Developer', 'Designer', 'Manager'] },
                                             { label: 'Exp', key: 'jobExperience', type: 'select', opts: ['Select', '1 Year', '2 Years', '5+ Years'] }
                                         ].map((f) => (
-                                            <div key={f.key} className="flex flex-col gap-0.5 border border-slate-200 p-1.5 rounded-sm bg-white">
-                                                <label className="text-xs font-bold text-black uppercase leading-none">{f.label}</label>
-                                                <select
-                                                    className="text-xs font-bold text-black outline-none w-full bg-transparent h-4 appearance-none"
-                                                    value={formData[f.key as keyof UserFormData] as string}
-                                                    onChange={(e) => handleInputChange(f.key as keyof UserFormData, e.target.value)}
-                                                >
-                                                    {f.opts.map(o => <option key={o} value={o}>{o}</option>)}
-                                                </select>
+                                            <div key={f.key} className="flex flex-col gap-0.5 border border-slate-200 p-1.5 rounded-sm bg-white relative">
+                                                <label className="text-xs font-normal text-black uppercase leading-none">{f.label}</label>
+                                                <div className="relative flex items-center">
+                                                    <select
+                                                        className="text-xs font-bold text-black outline-none w-full bg-transparent h-4 appearance-none pr-4 cursor-pointer"
+                                                        value={formData[f.key as keyof UserFormData] as string}
+                                                        onChange={(e) => handleInputChange(f.key as keyof UserFormData, e.target.value)}
+                                                    >
+                                                        {f.opts.map(o => <option key={o} value={o}>{o}</option>)}
+                                                    </select>
+                                                    {f.key === 'education' && <ChevronDown className="w-2.5 h-2.5 absolute right-0 text-slate-400 pointer-events-none" />}
+                                                </div>
                                             </div>
                                         ))}
 
                                         {/* Editable Verified Mobile */}
                                         <div className="flex flex-col gap-0.5 border border-slate-200 p-1.5 rounded-sm bg-white">
-                                            <label className="text-xs font-bold text-black uppercase leading-none">Verified Mobile</label>
+                                            <label className="text-xs font-normal text-black uppercase leading-none">Verified Mobile</label>
                                             <div className="flex items-center justify-between h-4 px-0.5">
                                                 <div className="flex items-center gap-1 text-blue-500 font-bold text-xs w-full">
                                                     <ShieldCheck className="w-2.5 h-2.5 shrink-0" />
@@ -704,7 +716,7 @@ export default function UserManagement() {
 
                                         {/* Editable Password */}
                                         <div className="flex flex-col gap-0.5 border border-slate-200 p-1.5 rounded-sm bg-white">
-                                            <label className="text-xs font-bold text-black uppercase leading-none italic font-serif">Password</label>
+                                            <label className="text-xs font-normal text-black uppercase leading-none italic font-serif">Password</label>
                                             <input
                                                 type="text"
                                                 value={formData.password}
@@ -717,12 +729,12 @@ export default function UserManagement() {
 
                                     <div className="grid grid-cols-[1fr_2fr] gap-3">
                                         <div className="flex flex-col gap-0.5 border border-slate-200 p-1.5 rounded-sm bg-white h-12">
-                                            <label className="text-xs font-bold text-black uppercase leading-none">Note</label>
+                                            <label className="text-xs font-normal text-black uppercase leading-none">Note</label>
                                             <textarea className="text-xs font-bold text-black outline-none w-full bg-transparent h-full resize-none leading-tight" value={formData.note} onChange={(e) => handleInputChange('note', e.target.value)} />
                                         </div>
 
                                         <div className="flex flex-col gap-0.5 border border-slate-200 p-1.5 rounded-sm bg-white min-h-[48px]">
-                                            <label className="text-xs font-bold text-black uppercase leading-none">New Mobile number</label>
+                                            <label className="text-xs font-normal text-black uppercase leading-none">New Mobile number</label>
 
                                             {/* List of additional numbers */}
                                             {formData.additionalMobiles && formData.additionalMobiles.length > 0 && (
@@ -773,44 +785,95 @@ export default function UserManagement() {
 
                                     {/* Merchant Section: Compact Heading */}
                                     <div className="bg-slate-100 px-3 py-1 border-y border-slate-200 mx-[-0.625rem]">
-                                        <span className="text-xs font-bold text-black uppercase flex items-center gap-2">
+                                        <span className="text-xs font-normal text-black uppercase flex items-center gap-2">
                                             <Store className="w-3 h-3" /> Merchant Information
                                         </span>
                                     </div>
 
                                     <div className="grid grid-cols-[1.2fr_1fr_1fr_1fr_1fr_0.8fr] gap-2">
                                         <div className="border border-slate-200 p-1.5 rounded-sm relative bg-white">
-                                            <label className="text-xs font-bold text-black uppercase absolute top-[-4px] left-1.5 bg-white px-0.5">Store Name</label>
+                                            <label className="text-xs font-normal text-black uppercase absolute top-[-4px] left-1.5 bg-white px-0.5">Store Name</label>
                                             <input className="text-xs font-bold text-black outline-none w-full h-5 mt-1" value={formData.storeName} onChange={(e) => handleInputChange('storeName', e.target.value)} />
                                         </div>
-                                        <div className="border border-slate-200 p-1.5 rounded-sm relative flex flex-col justify-center gap-0.5 bg-white">
-                                            <label className="text-xs font-bold text-black uppercase absolute top-[-4px] left-1.5 bg-white px-0.5">Show Button</label>
-                                            <select
-                                                className="text-xs font-bold text-black outline-none w-full bg-transparent mt-1"
-                                                value={formData.actionType}
-                                                onChange={(e) => handleInputChange('actionType', e.target.value)}
-                                            >
-                                                <option value="call">Call Only</option>
-                                                <option value="chat">Chat Only</option>
-                                                <option value="both">Call & Chat</option>
-                                            </select>
+                                        <div className="border border-slate-200 p-1.5 rounded-sm relative bg-white flex flex-col justify-center min-h-[36px]">
+                                            <label className="text-xs font-normal text-black uppercase absolute top-[-4px] left-1.5 bg-white px-0.5">Show Button</label>
+                                            <div className="relative mt-1">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setIsActionDropdownOpen(!isActionDropdownOpen)}
+                                                    className="w-full h-5 text-left px-1 text-[10px] font-bold text-black uppercase flex items-center justify-between focus:outline-none border border-slate-100 rounded-sm"
+                                                >
+                                                    <span className="truncate">
+                                                        {formData.actionType.length > 0
+                                                            ? formData.actionType.map(v => v === 'sendcv' ? 'Send CV' : v.charAt(0).toUpperCase() + v.slice(1)).join(', ')
+                                                            : 'Select Options'}
+                                                    </span>
+                                                    <div className={cn("transition-transform", isActionDropdownOpen ? "rotate-180" : "")}>
+                                                        <Plus className="w-2.5 h-2.5" />
+                                                    </div>
+                                                </button>
+
+                                                {isActionDropdownOpen && (
+                                                    <>
+                                                        <div
+                                                            className="fixed inset-0 z-[60]"
+                                                            onClick={() => setIsActionDropdownOpen(false)}
+                                                        />
+                                                        <div className="absolute top-full left-0 w-full mt-0.5 bg-white border border-slate-300 rounded-sm shadow-xl z-[70] py-0.5">
+                                                            {[
+                                                                { label: 'Call', value: 'call' },
+                                                                { label: 'Chat', value: 'chat' },
+                                                                { label: 'Send CV', value: 'sendcv' }
+                                                            ].map(btn => (
+                                                                <div
+                                                                    key={btn.value}
+                                                                    onClick={() => {
+                                                                        const current = [...formData.actionType];
+                                                                        if (current.includes(btn.value)) {
+                                                                            handleInputChange('actionType', current.filter(v => v !== btn.value));
+                                                                        } else {
+                                                                            handleInputChange('actionType', [...current, btn.value]);
+                                                                        }
+                                                                    }}
+                                                                    className="px-2 py-1.5 hover:bg-slate-50 cursor-pointer flex items-center justify-between group border-b border-slate-50 last:border-none"
+                                                                >
+                                                                    <span className={cn(
+                                                                        "text-[10px] font-bold uppercase",
+                                                                        formData.actionType.includes(btn.value) ? "text-blue-600" : "text-black"
+                                                                    )}>
+                                                                        {btn.label}
+                                                                    </span>
+                                                                    {formData.actionType.includes(btn.value) && <Check className="w-2.5 h-2.5 text-blue-600" />}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </>
+                                                )}
+                                            </div>
                                         </div>
                                         <div className="border border-slate-200 p-1.5 rounded-sm relative bg-white flex flex-col justify-center">
-                                            <label className="text-xs font-bold text-black uppercase absolute top-[-4px] left-1.5 bg-white px-0.5">M-Verified By</label>
+                                            <label className="text-xs font-normal text-black uppercase absolute top-[-4px] left-1.5 bg-white px-0.5">M-Verified By</label>
                                             <select className="text-xs font-bold text-black outline-none bg-transparent mt-1" value={formData.merchantVerifiedBy} onChange={(e) => handleInputChange('merchantVerifiedBy', e.target.value)}>
-                                                <option value="Mobile">Mobile</option>
-                                                <option value="NID">NID</option>
+                                                <option value="Yes">Yes</option>
+                                                <option value="No">No</option>
                                             </select>
                                         </div>
                                         <div className="border border-slate-200 p-1.5 rounded-sm relative bg-white flex flex-col justify-center">
-                                            <label className="text-xs font-bold text-black uppercase absolute top-[-4px] left-1.5 bg-white px-0.5">Type</label>
+                                            <label className="text-xs font-normal text-black uppercase absolute top-[-4px] left-1.5 bg-white px-0.5">Merchant Type</label>
+                                            <select className="text-xs font-bold text-black outline-none bg-transparent mt-1" value={formData.merchantTrustStatus} onChange={(e) => handleInputChange('merchantTrustStatus', e.target.value)}>
+                                                <option value="Untrusted">Untrusted</option>
+                                                <option value="Trusted">Trusted</option>
+                                            </select>
+                                        </div>
+                                        <div className="border border-slate-200 p-1.5 rounded-sm relative bg-white flex flex-col justify-center">
+                                            <label className="text-xs font-normal text-black uppercase absolute top-[-4px] left-1.5 bg-white px-0.5">Type</label>
                                             <select className="text-xs font-bold text-black outline-none bg-transparent mt-1" value={formData.merchantType} onChange={(e) => handleInputChange('merchantType', e.target.value)}>
                                                 <option>Free</option>
                                                 <option>Premium</option>
                                             </select>
                                         </div>
                                         <div className="border border-slate-200 p-1.5 rounded-sm relative bg-white flex flex-col justify-center">
-                                            <label className="text-xs font-bold text-black uppercase absolute top-[-4px] left-1.5 bg-white px-0.5">Category</label>
+                                            <label className="text-xs font-normal text-black uppercase absolute top-[-4px] left-1.5 bg-white px-0.5">Category</label>
                                             <select className="text-xs font-bold text-black outline-none bg-transparent mt-1" value={formData.category} onChange={(e) => handleInputChange('category', e.target.value)}>
                                                 <option value="">Select</option>
                                                 {categories.map(cat => (
@@ -819,13 +882,13 @@ export default function UserManagement() {
                                             </select>
                                         </div>
                                         <div className="border border-slate-200 p-1.5 rounded-sm relative flex flex-col justify-center bg-white">
-                                            <label className="text-xs font-bold text-black uppercase absolute top-[-4px] left-1.5 bg-white px-0.5">Rating</label>
+                                            <label className="text-xs font-normal text-black uppercase absolute top-[-4px] left-1.5 bg-white px-0.5">Rating</label>
                                             <input className="text-xs font-bold text-black outline-none w-full h-5 mt-1" value={formData.rating} onChange={(e) => handleInputChange('rating', e.target.value)} />
                                         </div>
                                     </div>
 
                                     <div className="border border-slate-200 p-1.5 rounded-sm relative flex items-center gap-2 bg-white">
-                                        <label className="text-xs font-bold text-black uppercase absolute top-[-5px] left-2 bg-white px-1">Page Username</label>
+                                        <label className="text-xs font-normal text-black uppercase absolute top-[-5px] left-2 bg-white px-1">Page Username</label>
                                         <span className="text-xs text-black italic">shadamon.com/</span>
                                         <input className="text-xs font-bold text-black outline-none flex-1 border-b border-slate-100 bg-transparent h-5" value={formData.pageName} onChange={(e) => handleInputChange('pageName', e.target.value)} />
                                         <div className="flex gap-1">
@@ -873,9 +936,27 @@ export default function UserManagement() {
                                                             </div>
                                                         </label>
                                                     </div>
-                                                    <div className="flex flex-col gap-1">
-                                                        <label className="flex items-center gap-1 cursor-pointer text-xs font-bold"><input type="radio" className="w-2 h-2" name={u.label + "status"} checked={formData[(u.key + 'Status') as keyof UserFormData] === 'approved'} onChange={() => handleInputChange((u.key + 'Status') as keyof UserFormData, 'approved')} /> ACC</label>
-                                                        <label className="flex items-center gap-1 cursor-pointer text-xs font-bold text-rose-500"><input type="radio" className="w-2 h-2" name={u.label + "status"} checked={formData[(u.key + 'Status') as keyof UserFormData] === 'rejected'} onChange={() => handleInputChange((u.key + 'Status') as keyof UserFormData, 'rejected')} /> DEC</label>
+                                                    <div className="flex flex-col gap-1 self-center">
+                                                        <label className="flex items-center gap-1 cursor-pointer text-[10px] font-bold">
+                                                            <input
+                                                                type="radio"
+                                                                className="w-2 h-2"
+                                                                name={u.key + "status"}
+                                                                checked={formData[(u.key + 'Status') as keyof UserFormData] === 'approved'}
+                                                                onChange={() => handleInputChange((u.key + 'Status') as keyof UserFormData, 'approved')}
+                                                            />
+                                                            ACC
+                                                        </label>
+                                                        <label className="flex items-center gap-1 cursor-pointer text-[10px] font-bold text-rose-500">
+                                                            <input
+                                                                type="radio"
+                                                                className="w-2 h-2"
+                                                                name={u.key + "status"}
+                                                                checked={formData[(u.key + 'Status') as keyof UserFormData] === 'rejected'}
+                                                                onChange={() => handleInputChange((u.key + 'Status') as keyof UserFormData, 'rejected')}
+                                                            />
+                                                            DEC
+                                                        </label>
                                                     </div>
                                                 </div>
                                             ))}
