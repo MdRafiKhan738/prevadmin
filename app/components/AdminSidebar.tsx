@@ -45,7 +45,7 @@ export default function AdminSidebar({ isCollapsed, toggleCollapse }: AdminSideb
         { href: '/promoted-ads', label: 'Promote Management', icon: Megaphone },
         { href: '/transactions', label: 'Transction & Run PKG', icon: Terminal },
         { href: '/admin-create', label: 'Admin Create', icon: UserPlus },
-        { href: '/notifications', label: 'Notification & Messing', icon: Bell },
+        { href: '/notifications', label: 'Notification & Messaging', icon: Bell },
         { href: '/ad-position', label: 'AD Position (W/A/Q)', icon: LayoutGrid },
         { href: '/categories', label: 'Categorie Manager', icon: Layers },
         { href: '/locations', label: 'Location Manager', icon: MapPin },
