@@ -34,15 +34,7 @@ export default function PromotedAdsPage() {
     const [categories, setCategories] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
-    // Manual Promotion State
-    const [manualPromote, setManualPromote] = useState({
-        productId: '',
-        adType: 'Free',
-        amount: '',
-        runTill: ''
-    });
     const [savingId, setSavingId] = useState<string | number | null>(null);
-    const [manualSaving, setManualSaving] = useState(false);
 
     // Premier Opportunity State
     const [premierSettings, setPremierSettings] = useState<any>({
@@ -172,22 +164,7 @@ export default function PromotedAdsPage() {
         }
     };
 
-    const handleManualPromote = async () => {
-        if (!manualPromote.productId) return toast.error("Product ID is required");
-        setManualSaving(true);
-        try {
-            const token = Cookies.get('adminToken');
-            await axios.post(`${API_BASE_URL}/api/admins/manual-promote`, manualPromote, {
-                headers: { 'Authorization': `Bearer ${token}`, 'x-auth-token': token }
-            });
-            toast.success("Ad promoted successfully!");
-            setManualPromote({ productId: '', adType: 'Free', amount: '', runTill: '' });
-        } catch (err: any) {
-            toast.error(err.response?.data?.message || "Failed to promote ad");
-        } finally {
-            setManualSaving(false);
-        }
-    };
+
 
     const handleSavePremier = async () => {
         setPremierSaving(true);
@@ -440,75 +417,7 @@ export default function PromotedAdsPage() {
                 </div>
             </div>
 
-            <div className="flex gap-4 items-start">
-                {/* Manual Promotion Section */}
-                <div className="bg-white/50 p-3 rounded-sm border border-slate-100 max-w-3xl flex-1">
-                    <h2 className="text-xs font-bold text-black mb-2 flex items-center gap-1.5 uppercase">
-                        Product a Product Manually
-                    </h2>
 
-                    <div className="grid grid-cols-[1fr_0.8fr] gap-3 mb-3">
-                        <div className="grid grid-cols-2 gap-3">
-                            <div className="space-y-1">
-                                <div className="relative">
-                                    <input
-                                        placeholder="Product ID"
-                                        className="w-full border border-slate-300 px-2 h-8 outline-none text-xs placeholder:font-normal bg-white"
-                                        value={manualPromote.productId}
-                                        onChange={(e) => setManualPromote({ ...manualPromote, productId: e.target.value })}
-                                    />
-                                    <Search className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-emerald-600" />
-                                </div>
-                                <input
-                                    placeholder="Amount"
-                                    className="w-full border border-slate-300 px-2 h-8 outline-none text-xs placeholder:font-normal bg-white"
-                                    value={manualPromote.amount}
-                                    onChange={(e) => setManualPromote({ ...manualPromote, amount: e.target.value })}
-                                />
-                            </div>
-
-                            {/* <div className="space-y-1">
-                                <select
-                                    className="w-full border border-slate-300 px-2 h-8 outline-none text-xs bg-white"
-                                    value={manualPromote.adType}
-                                    onChange={(e) => setManualPromote({ ...manualPromote, adType: e.target.value })}
-                                >
-                                    <option value="" disabled>AD Type</option>
-                                    <option value="Free">Free</option>
-                                    <option value="Promoted">Promoted</option>
-                                </select>
-                                <div className="relative">
-                                    <input
-                                        placeholder="Today to Run till"
-                                        className="w-full border border-slate-300 px-2 h-8 outline-none text-xs placeholder:font-normal bg-white"
-                                        value={manualPromote.runTill}
-                                        onChange={(e) => setManualPromote({ ...manualPromote, runTill: e.target.value })}
-                                        onFocus={(e) => e.target.type = 'date'}
-                                        onBlur={(e) => e.target.type = 'text'}
-                                    />
-                                    <Calendar className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-black" />
-                                </div>
-                            </div> */}
-                        </div>
-                    </div>
-
-                    <div className="flex gap-2">
-                        <button
-                            onClick={handleManualPromote}
-                            disabled={manualSaving}
-                            className="bg-[#00a65a] text-white px-5 py-1.5 rounded-[1px] font-bold text-xs shadow-sm hover:bg-[#008d4c] uppercase flex items-center gap-2 disabled:bg-slate-300"
-                        >
-                            {manualSaving ? "Saving..." : "Save"}
-                        </button>
-                        <button
-                            className="bg-white border border-slate-300 text-black px-5 py-1.5 rounded-[1px] font-bold text-xs shadow-sm hover:bg-slate-50 uppercase"
-                        >
-                            Cancel
-                        </button>
-                    </div>
-                </div>
-
-            </div>
 
             <AnimatePresence>
                 {showPremierModal && (

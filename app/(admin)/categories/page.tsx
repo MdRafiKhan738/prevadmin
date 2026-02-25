@@ -26,6 +26,7 @@ interface Feature {
     order: number;
     status: boolean;
     buttonType?: string;
+    selectionType?: 'Single' | 'Multi';
     boxFadeName?: string;
     buttonItemNames?: string[];
     category?: Category;
@@ -105,6 +106,7 @@ export default function CategoriesPage() {
         order: 1,
         status: true,
         buttonType: '',
+        selectionType: 'Single' as 'Single' | 'Multi',
         boxFadeName: '',
         buttonItemNames: [''],
     });
@@ -295,6 +297,7 @@ export default function CategoriesPage() {
             order: f.order,
             status: f.status,
             buttonType: f.buttonType || '',
+            selectionType: f.selectionType || 'Single',
             boxFadeName: f.boxFadeName || '',
             buttonItemNames: f.buttonItemNames?.length ? f.buttonItemNames : [''],
         });
@@ -340,6 +343,7 @@ export default function CategoriesPage() {
             order: 1,
             status: true,
             buttonType: '',
+            selectionType: 'Single',
             boxFadeName: '',
             buttonItemNames: [''],
         });
@@ -843,6 +847,7 @@ export default function CategoriesPage() {
                                                     <input type="number" placeholder="Ordering" className="w-full border border-slate-300 px-2 py-1.5 outline-none font-medium bg-white text-black"
                                                         value={catForm.order} onChange={e => setCatForm({ ...catForm, order: Number(e.target.value) })} />
                                                 </div>
+
                                                 <div className="flex gap-2 h-max self-end mt-1">
                                                     <button type="submit" className="bg-[#127ef3] text-white flex-1 py-1.5 font-bold rounded-sm border border-blue-800 shadow-inner px-12">
                                                         Save
@@ -899,6 +904,14 @@ export default function CategoriesPage() {
                                                 <div className="space-y-1">
                                                     <input type="number" placeholder="Ordering" className="w-full border border-slate-300 px-2 py-1.5 outline-none font-medium"
                                                         value={featForm.order} onChange={e => setFeatForm({ ...featForm, order: Number(e.target.value) })} />
+                                                </div>
+                                                <div className="flex items-center gap-4 mt-1">
+                                                    <label className="flex items-center gap-1.5 cursor-pointer text-black">
+                                                        <input type="radio" checked={featForm.selectionType === 'Single'} onChange={() => setFeatForm({ ...featForm, selectionType: 'Single' })} className="w-3 h-3 accent-blue-600" /> Single
+                                                    </label>
+                                                    <label className="flex items-center gap-1.5 cursor-pointer text-black">
+                                                        <input type="radio" checked={featForm.selectionType === 'Multi'} onChange={() => setFeatForm({ ...featForm, selectionType: 'Multi' })} className="w-3 h-3 accent-blue-600" /> Multi
+                                                    </label>
                                                 </div>
 
                                                 {featForm.buttonType === 'Box' && (

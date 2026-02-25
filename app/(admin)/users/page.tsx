@@ -16,6 +16,21 @@ import { twMerge } from 'tailwind-merge';
 import { API_BASE_URL } from '../../../utils/apiConfig';
 import { getImageUrl } from '../../../utils/imageUrl';
 import toast from 'react-hot-toast';
+import { RiCheckboxCircleFill } from 'react-icons/ri';
+
+const VerifiedBadge = () => (
+    <div className="relative group/badge flex items-center justify-center -mt-0.5 ml-1">
+        <RiCheckboxCircleFill className="w-4 h-4 text-[#0088cc] shrink-0 cursor-pointer" />
+        <div className="absolute bottom-full left-1/2 -translate-x-[20%] lg:-translate-x-1/2 mb-2 hidden group-hover/badge:block w-[240px] bg-slate-50 border border-slate-200 shadow-xl rounded-xl p-3 z-[100] animate-in fade-in zoom-in-95 duration-200 pointer-events-none text-left">
+            <p className="text-[13px] text-slate-700 font-medium leading-relaxed whitespace-normal break-words normal-case">
+                <span className="font-bold text-black">Verified</span> by mobile number & additional checks to ensure authenticity.
+            </p>
+            <div className="absolute top-full left-[20%] lg:left-1/2 -translate-x-1/2 -mt-[1px]">
+                <div className="w-3 h-3 bg-slate-50 border-b border-r border-slate-200 transform rotate-45" />
+            </div>
+        </div>
+    </div>
+);
 
 function cn(...inputs: (string | undefined | null | false)[]) {
     return twMerge(clsx(inputs));
@@ -50,7 +65,7 @@ interface UserFormData {
     photo?: string;
     storeLogo?: string;
     storeBanner?: string;
-    merchantVerifiedBy: string;
+    mVerified: boolean;
     merchantTrustStatus: string;
     additionalMobiles?: string[];
 }
@@ -86,7 +101,7 @@ export default function UserManagement() {
         storeName: '',
         actionType: ['call'],
         accountStatus: 'review',
-        verifiedBy: 'Mobile',
+        verifiedBy: 'Not Verified',
         location: '',
         category: '',
         pageName: '',
@@ -98,7 +113,7 @@ export default function UserManagement() {
         photo: '',
         storeLogo: '',
         storeBanner: '',
-        merchantVerifiedBy: 'Mobile',
+        mVerified: false,
         merchantTrustStatus: 'Untrusted',
         additionalMobiles: []
     });
@@ -158,7 +173,7 @@ export default function UserManagement() {
                 storeName: user.storeName || '',
                 actionType: Array.isArray(user.actionType) ? user.actionType : (typeof user.actionType === 'string' ? [user.actionType] : ['call']),
                 accountStatus: user.accountStatus || 'review',
-                verifiedBy: user.verifiedBy || 'Mobile',
+                verifiedBy: user.verifiedBy || 'Not Verified',
                 location: user.location || '',
                 category: user.category || '',
                 pageName: user.pageName || '',
@@ -170,7 +185,7 @@ export default function UserManagement() {
                 photo: user.photo || '',
                 storeLogo: user.storeLogo || '',
                 storeBanner: user.storeBanner || '',
-                merchantVerifiedBy: user.merchantVerifiedBy || 'Mobile',
+                mVerified: user.mVerified ?? false,
                 merchantTrustStatus: user.merchantTrustStatus || 'Untrusted',
                 additionalMobiles: user.additionalMobiles || []
             });
@@ -192,7 +207,7 @@ export default function UserManagement() {
                 storeName: '',
                 actionType: ['call'],
                 accountStatus: 'review',
-                verifiedBy: 'Mobile',
+                verifiedBy: 'Not Verified',
                 location: '',
                 category: '',
                 pageName: '',
@@ -204,7 +219,7 @@ export default function UserManagement() {
                 photo: '',
                 storeLogo: '',
                 storeBanner: '',
-                merchantVerifiedBy: 'Mobile',
+                mVerified: false,
                 merchantTrustStatus: 'Untrusted',
                 additionalMobiles: []
             });
@@ -231,7 +246,7 @@ export default function UserManagement() {
             storeName: '',
             actionType: ['call'],
             accountStatus: 'review',
-            verifiedBy: 'Mobile',
+            verifiedBy: 'Not Verified',
             location: '',
             category: '',
             pageName: '',
@@ -243,7 +258,7 @@ export default function UserManagement() {
             photo: '',
             storeLogo: '',
             storeBanner: '',
-            merchantVerifiedBy: 'Mobile',
+            mVerified: false,
             merchantTrustStatus: 'Untrusted',
             additionalMobiles: []
         });
@@ -488,8 +503,13 @@ export default function UserManagement() {
                                         onChange={() => toggleSelectUser(user._id)}
                                     />
                                 </td>
-                                <td className="px-2 py-1.5 text-xs text-black">{user._id.slice(-8)}</td>
-                                <td className="px-2 py-1.5 text-black">{user.name}</td>
+                                <td className="px-2 py-1.5 text-xs text-black">{user._id}</td>
+                                <td className="px-2 py-1.5 text-black">
+                                    <div className="flex items-center">
+                                        {user.name}
+                                        {user.mVerified && <VerifiedBadge />}
+                                    </div>
+                                </td>
                                 <td className="px-2 py-1.5 text-black">{user.mobile}</td>
                                 <td className="px-2 py-1.5 text-black">{user.category}</td>
                                 <td className="px-2 py-1.5 text-black">{user.location}</td>
@@ -647,20 +667,24 @@ export default function UserManagement() {
                                                 </div>
                                             </div>
                                             <select className="text-xs font-bold text-black outline-none w-full bg-transparent h-4" value={formData.verifiedBy} onChange={(e) => handleInputChange('verifiedBy', e.target.value)}>
+                                                <option value="Not Verified">Not Verified</option>
                                                 <option value="Mobile">Mobile</option>
                                                 <option value="Email">Email</option>
                                                 <option value="Google">Google</option>
                                                 <option value="Facebook">Facebook</option>
                                             </select>
                                         </div>
-                                        <div className="flex flex-col gap-0.5 border border-slate-200 p-1.5 rounded-sm bg-white">
+                                        <div className="flex flex-col gap-0.5 border border-slate-200 p-1.5 rounded-sm bg-white relative">
                                             <label className="text-xs font-normal text-black uppercase leading-none">Location</label>
-                                            <select className="text-xs font-bold text-black outline-none w-full bg-transparent h-5 appearance-none" value={formData.location} onChange={(e) => handleInputChange('location', e.target.value)}>
-                                                <option value="">Select Location</option>
-                                                {locations.map(loc => (
-                                                    <option key={loc._id} value={loc.name}>{loc.name}</option>
-                                                ))}
-                                            </select>
+                                            <div className="relative flex items-center">
+                                                <select className="text-xs font-bold text-black outline-none w-full bg-transparent h-5 appearance-none pr-4 cursor-pointer" value={formData.location} onChange={(e) => handleInputChange('location', e.target.value)}>
+                                                    <option value="">Select Location</option>
+                                                    {locations.map(loc => (
+                                                        <option key={loc._id} value={loc.name}>{loc.name}</option>
+                                                    ))}
+                                                </select>
+                                                <ChevronDown className="w-2.5 h-2.5 absolute right-0 text-slate-400 pointer-events-none" />
+                                            </div>
                                         </div>
                                     </div>
 
@@ -693,7 +717,7 @@ export default function UserManagement() {
                                                     >
                                                         {f.opts.map(o => <option key={o} value={o}>{o}</option>)}
                                                     </select>
-                                                    {f.key === 'education' && <ChevronDown className="w-2.5 h-2.5 absolute right-0 text-slate-400 pointer-events-none" />}
+                                                    {['education', 'gender', 'currentJob', 'jobExperience'].includes(f.key) && <ChevronDown className="w-2.5 h-2.5 absolute right-0 text-slate-400 pointer-events-none" />}
                                                 </div>
                                             </div>
                                         ))}
@@ -853,7 +877,7 @@ export default function UserManagement() {
                                         </div>
                                         <div className="border border-slate-200 p-1.5 rounded-sm relative bg-white flex flex-col justify-center">
                                             <label className="text-xs font-normal text-black uppercase absolute top-[-4px] left-1.5 bg-white px-0.5">M-Verified By</label>
-                                            <select className="text-xs font-bold text-black outline-none bg-transparent mt-1" value={formData.merchantVerifiedBy} onChange={(e) => handleInputChange('merchantVerifiedBy', e.target.value)}>
+                                            <select className="text-xs font-bold text-black outline-none bg-transparent mt-1" value={formData.mVerified ? "Yes" : "No"} onChange={(e) => handleInputChange('mVerified', e.target.value === 'Yes')}>
                                                 <option value="Yes">Yes</option>
                                                 <option value="No">No</option>
                                             </select>

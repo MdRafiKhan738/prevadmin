@@ -37,7 +37,7 @@ interface Ad {
     actionType: string;
     images: string[];
     adType: string;
-    status: 'active' | 'pending' | 'rejected' | 'expired';
+    status: 'active' | 'pending' | 'rejected' | 'expired' | 'notification' | 'pause' | 'review' | 'atv_msg' | 'unatv_msg' | 'deleted';
     createdAt: string;
     price?: number;
     merchantID?: string;
@@ -62,6 +62,8 @@ interface Ad {
     targetValue: number;
     dailyDeliveryCount: number;
     dailyViewsCount: number;
+    promotedViews?: number;
+    promotedDeliveryCount?: number;
     features?: Record<string, any>;
     isReported?: boolean;
     photoStatus: 'pending' | 'approved' | 'rejected';
@@ -532,6 +534,7 @@ export default function PostManagement() {
             case 'pending': return 'bg-amber-100 text-amber-700 border-amber-200';
             case 'rejected': return 'bg-rose-100 text-rose-700 border-rose-200';
             case 'expired': return 'bg-slate-100 text-black border-slate-200';
+            case 'deleted': return 'bg-red-100 text-red-700 border-red-200 font-bold';
             default: return 'bg-slate-100 text-black border-slate-200';
         }
     };
@@ -680,7 +683,7 @@ export default function PostManagement() {
                                             </td>
                                             <td className="px-1 py-1 text-black whitespace-nowrap border-r border-b border-slate-300 align-top" rowSpan={2}>
                                                 <div className="flex flex-col">
-                                                    <span>{ad._id.slice(-8)}</span>
+                                                    <span>{ad._id}</span>
                                                     <div className="flex gap-1 mt-0.5">
                                                         {ad.userUpdated && (
                                                             <div className="bg-white p-0.5 shadow-sm border border-black" title="Updated by User">
@@ -705,7 +708,8 @@ export default function PostManagement() {
                                                     <option value="notification">Notification</option>
                                                     <option value="pause">Pause</option>
                                                     <option value="review">Review/Processing</option>
-                                                    <option value="rejected">Delete (Reason)</option>
+                                                    <option value="rejected">Rejected (Reason)</option>
+                                                    <option value="deleted">Deleted (By User)</option>
                                                     <option value="atv_msg">Product Atv+Msg</option>
                                                     <option value="unatv_msg">Prodt Unatv+Msg</option>
                                                 </select>
@@ -1147,7 +1151,8 @@ export default function PostManagement() {
                                                         <option value="notification">Notification</option>
                                                         <option value="pause">Pause</option>
                                                         <option value="review">Review/Processing</option>
-                                                        <option value="rejected">Delete (Reason)</option>
+                                                        <option value="rejected">Rejected (Reason)</option>
+                                                        <option value="deleted">Deleted (By User)</option>
                                                         <option value="atv_msg">Product Atv+Msg</option>
                                                         <option value="unatv_msg">Prodt Unatv+Msg</option>
                                                     </select>
@@ -1188,11 +1193,20 @@ export default function PostManagement() {
                                             </div>
                                             <div className="flex flex-col gap-2">
                                                 <div className="flex flex-col gap-0.5">
-                                                    <label className="text-xs text-black">Notification Dialogue</label>
+                                                    <div className="flex items-center justify-between">
+                                                        <label className="text-xs text-black">Notification Dialogue</label>
+                                                        <button
+                                                            onClick={() => handleEditChange('notificationDialogue', '')}
+                                                            className="text-[10px] text-rose-500 hover:underline font-bold"
+                                                        >
+                                                            Clear
+                                                        </button>
+                                                    </div>
                                                     <input
-                                                        className="w-full border border-slate-200 h-7 text-xs outline-none px-2"
+                                                        className="w-full border border-slate-200 h-7 text-xs outline-none px-2 font-bold text-black"
                                                         value={editFormData.notificationDialogue || ''}
                                                         onChange={(e) => handleEditChange('notificationDialogue', e.target.value)}
+                                                        placeholder=""
                                                     />
                                                 </div>
                                                 <div className="grid grid-cols-[1fr_1fr_0.8fr] gap-1.5">
@@ -1345,7 +1359,17 @@ export default function PostManagement() {
                                     <div className="flex items-center gap-2">
                                         <ArrowLeft className="w-3 h-3 text-rose-500" />
                                         <span className="text-xs font-bold text-black">/ Short View</span>
-                                        <span className="bg-emerald-600 text-white px-1 rounded-sm text-xs py-0.5">Publish</span>
+                                        <span className={cn(
+                                            "px-1 rounded-sm text-[10px] py-0.5 uppercase font-bold text-white",
+                                            selectedAd.status === 'active' ? "bg-emerald-600" :
+                                                selectedAd.status === 'pending' ? "bg-amber-500" :
+                                                    selectedAd.status === 'deleted' ? "bg-red-600" : "bg-slate-500"
+                                        )}>
+                                            {selectedAd.status === 'deleted' ? 'Deleted' :
+                                                selectedAd.status === 'pause' ? 'Paused' :
+                                                    selectedAd.status === 'rejected' ? 'Rejected' :
+                                                        selectedAd.status}
+                                        </span>
                                     </div>
                                     <button onClick={() => setShowShortViewModal(false)}><X className="w-3.5 h-3.5 text-black" /></button>
                                 </div>
