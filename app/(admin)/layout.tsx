@@ -2,6 +2,9 @@
 
 import React, { useState } from 'react';
 import AdminSidebar from '../components/AdminSidebar';
+import { useSettings } from '../context/SettingsContext';
+import { getImageUrl } from '../../utils/imageUrl';
+import { useEffect } from 'react';
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { Menu, Moon, User } from 'lucide-react';
@@ -16,6 +19,29 @@ export default function AdminLayout({
     children: React.ReactNode
 }) {
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+    const { settings } = useSettings();
+
+    // Apply favicon
+    useEffect(() => {
+        if (settings.favIcon) {
+            const faviconUrl = getImageUrl(settings.favIcon);
+            let link: HTMLLinkElement | null = document.querySelector("link[rel*='icon']");
+            if (!link) {
+                link = document.createElement('link');
+                link.rel = 'icon';
+                document.getElementsByTagName('head')[0].appendChild(link);
+            }
+            link.href = faviconUrl;
+
+            let appleIcon: HTMLLinkElement | null = document.querySelector("link[rel='apple-touch-icon']");
+            if (!appleIcon) {
+                appleIcon = document.createElement('link');
+                appleIcon.rel = 'apple-touch-icon';
+                document.getElementsByTagName('head')[0].appendChild(appleIcon);
+            }
+            appleIcon.href = faviconUrl;
+        }
+    }, [settings.favIcon]);
 
     return (
         <div className="min-h-screen bg-[#f1f5f9] flex flex-col font-sans">
@@ -28,7 +54,18 @@ export default function AdminLayout({
                     >
                         <Menu className="w-4 h-4 text-black" />
                     </button>
-                    <span className="font-black text-sm tracking-[0.1em] text-black">SHADAMON</span>
+                    {settings.siteLogo ? (
+                        <div className="flex items-center">
+                            <img
+                                src={getImageUrl(settings.siteLogo)}
+                                alt="Logo"
+                                className="h-6 w-auto object-contain block"
+                                style={{ maxWidth: '120px' }}
+                            />
+                        </div>
+                    ) : (
+                        <span className="font-black text-sm tracking-[0.1em] text-black">SHADAMON</span>
+                    )}
                 </div>
 
                 <div className="flex items-center gap-2">
