@@ -51,12 +51,11 @@ interface UserFormData {
     jobExperience: string;
     note: string;
     storeName: string;
-    actionType: string[];
     accountStatus: string;
     verifiedBy: string;
     location: string;
     category: string;
-    pageName: string;
+    sellerPageUrl: string;
     merchantType: string;
     rating: number | string;
     storeBannerStatus: string;
@@ -68,6 +67,7 @@ interface UserFormData {
     mVerified: boolean;
     merchantTrustStatus: string;
     additionalMobiles?: string[];
+    lastLogin?: string;
 }
 
 export default function UserManagement() {
@@ -84,7 +84,17 @@ export default function UserManagement() {
     const [selectedFiles, setSelectedFiles] = useState<{ [key: string]: File }>({});
     const [locations, setLocations] = useState<any[]>([]);
     const [categories, setCategories] = useState<any[]>([]);
-    const [isActionDropdownOpen, setIsActionDropdownOpen] = useState(false);
+    const [searchFilters, setSearchFilters] = useState({
+        id: '',
+        mobile: '',
+        email: '',
+        category: 'Select',
+        location: 'Select',
+        status: 'Select',
+        merchantType: 'both',
+        dateFrom: '',
+        dateTo: ''
+    });
 
     const [formData, setFormData] = useState<UserFormData>({
         name: '',
@@ -99,12 +109,11 @@ export default function UserManagement() {
         jobExperience: '',
         note: '',
         storeName: '',
-        actionType: ['call'],
         accountStatus: 'review',
         verifiedBy: 'Not Verified',
         location: '',
         category: '',
-        pageName: '',
+        sellerPageUrl: '',
         merchantType: 'Free',
         rating: '',
         storeBannerStatus: 'pending',
@@ -115,7 +124,8 @@ export default function UserManagement() {
         storeBanner: '',
         mVerified: false,
         merchantTrustStatus: 'Untrusted',
-        additionalMobiles: []
+        additionalMobiles: [],
+        lastLogin: ''
     });
     const [tempMobile, setTempMobile] = useState('');
 
@@ -137,11 +147,19 @@ export default function UserManagement() {
         }
     };
 
-    const fetchUsers = async () => {
+    const fetchUsers = async (filters: any = {}) => {
         setLoading(true);
         try {
             const token = Cookies.get('adminToken');
-            const res = await axios.get(API_BASE, {
+            const params = new URLSearchParams();
+
+            Object.entries(filters).forEach(([key, value]) => {
+                if (value && value !== 'Select' && value !== 'Both' && value !== 'All' && value !== 'both') {
+                    params.append(key, String(value));
+                }
+            });
+
+            const res = await axios.get(`${API_BASE}?${params.toString()}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             setUsers(res.data);
@@ -171,12 +189,11 @@ export default function UserManagement() {
                 jobExperience: user.jobExperience || '',
                 note: user.note || '',
                 storeName: user.storeName || '',
-                actionType: Array.isArray(user.actionType) ? user.actionType : (typeof user.actionType === 'string' ? [user.actionType] : ['call']),
                 accountStatus: user.accountStatus || 'review',
                 verifiedBy: user.verifiedBy || 'Not Verified',
                 location: user.location || '',
                 category: user.category || '',
-                pageName: user.pageName || '',
+                sellerPageUrl: user.sellerPageUrl || '',
                 merchantType: user.merchantType || 'Free',
                 rating: user.rating || '',
                 storeBannerStatus: user.storeBannerStatus || 'pending',
@@ -187,7 +204,8 @@ export default function UserManagement() {
                 storeBanner: user.storeBanner || '',
                 mVerified: user.mVerified ?? false,
                 merchantTrustStatus: user.merchantTrustStatus || 'Untrusted',
-                additionalMobiles: user.additionalMobiles || []
+                additionalMobiles: user.additionalMobiles || [],
+                lastLogin: user.lastLogin || ''
             });
             setTempMobile('');
         } else {
@@ -205,12 +223,11 @@ export default function UserManagement() {
                 jobExperience: '',
                 note: '',
                 storeName: '',
-                actionType: ['call'],
                 accountStatus: 'review',
                 verifiedBy: 'Not Verified',
                 location: '',
                 category: '',
-                pageName: '',
+                sellerPageUrl: '',
                 merchantType: 'Free',
                 rating: '',
                 storeBannerStatus: 'pending',
@@ -221,7 +238,8 @@ export default function UserManagement() {
                 storeBanner: '',
                 mVerified: false,
                 merchantTrustStatus: 'Untrusted',
-                additionalMobiles: []
+                additionalMobiles: [],
+                lastLogin: ''
             });
             setTempMobile('');
         }
@@ -244,12 +262,11 @@ export default function UserManagement() {
             jobExperience: '',
             note: '',
             storeName: '',
-            actionType: ['call'],
             accountStatus: 'review',
             verifiedBy: 'Not Verified',
             location: '',
             category: '',
-            pageName: '',
+            sellerPageUrl: '',
             merchantType: 'Free',
             rating: '',
             storeBannerStatus: 'pending',
@@ -264,11 +281,33 @@ export default function UserManagement() {
         });
         setTempMobile('');
         setSelectedFiles({});
-        setIsActionDropdownOpen(false);
     };
 
     const handleInputChange = (field: keyof UserFormData, value: any) => {
         setFormData(prev => ({ ...prev, [field]: value }));
+    };
+
+    const handleCheckUsername = async () => {
+        if (!formData.sellerPageUrl) {
+            toast.error("Please enter a username");
+            return;
+        }
+        try {
+            const token = Cookies.get('adminToken');
+            const res = await axios.post(`${API_BASE}/check-username`, {
+                sellerPageUrl: formData.sellerPageUrl,
+                userId: editingUser?._id
+            }, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.data.available) {
+                toast.success("Username is available!");
+            } else {
+                toast.error("Username already taken!");
+            }
+        } catch (err: any) {
+            toast.error(err.response?.data?.message || "Failed to check username");
+        }
     };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, field: string) => {
@@ -296,15 +335,10 @@ export default function UserManagement() {
             const data = new FormData();
             Object.keys(formData).forEach(key => {
                 const value = formData[key as keyof UserFormData];
-                if (value !== undefined && key !== 'photo' && key !== 'storeLogo' && key !== 'storeBanner' && key !== 'additionalMobiles' && key !== 'actionType') {
+                if (value !== undefined && key !== 'photo' && key !== 'storeLogo' && key !== 'storeBanner' && key !== 'additionalMobiles') {
                     data.append(key, String(value));
                 }
             });
-
-            // Append actionType
-            if (formData.actionType && formData.actionType.length > 0) {
-                formData.actionType.forEach(at => data.append('actionType[]', at));
-            }
 
             // Append additionalMobiles
             if (formData.additionalMobiles && formData.additionalMobiles.length > 0) {
@@ -394,14 +428,19 @@ export default function UserManagement() {
 
     const filteredUsers = users.filter(user => {
         const matchesSearch =
+            !searchQuery ||
             user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            user.storeName?.toLowerCase().includes(searchQuery.toLowerCase());
+            user.storeName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            user.mobile?.toLowerCase().includes(searchQuery.toLowerCase());
+
+        const isSeller = user.merchantType === 'Premium' || user.merchantType === 'Free Saller';
+        const isCustomer = user.merchantType === 'Free';
 
         const matchesType =
             userTypeFilter === 'both' ||
-            (userTypeFilter === 'seller' && user.merchantType !== 'User') ||
-            (userTypeFilter === 'customer' && user.merchantType === 'User');
+            (userTypeFilter === 'seller' && isSeller) ||
+            (userTypeFilter === 'customer' && isCustomer);
 
         return matchesSearch && matchesType;
     });
@@ -446,9 +485,36 @@ export default function UserManagement() {
 
                 <div className="flex items-center gap-2">
                     <div className="flex bg-slate-100 p-0.5 rounded-sm overflow-hidden border border-slate-200">
-                        <button onClick={() => setUserTypeFilter('both')} className={cn("px-2 py-1 text-xs font-bold rounded-sm transition-colors", userTypeFilter === 'both' ? "bg-rose-500 text-white" : "text-black")}>⇋ Both</button>
-                        <button onClick={() => setUserTypeFilter('seller')} className={cn("px-2 py-1 text-xs font-bold rounded-sm transition-colors", userTypeFilter === 'seller' ? "bg-emerald-600 text-white" : "text-black")}>Seller</button>
-                        <button onClick={() => setUserTypeFilter('customer')} className={cn("px-2 py-1 text-xs font-bold rounded-sm transition-colors", userTypeFilter === 'customer' ? "bg-emerald-600 text-white" : "text-black")}>Customer</button>
+                        <button
+                            onClick={() => {
+                                setUserTypeFilter('both');
+                                setSearchFilters(prev => ({ ...prev, merchantType: 'both' }));
+                                fetchUsers({ ...searchFilters, merchantType: 'both' });
+                            }}
+                            className={cn("px-2 py-1 text-xs font-bold rounded-sm transition-colors", userTypeFilter === 'both' ? "bg-rose-500 text-white" : "text-black")}
+                        >
+                            ⇋ Both
+                        </button>
+                        <button
+                            onClick={() => {
+                                setUserTypeFilter('seller');
+                                setSearchFilters(prev => ({ ...prev, merchantType: 'seller' }));
+                                fetchUsers({ ...searchFilters, merchantType: 'seller' });
+                            }}
+                            className={cn("px-2 py-1 text-xs font-bold rounded-sm transition-colors", userTypeFilter === 'seller' ? "bg-emerald-600 text-white" : "text-black")}
+                        >
+                            Seller
+                        </button>
+                        <button
+                            onClick={() => {
+                                setUserTypeFilter('customer');
+                                setSearchFilters(prev => ({ ...prev, merchantType: 'customer' }));
+                                fetchUsers({ ...searchFilters, merchantType: 'customer' });
+                            }}
+                            className={cn("px-2 py-1 text-xs font-bold rounded-sm transition-colors", userTypeFilter === 'customer' ? "bg-emerald-600 text-white" : "text-black")}
+                        >
+                            Customer
+                        </button>
                     </div>
                     <button
                         onClick={handleBulkDelete}
@@ -478,21 +544,23 @@ export default function UserManagement() {
                                     onChange={toggleSelectAll}
                                 />
                             </th>
-                            <th className="px-2 py-2 text-left font-bold text-black uppercase tracking-tight">Id</th>
-                            <th className="px-2 py-2 text-left font-bold text-black uppercase tracking-tight">M Name</th>
-                            <th className="px-2 py-2 text-left font-bold text-black uppercase tracking-tight">Phone</th>
-                            <th className="px-2 py-2 text-left font-bold text-black uppercase tracking-tight">Categorie</th>
-                            <th className="px-2 py-2 text-left font-bold text-black uppercase tracking-tight">Location</th>
-                            <th className="px-2 py-2 text-left font-bold text-black uppercase tracking-tight">Created Date</th>
-                            <th className="px-2 py-2 text-left font-bold text-black uppercase tracking-tight w-28">Status</th>
-                            <th className="px-2 py-2 text-center font-bold text-black uppercase tracking-tight">Rating</th>
-                            <th className="px-2 py-2 text-center font-bold text-black uppercase tracking-tight">Edit by</th>
-                            <th className="px-2 py-2 text-center font-bold text-black uppercase tracking-tight">Edit</th>
+                            <th className="px-2 py-2 text-left font-bold text-black uppercase tracking-tight text-[10px]">Id</th>
+                            <th className="px-2 py-2 text-left font-bold text-black uppercase tracking-tight text-[10px]">M Name</th>
+                            <th className="px-2 py-2 text-left font-bold text-black uppercase tracking-tight text-[10px]">Phone</th>
+                            <th className="px-2 py-2 text-left font-bold text-black uppercase tracking-tight text-[10px]">Email</th>
+                            <th className="px-2 py-2 text-left font-bold text-black uppercase tracking-tight text-[10px]">Categorie</th>
+                            <th className="px-2 py-2 text-left font-bold text-black uppercase tracking-tight text-[10px]">Location</th>
+                            <th className="px-2 py-2 text-left font-bold text-black uppercase tracking-tight text-[10px]">Created Date</th>
+                            <th className="px-2 py-2 text-left font-bold text-black uppercase tracking-tight w-28 text-[10px]">Status</th>
+                            <th className="px-2 py-2 text-left font-bold text-black uppercase tracking-tight text-[10px]">Last Login</th>
+                            <th className="px-2 py-2 text-center font-bold text-black uppercase tracking-tight text-[10px]">Rating</th>
+                            <th className="px-2 py-2 text-center font-bold text-black uppercase tracking-tight text-[10px]">Edit by</th>
+                            <th className="px-2 py-2 text-center font-bold text-black uppercase tracking-tight text-[10px]">Edit</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                         {loading ? (
-                            <tr><td colSpan={11} className="py-20 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-indigo-600" /></td></tr>
+                            <tr><td colSpan={13} className="py-20 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-indigo-600" /></td></tr>
                         ) : filteredUsers.map((user) => (
                             <tr key={user._id} className={cn("hover:bg-slate-50 transition-colors", selectedUsers.includes(user._id) && "bg-rose-50/50")}>
                                 <td className="px-2 py-1.5">
@@ -510,7 +578,8 @@ export default function UserManagement() {
                                         {user.mVerified && <VerifiedBadge />}
                                     </div>
                                 </td>
-                                <td className="px-2 py-1.5 text-black">{user.mobile}</td>
+                                <td className="px-2 py-1.5 text-black text-xs">{user.mobile}</td>
+                                <td className="px-2 py-1.5 text-black">{user.email || ''}</td>
                                 <td className="px-2 py-1.5 text-black">{user.category}</td>
                                 <td className="px-2 py-1.5 text-black">{user.location}</td>
                                 <td className="px-2 py-1.5 text-black">{new Date(user.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'numeric', year: '2-digit' })}</td>
@@ -522,11 +591,11 @@ export default function UserManagement() {
                                     >
                                         <option value="active">Active</option>
                                         <option value="inactive">UnActive</option>
-                                        <option value="review">Review</option>
-                                        <option value="atv_msg">Atv & Msg</option>
-                                        <option value="unatv_msg">UnA & Msg</option>
                                         <option value="r_delete">R-Delete</option>
                                     </select>
+                                </td>
+                                <td className="px-2 py-1.5 text-black text-[10px]">
+                                    {user.lastLogin ? new Date(user.lastLogin).toLocaleString('en-GB', { day: 'numeric', month: 'numeric', year: '2-digit', hour: '2-digit', minute: '2-digit' }) : 'N/A'}
                                 </td>
                                 <td className="px-2 py-1.5 text-center text-black">{user.rating || ''}</td>
                                 <td className="px-2 py-1.5 text-center text-black">Admin</td>
@@ -554,51 +623,96 @@ export default function UserManagement() {
                                 <div className="border border-slate-200 p-3 space-y-4">
                                     <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                                         <div className="flex bg-slate-100 p-0.5 rounded-sm overflow-hidden border border-slate-200">
-                                            <button className="px-2 py-1 bg-rose-500 text-white text-xs font-bold rounded-sm">Both</button>
-                                            <button className="px-2 py-1 text-black text-xs font-bold">Seller</button>
-                                            <button className="px-2 py-1 text-black text-xs font-bold">Customer</button>
+                                            <button
+                                                onClick={() => setSearchFilters(prev => ({ ...prev, merchantType: 'both' }))}
+                                                className={cn("px-2 py-1 text-xs font-bold rounded-sm transition-colors", searchFilters.merchantType === 'both' ? "bg-rose-500 text-white" : "text-black")}
+                                            >
+                                                Both
+                                            </button>
+                                            <button
+                                                onClick={() => setSearchFilters(prev => ({ ...prev, merchantType: 'seller' }))}
+                                                className={cn("px-2 py-1 text-xs font-bold rounded-sm transition-colors", searchFilters.merchantType === 'seller' ? "bg-emerald-600 text-white" : "text-black")}
+                                            >
+                                                Seller
+                                            </button>
+                                            <button
+                                                onClick={() => setSearchFilters(prev => ({ ...prev, merchantType: 'customer' }))}
+                                                className={cn("px-2 py-1 text-xs font-bold rounded-sm transition-colors", searchFilters.merchantType === 'customer' ? "bg-emerald-600 text-white" : "text-black")}
+                                            >
+                                                Customer
+                                            </button>
                                         </div>
                                         <div className="flex items-center gap-1.5">
-                                            <button className="p-1 bg-rose-500 text-white rounded-sm"><Trash2 className="w-3 h-3" /></button>
+                                            <button
+                                                onClick={() => {
+                                                    const reset = {
+                                                        id: '',
+                                                        mobile: '',
+                                                        email: '',
+                                                        category: 'Select',
+                                                        location: 'Select',
+                                                        status: 'Select',
+                                                        merchantType: 'both',
+                                                        dateFrom: '',
+                                                        dateTo: ''
+                                                    };
+                                                    setSearchFilters(reset);
+                                                    fetchUsers(reset);
+                                                }}
+                                                className="p-1 bg-rose-500 text-white rounded-sm" title="Reset Search">
+                                                <Trash2 className="w-3 h-3" />
+                                            </button>
                                             <button className="p-1 bg-emerald-600 text-white rounded-sm"><Plus className="w-3 h-3" /></button>
-                                            <button className="p-1 bg-emerald-600 text-white rounded-sm"><Search className="w-3 h-3" /></button>
+                                            <button onClick={() => fetchUsers(searchFilters)} className="p-1 bg-emerald-600 text-white rounded-sm"><Search className="w-3 h-3" /></button>
                                         </div>
                                     </div>
 
                                     <div className="grid grid-cols-6 gap-3">
                                         {[
-                                            { label: 'Seller ID', placeholder: 'ID...', value: searchQuery, onChange: setSearchQuery },
-                                            { label: 'Mobile', placeholder: 'Mobile...', value: searchQuery, onChange: setSearchQuery },
-                                            { label: 'Categorie', placeholder: 'Select', type: 'select' },
-                                            { label: 'Sub Categorie', placeholder: 'Select', type: 'select' },
-                                            { label: 'Sub Location', placeholder: 'Select', type: 'select' },
-                                            { label: 'Active Status', placeholder: 'Select', type: 'select' }
+                                            { label: 'Seller ID', placeholder: 'ID...', value: searchFilters.id, name: 'id' },
+                                            { label: 'Mobile', placeholder: 'Mobile...', value: searchFilters.mobile, name: 'mobile' },
+                                            { label: 'Email', placeholder: 'Email...', value: searchFilters.email, name: 'email' },
+                                            { label: 'Categorie', placeholder: 'Select', type: 'select', name: 'category', options: ['Select', ...categories.map(c => c.name)] },
+                                            { label: 'Location', placeholder: 'Select', type: 'select', name: 'location', options: ['Select', ...locations.map(l => l.name)] },
+                                            { label: 'Active Status', placeholder: 'Select', type: 'select', name: 'status', options: ['Select', 'active', 'inactive', 'review', 'active_message', 'inactive_message', 'r_delete'] }
                                         ].map((f, i) => (
                                             <div key={i} className="flex flex-col gap-0.5 border border-slate-200 p-1.5 rounded-sm">
                                                 <label className="text-xs font-bold text-black uppercase leading-none">{f.label}</label>
                                                 {f.type === 'select' ? (
-                                                    <select className="text-xs text-black outline-none w-full bg-transparent h-4">
-                                                        <option>{f.placeholder}</option>
+                                                    <select
+                                                        className="text-xs text-black outline-none w-full bg-transparent h-4"
+                                                        value={f.value}
+                                                        onChange={(e) => setSearchFilters(prev => ({ ...prev, [f.name as string]: e.target.value }))}
+                                                    >
+                                                        {f.options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                                                     </select>
                                                 ) : (
                                                     <input
                                                         className="text-xs text-black outline-none w-full bg-transparent h-4"
                                                         placeholder={f.placeholder}
                                                         value={f.value || ''}
-                                                        onChange={(e) => f.onChange?.(e.target.value)}
+                                                        onChange={(e) => setSearchFilters(prev => ({ ...prev, [f.name as string]: e.target.value }))}
                                                     />
                                                 )}
                                             </div>
                                         ))}
                                     </div>
 
-                                    <div className="grid grid-cols-4 gap-3">
-                                        {['Registration Date To', 'Registration Date From', 'Login Date from', 'Login Date till'].map((label, i) => (
-                                            <div key={label} className="flex flex-col gap-0.5 border border-slate-200 p-1 rounded-sm">
-                                                <label className="text-xs font-bold text-black uppercase leading-none">{label}</label>
-                                                <div className="flex items-center gap-2 h-5">
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {[
+                                            { label: 'Registration Date From', name: 'dateFrom', value: searchFilters.dateFrom },
+                                            { label: 'Registration Date To', name: 'dateTo', value: searchFilters.dateTo },
+                                        ].map((f, i) => (
+                                            <div key={f.label} className="flex flex-col gap-0.5 border border-slate-200 p-1 rounded-sm">
+                                                <label className="text-xs font-bold text-black uppercase leading-none">{f.label}</label>
+                                                <div className="flex items-center gap-2 h-5 text-black">
                                                     <Calendar className="w-3 h-3 text-black" />
-                                                    <input type="text" className="text-xs text-black outline-none bg-transparent w-full" placeholder="15.8.21" />
+                                                    <input
+                                                        type="date"
+                                                        className="text-xs text-black outline-none bg-transparent w-full"
+                                                        value={f.value}
+                                                        onChange={(e) => setSearchFilters(prev => ({ ...prev, [f.name]: e.target.value }))}
+                                                    />
                                                 </div>
                                             </div>
                                         ))}
@@ -606,13 +720,36 @@ export default function UserManagement() {
 
                                     <div className="flex items-center justify-between pt-2">
                                         <div className="flex bg-slate-100 p-0.5 rounded-sm overflow-hidden border border-slate-200">
-                                            <button className="px-2 py-1 bg-slate-600 text-white text-xs font-bold rounded-sm"> Both</button>
-                                            <button className="px-2 py-1 text-black text-xs font-bold">Seller</button>
-                                            <button className="px-2 py-1 text-black text-xs font-bold">Customer</button>
+                                            <button
+                                                onClick={() => setSearchFilters(prev => ({ ...prev, merchantType: 'both' }))}
+                                                className={cn("px-2 py-1 text-xs font-bold rounded-sm transition-colors", searchFilters.merchantType === 'both' ? "bg-slate-600 text-white" : "text-black")}
+                                            >
+                                                Both
+                                            </button>
+                                            <button
+                                                onClick={() => setSearchFilters(prev => ({ ...prev, merchantType: 'seller' }))}
+                                                className={cn("px-2 py-1 text-xs font-bold rounded-sm transition-colors", searchFilters.merchantType === 'seller' ? "bg-slate-600 text-white" : "text-black")}
+                                            >
+                                                Seller
+                                            </button>
+                                            <button
+                                                onClick={() => setSearchFilters(prev => ({ ...prev, merchantType: 'customer' }))}
+                                                className={cn("px-2 py-1 text-xs font-bold rounded-sm transition-colors", searchFilters.merchantType === 'customer' ? "bg-slate-600 text-white" : "text-black")}
+                                            >
+                                                Customer
+                                            </button>
                                         </div>
                                         <div className="flex gap-2">
                                             <button onClick={() => setShowSearchModal(false)} className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-600 text-white text-xs font-bold rounded-sm shadow-sm"><X className="w-3 h-3" /> Hide Search</button>
-                                            <button onClick={() => setShowSearchModal(false)} className="flex items-center gap-1.5 px-6 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-sm shadow-sm"><Search className="w-3 h-3" /> Search</button>
+                                            <button
+                                                onClick={() => {
+                                                    fetchUsers(searchFilters);
+                                                    setShowSearchModal(false);
+                                                }}
+                                                className="flex items-center gap-1.5 px-6 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-sm shadow-sm"
+                                            >
+                                                <Search className="w-3 h-3" /> Search
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -749,6 +886,16 @@ export default function UserManagement() {
                                                 className="text-xs font-bold text-black outline-none w-full bg-transparent h-4"
                                             />
                                         </div>
+
+                                        {/* Last Login Date - Only in Edit Mode */}
+                                        {editingUser && (
+                                            <div className="flex flex-col gap-0.5 border border-slate-200 p-1.5 rounded-sm bg-white">
+                                                <label className="text-xs font-normal text-black uppercase leading-none italic font-serif">Last Login Date</label>
+                                                <div className="text-[10px] font-bold text-blue-600 h-4 flex items-center">
+                                                    {formData.lastLogin ? new Date(formData.lastLogin as string).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A'}
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div className="grid grid-cols-[1fr_2fr] gap-3">
@@ -763,7 +910,7 @@ export default function UserManagement() {
                                             {/* List of additional numbers */}
                                             {formData.additionalMobiles && formData.additionalMobiles.length > 0 && (
                                                 <div className="flex flex-wrap gap-1 mt-1 mb-1">
-                                                    {formData.additionalMobiles.map((m, i) => (
+                                                    {formData.additionalMobiles?.map((m, i) => (
                                                         <span key={i} className="px-1.5 py-0.5 bg-slate-100 text-xs font-bold rounded flex items-center gap-1">
                                                             {m}
                                                             <button
@@ -819,62 +966,6 @@ export default function UserManagement() {
                                             <label className="text-xs font-normal text-black uppercase absolute top-[-4px] left-1.5 bg-white px-0.5">Store Name</label>
                                             <input className="text-xs font-bold text-black outline-none w-full h-5 mt-1" value={formData.storeName} onChange={(e) => handleInputChange('storeName', e.target.value)} />
                                         </div>
-                                        <div className="border border-slate-200 p-1.5 rounded-sm relative bg-white flex flex-col justify-center min-h-[36px]">
-                                            <label className="text-xs font-normal text-black uppercase absolute top-[-4px] left-1.5 bg-white px-0.5">Show Button</label>
-                                            <div className="relative mt-1">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setIsActionDropdownOpen(!isActionDropdownOpen)}
-                                                    className="w-full h-5 text-left px-1 text-[10px] font-bold text-black uppercase flex items-center justify-between focus:outline-none border border-slate-100 rounded-sm"
-                                                >
-                                                    <span className="truncate">
-                                                        {formData.actionType.length > 0
-                                                            ? formData.actionType.map(v => v === 'sendcv' ? 'Send CV' : v.charAt(0).toUpperCase() + v.slice(1)).join(', ')
-                                                            : 'Select Options'}
-                                                    </span>
-                                                    <div className={cn("transition-transform", isActionDropdownOpen ? "rotate-180" : "")}>
-                                                        <Plus className="w-2.5 h-2.5" />
-                                                    </div>
-                                                </button>
-
-                                                {isActionDropdownOpen && (
-                                                    <>
-                                                        <div
-                                                            className="fixed inset-0 z-[60]"
-                                                            onClick={() => setIsActionDropdownOpen(false)}
-                                                        />
-                                                        <div className="absolute top-full left-0 w-full mt-0.5 bg-white border border-slate-300 rounded-sm shadow-xl z-[70] py-0.5">
-                                                            {[
-                                                                { label: 'Call', value: 'call' },
-                                                                { label: 'Chat', value: 'chat' },
-                                                                { label: 'Send CV', value: 'sendcv' }
-                                                            ].map(btn => (
-                                                                <div
-                                                                    key={btn.value}
-                                                                    onClick={() => {
-                                                                        const current = [...formData.actionType];
-                                                                        if (current.includes(btn.value)) {
-                                                                            handleInputChange('actionType', current.filter(v => v !== btn.value));
-                                                                        } else {
-                                                                            handleInputChange('actionType', [...current, btn.value]);
-                                                                        }
-                                                                    }}
-                                                                    className="px-2 py-1.5 hover:bg-slate-50 cursor-pointer flex items-center justify-between group border-b border-slate-50 last:border-none"
-                                                                >
-                                                                    <span className={cn(
-                                                                        "text-[10px] font-bold uppercase",
-                                                                        formData.actionType.includes(btn.value) ? "text-blue-600" : "text-black"
-                                                                    )}>
-                                                                        {btn.label}
-                                                                    </span>
-                                                                    {formData.actionType.includes(btn.value) && <Check className="w-2.5 h-2.5 text-blue-600" />}
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </>
-                                                )}
-                                            </div>
-                                        </div>
                                         <div className="border border-slate-200 p-1.5 rounded-sm relative bg-white flex flex-col justify-center">
                                             <label className="text-xs font-normal text-black uppercase absolute top-[-4px] left-1.5 bg-white px-0.5">M-Verified By</label>
                                             <select className="text-xs font-bold text-black outline-none bg-transparent mt-1" value={formData.mVerified ? "Yes" : "No"} onChange={(e) => handleInputChange('mVerified', e.target.value === 'Yes')}>
@@ -914,10 +1005,10 @@ export default function UserManagement() {
                                     <div className="border border-slate-200 p-1.5 rounded-sm relative flex items-center gap-2 bg-white">
                                         <label className="text-xs font-normal text-black uppercase absolute top-[-5px] left-2 bg-white px-1">Page Username</label>
                                         <span className="text-xs text-black italic">shadamon.com/</span>
-                                        <input className="text-xs font-bold text-black outline-none flex-1 border-b border-slate-100 bg-transparent h-5" value={formData.pageName} onChange={(e) => handleInputChange('pageName', e.target.value)} />
+                                        <input className="text-xs font-bold text-black outline-none flex-1 border-b border-slate-100 bg-transparent h-5" value={formData.sellerPageUrl} onChange={(e) => handleInputChange('sellerPageUrl', e.target.value)} />
                                         <div className="flex gap-1">
-                                            <button className="bg-slate-50 text-black px-2 py-0.5 rounded-[1px] text-xs font-bold border border-slate-200 hover:bg-slate-100 transition-colors">Change</button>
-                                            <button className="bg-indigo-600 text-white px-3 py-0.5 rounded-[1px] text-xs font-bold shadow-sm">Save</button>
+                                            <button type="button" onClick={() => handleInputChange('sellerPageUrl', '')} className="bg-slate-50 text-black px-2 py-0.5 rounded-[1px] text-xs font-bold border border-slate-200 hover:bg-slate-100 transition-colors">Change</button>
+                                            <button type="button" onClick={handleCheckUsername} className="bg-indigo-600 text-white px-3 py-0.5 rounded-[1px] text-xs font-bold shadow-sm">Check</button>
                                         </div>
                                     </div>
 
