@@ -56,6 +56,7 @@ interface Ad {
         name: string;
         email: string;
         mobile: string;
+        merchantTrustStatus?: string;
     };
     views: number;
     deliveryCount: number;
@@ -173,7 +174,7 @@ export default function PostManagement() {
     const [showEditModal, setShowEditModal] = useState(false);
     const [showShortViewModal, setShowShortViewModal] = useState(false);
     const [hoveredImage, setHoveredImage] = useState<string | null>(null);
-    const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'today' | 'running'>('all');
+    const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'today' | 'running' | 'waiting_promote'>('all');
     const [searchKeys, setSearchKeys] = useState<any>({
         categoryId: '',
         subCategoryId: '',
@@ -253,6 +254,12 @@ export default function PostManagement() {
             filtered = filtered.filter(ad =>
                 ad.adType === 'Promoted' &&
                 ad.status === 'active'
+            );
+        } else if (activeTab === 'waiting_promote') {
+            // Promoted ads from Untrusted Users
+            filtered = filtered.filter(ad =>
+                ad.adType === 'Promoted' &&
+                ad.user?.merchantTrustStatus !== 'Trusted'
             );
         }
 
@@ -583,6 +590,18 @@ export default function PostManagement() {
                                 ads.filter(a =>
                                     a.adType === 'Promoted' &&
                                     a.status === 'active'
+                                ).length
+                            })
+                        </button>
+                        <span className="text-black">|</span>
+                        <button
+                            onClick={() => setActiveTab('waiting_promote')}
+                            className={cn("hover:text-indigo-600 transition-colors whitespace-nowrap", activeTab === 'waiting_promote' && "text-indigo-600 border-b-2 border-indigo-600")}
+                        >
+                            Waiting Promote ({
+                                ads.filter(a =>
+                                    a.adType === 'Promoted' &&
+                                    a.user?.merchantTrustStatus !== 'Trusted'
                                 ).length
                             })
                         </button>
