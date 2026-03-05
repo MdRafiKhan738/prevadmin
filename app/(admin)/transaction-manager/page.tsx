@@ -7,6 +7,7 @@ import { Search, ChevronDown, ArrowLeft, Calendar, Trash2 } from 'lucide-react';
 import { API_BASE_URL } from '@/utils/apiConfig';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
+import { format } from 'date-fns';
 
 export default function TransactionManagerPage() {
     // Manual Promotion State
@@ -26,8 +27,27 @@ export default function TransactionManagerPage() {
         labels: []
     });
 
+    // Transaction Report State
+    const [transactions, setTransactions] = useState<any[]>([]);
+    const [filteredTransactions, setFilteredTransactions] = useState<any[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+    // Filter States
+    const [filters, setFilters] = useState({
+        fromDate: '',
+        toDate: '',
+        tnxId: '',
+        productId: '',
+        sellerMobile: '',
+        sellerId: '',
+        item: '',
+        mode: ''
+    });
+
     useEffect(() => {
         fetchData();
+        fetchTransactions();
     }, []);
 
     const fetchData = async () => {
@@ -48,6 +68,25 @@ export default function TransactionManagerPage() {
         }
     };
 
+    const fetchTransactions = async () => {
+        setLoading(true);
+        try {
+            const token = Cookies.get('adminToken');
+            const res = await axios.get(`${API_BASE_URL}/api/admins/transactions`, {
+                headers: { 'Authorization': `Bearer ${token}`, 'x-auth-token': token }
+            });
+            if (res.data.success) {
+                setTransactions(res.data.data);
+                setFilteredTransactions(res.data.data);
+            }
+        } catch (err) {
+            console.error("Fetch transactions error:", err);
+            toast.error("Failed to fetch transactions");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleManualPromote = async () => {
         if (!manualPromote.productId && !manualPromote.sellerId) {
             return toast.error("Either Product ID or Seller ID is required");
@@ -60,10 +99,94 @@ export default function TransactionManagerPage() {
             });
             toast.success("Ad promoted successfully!");
             setManualPromote({ productId: '', adType: 'Free', amount: '', runTill: '', sellerId: '', isVerifyBadge: 'No', level: '' });
+            fetchTransactions(); // Refresh table
         } catch (err: any) {
             toast.error(err.response?.data?.message || "Failed to promote ad");
         } finally {
             setManualSaving(false);
+        }
+    };
+
+    const handleSearch = () => {
+        let result = [...transactions];
+
+        if (filters.tnxId) {
+            result = result.filter(t => t.tnxId?.toLowerCase().includes(filters.tnxId.toLowerCase()));
+        }
+        if (filters.productId) {
+            result = result.filter(t =>
+                t.productId?._id?.toLowerCase().includes(filters.productId.toLowerCase()) ||
+                t.productId?.headline?.toLowerCase().includes(filters.productId.toLowerCase())
+            );
+        }
+        if (filters.sellerMobile) {
+            result = result.filter(t => t.mobileNumber?.includes(filters.sellerMobile));
+        }
+        if (filters.sellerId) {
+            result = result.filter(t => t.sellerId?._id?.toLowerCase().includes(filters.sellerId.toLowerCase()));
+        }
+        if (filters.item) {
+            result = result.filter(t => t.item?.toLowerCase().includes(filters.item.toLowerCase()));
+        }
+        if (filters.mode) {
+            result = result.filter(t => t.mode?.toLowerCase().includes(filters.mode.toLowerCase()));
+        }
+        if (filters.fromDate) {
+            result = result.filter(t => new Date(t.payTime) >= new Date(filters.fromDate));
+        }
+        if (filters.toDate) {
+            const toDate = new Date(filters.toDate);
+            toDate.setHours(23, 59, 59, 999);
+            result = result.filter(t => new Date(t.payTime) <= toDate);
+        }
+
+        setFilteredTransactions(result);
+    };
+
+    const handleDelete = async (id: string) => {
+        if (!confirm("Are you sure you want to delete this transaction?")) return;
+        try {
+            const token = Cookies.get('adminToken');
+            await axios.delete(`${API_BASE_URL}/api/admins/transactions/${id}`, {
+                headers: { 'Authorization': `Bearer ${token}`, 'x-auth-token': token }
+            });
+            toast.success("Transaction deleted");
+            fetchTransactions();
+        } catch (err) {
+            toast.error("Failed to delete transaction");
+        }
+    };
+
+    const handleBatchDelete = async () => {
+        if (selectedIds.length === 0) return toast.error("No transactions selected");
+        if (!confirm(`Are you sure you want to delete ${selectedIds.length} transactions?`)) return;
+
+        try {
+            const token = Cookies.get('adminToken');
+            await Promise.all(selectedIds.map(id =>
+                axios.delete(`${API_BASE_URL}/api/admins/transactions/${id}`, {
+                    headers: { 'Authorization': `Bearer ${token}`, 'x-auth-token': token }
+                })
+            ));
+            toast.success("Selected transactions deleted");
+            setSelectedIds([]);
+            fetchTransactions();
+        } catch (err) {
+            toast.error("Some deletions failed");
+        }
+    };
+
+    const toggleSelect = (id: string) => {
+        setSelectedIds(prev =>
+            prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+        );
+    };
+
+    const toggleSelectAll = () => {
+        if (selectedIds.length === filteredTransactions.length) {
+            setSelectedIds([]);
+        } else {
+            setSelectedIds(filteredTransactions.map(t => t._id));
         }
     };
 
@@ -181,82 +304,163 @@ export default function TransactionManagerPage() {
 
                     {/* Filters */}
                     <div className="p-3 flex items-center gap-2 flex-wrap border-b border-slate-100 bg-white">
-                        <button className="p-1.5 border border-slate-300 rounded-sm bg-slate-100 hover:bg-slate-200">
+                        <button
+                            onClick={handleBatchDelete}
+                            className="p-1.5 border border-slate-300 rounded-sm bg-slate-100 hover:bg-slate-200"
+                            title="Delete Selected"
+                        >
                             <Trash2 className="w-3.5 h-3.5 text-black" />
                         </button>
 
                         <div className="flex items-center gap-2 border border-slate-200 rounded-sm bg-white px-2 h-9">
                             <span className="text-slate-500 shrink-0">From Date</span>
-                            <input type="date" className="outline-none text-xs w-28 bg-transparent" />
+                            <input
+                                type="date"
+                                className="outline-none text-xs w-28 bg-transparent"
+                                value={filters.fromDate}
+                                onChange={(e) => setFilters({ ...filters, fromDate: e.target.value })}
+                            />
                         </div>
 
                         <div className="flex items-center gap-2 border border-slate-200 rounded-sm bg-white px-2 h-9">
                             <span className="text-slate-500 shrink-0">To Date</span>
-                            <input type="date" className="outline-none text-xs w-28 bg-transparent" />
+                            <input
+                                type="date"
+                                className="outline-none text-xs w-28 bg-transparent"
+                                value={filters.toDate}
+                                onChange={(e) => setFilters({ ...filters, toDate: e.target.value })}
+                            />
                         </div>
 
-                        <input placeholder="Txn ID..." className="h-9 border border-slate-300 px-3 outline-none text-xs w-32 bg-white" />
-                        <input placeholder="Product ID" className="h-9 border border-slate-300 px-3 outline-none text-xs w-32 bg-white" />
-                        <input placeholder="Seller Mobile" className="h-9 border border-slate-300 px-3 outline-none text-xs w-32 bg-white" />
-                        <input placeholder="Seller ID" className="h-9 border border-slate-300 px-3 outline-none text-xs w-28 bg-white" />
-                        <input placeholder="Item" className="h-9 border border-slate-300 px-3 outline-none text-xs w-28 bg-white" />
-                        <input placeholder="Trx Mode" className="h-9 border border-slate-300 px-3 outline-none text-xs w-28 bg-white" />
+                        <input
+                            placeholder="Txn ID..."
+                            className="h-9 border border-slate-300 px-3 outline-none text-xs w-32 bg-white"
+                            value={filters.tnxId}
+                            onChange={(e) => setFilters({ ...filters, tnxId: e.target.value })}
+                        />
+                        <input
+                            placeholder="Product ID"
+                            className="h-9 border border-slate-300 px-3 outline-none text-xs w-32 bg-white"
+                            value={filters.productId}
+                            onChange={(e) => setFilters({ ...filters, productId: e.target.value })}
+                        />
+                        <input
+                            placeholder="Seller Mobile"
+                            className="h-9 border border-slate-300 px-3 outline-none text-xs w-32 bg-white"
+                            value={filters.sellerMobile}
+                            onChange={(e) => setFilters({ ...filters, sellerMobile: e.target.value })}
+                        />
+                        <input
+                            placeholder="Seller ID"
+                            className="h-9 border border-slate-300 px-3 outline-none text-xs w-28 bg-white"
+                            value={filters.sellerId}
+                            onChange={(e) => setFilters({ ...filters, sellerId: e.target.value })}
+                        />
+                        <input
+                            placeholder="Item"
+                            className="h-9 border border-slate-300 px-3 outline-none text-xs w-28 bg-white"
+                            value={filters.item}
+                            onChange={(e) => setFilters({ ...filters, item: e.target.value })}
+                        />
+                        <input
+                            placeholder="Trx Mode"
+                            className="h-9 border border-slate-300 px-3 outline-none text-xs w-28 bg-white"
+                            value={filters.mode}
+                            onChange={(e) => setFilters({ ...filters, mode: e.target.value })}
+                        />
 
-                        <button className="bg-[#00a65a] text-white px-4 h-9 rounded-sm font-bold text-xs uppercase flex items-center gap-2 shadow-sm hover:bg-emerald-700 ml-auto">
+                        <button
+                            onClick={handleSearch}
+                            className="bg-[#00a65a] text-white px-4 h-9 rounded-sm font-bold text-xs uppercase flex items-center gap-2 shadow-sm hover:bg-emerald-700 ml-auto"
+                        >
                             <Search className="w-3.5 h-3.5" />
                             Search
                         </button>
                     </div>
 
                     {/* Table */}
-                    <div className="overflow-x-auto">
-                        <table className="w-full border-collapse">
-                            <thead>
-                                <tr className="text-left bg-slate-50/50 border-b border-slate-100">
-                                    <th className="p-2 w-10 text-center">
-                                        <input type="checkbox" className="w-3 h-3" />
-                                    </th>
-                                    <th className="p-2 text-black border-r border-slate-100">Tnx ID</th>
-                                    <th className="p-2 text-black border-r border-slate-100 text-center">Trx Mode</th>
-                                    <th className="p-2 text-black border-r border-slate-100 text-center">Seller ID</th>
-                                    <th className="p-2 text-black border-r border-slate-100 text-center">Product ID</th>
-                                    <th className="p-2 text-black border-r border-slate-100 text-center">Mobile Number</th>
-                                    <th className="p-2 text-black border-r border-slate-100 text-center">Amount</th>
-                                    <th className="p-2 text-black border-r border-slate-100 text-center">Pay Type</th>
-                                    <th className="p-2 text-black border-r border-slate-100">Payee Name</th>
-                                    <th className="p-2 text-black border-r border-slate-100">Item</th>
-                                    <th className="p-2 text-black border-r border-slate-100 whitespace-nowrap">Pay Time</th>
-                                    <th className="p-2 text-black text-center whitespace-nowrap">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-50">
-                                {[
-                                    { tnx: '60178a10a661a147147', mode: 'Online', seller: '154855', prod: '----', mobile: '0175488544', amount: '1999', payType: 'DBBL', name: 'Sathi Akter', item: 'Verify Badge', time: '2021-02-01 10:56:48', status: 'VALID' },
-                                    { tnx: '60178a0d71e33147147', mode: 'Admin', seller: '965885', prod: '85485555', mobile: '0158452877', amount: '1999', payType: 'Bkash', name: 'Sathi Akter', item: 'Highlight', time: '2021-02-01 10:56:45', status: 'VALID' },
-                                    { tnx: '601762b300b89146337', mode: 'Online', seller: '965855', prod: '11254155', mobile: '01854887554', amount: '3050', payType: 'Visa', name: 'Imran Imran', item: 'View', time: '2021-02-01 08:08:51', status: 'VALID' },
-                                    { tnx: '60171add9a179113585', mode: 'Online', seller: '8545888', prod: '10254778', mobile: '01996554887', amount: '1999', payType: 'Rocket', name: 'Shopan S.M. Sh', item: 'Urgent', time: '2021-02-01 03:02:21', status: 'VALID' },
-                                ].map((row, i) => (
-                                    <tr key={i} className="hover:bg-slate-50 transition-colors">
-                                        <td className="p-2 text-center">
-                                            <input type="checkbox" className="w-3 h-3" />
-                                        </td>
-                                        <td className="p-2 font-mono text-[11px] text-slate-600 border-r border-slate-100">{row.tnx}</td>
-                                        <td className="p-2 text-center text-slate-700 border-r border-slate-100">{row.mode}</td>
-                                        <td className="p-2 text-center text-slate-700 border-r border-slate-100">{row.seller}</td>
-                                        <td className="p-2 text-center text-slate-700 border-r border-slate-100">{row.prod}</td>
-                                        <td className="p-2 text-center text-slate-700 border-r border-slate-100">{row.mobile}</td>
-                                        <td className="p-2 text-center font-bold text-slate-800 border-r border-slate-100">Tk. {row.amount}</td>
-                                        <td className="p-2 text-center text-slate-700 border-r border-slate-100">{row.payType}</td>
-                                        <td className="p-2 text-blue-600 border-r border-slate-100">{row.name}</td>
-                                        <td className="p-2 text-slate-700 border-r border-slate-100">{row.item}</td>
-                                        <td className="p-2 text-[11px] text-slate-600 border-r border-slate-100 whitespace-nowrap">{row.time}</td>
-                                        <td className="p-2 text-center">
-                                            <span className="bg-emerald-600 text-white px-2 py-0.5 rounded-[1px] text-[10px] font-bold">VALID</span>
-                                        </td>
+                    <div className="overflow-x-auto min-h-[400px]">
+                        {loading ? (
+                            <div className="p-10 text-center text-slate-500">Loading transactions...</div>
+                        ) : (
+                            <table className="w-full border-collapse">
+                                <thead>
+                                    <tr className="text-left bg-slate-50/50 border-b border-slate-100">
+                                        <th className="p-2 w-10 text-center">
+                                            <input
+                                                type="checkbox"
+                                                className="w-3 h-3"
+                                                checked={filteredTransactions.length > 0 && selectedIds.length === filteredTransactions.length}
+                                                onChange={toggleSelectAll}
+                                            />
+                                        </th>
+                                        <th className="p-2 text-black border-r border-slate-100">Tnx ID</th>
+                                        <th className="p-2 text-black border-r border-slate-100 text-center">Trx Mode</th>
+                                        <th className="p-2 text-black border-r border-slate-100 text-center">Seller ID</th>
+                                        <th className="p-2 text-black border-r border-slate-100 text-center">Product ID</th>
+                                        <th className="p-2 text-black border-r border-slate-100 text-center">Mobile Number</th>
+                                        <th className="p-2 text-black border-r border-slate-100 text-center">Amount</th>
+                                        <th className="p-2 text-black border-r border-slate-100 text-center">Pay Type</th>
+                                        <th className="p-2 text-black border-r border-slate-100">Payee Name</th>
+                                        <th className="p-2 text-black border-r border-slate-100">Item</th>
+                                        <th className="p-2 text-black border-r border-slate-100 whitespace-nowrap">Pay Time</th>
+                                        <th className="p-2 text-black text-center whitespace-nowrap">Status</th>
+                                        <th className="p-2 text-black text-center whitespace-nowrap">Action</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody className="divide-y divide-slate-50">
+                                    {filteredTransactions.map((row) => (
+                                        <tr key={row._id} className="hover:bg-slate-50 transition-colors">
+                                            <td className="p-2 text-center">
+                                                <input
+                                                    type="checkbox"
+                                                    className="w-3 h-3"
+                                                    checked={selectedIds.includes(row._id)}
+                                                    onChange={() => toggleSelect(row._id)}
+                                                />
+                                            </td>
+                                            <td className="p-2 font-mono text-[11px] text-slate-600 border-r border-slate-100">{row.tnxId}</td>
+                                            <td className="p-2 text-center text-slate-700 border-r border-slate-100">{row.mode}</td>
+                                            <td className="p-2 text-center text-slate-700 border-r border-slate-100" title={row.sellerId?._id}>
+                                                {row.sellerId?._id?.slice(-6) || '----'}
+                                            </td>
+                                            <td className="p-2 text-center text-slate-700 border-r border-slate-100" title={row.productId?._id}>
+                                                {row.productId?._id?.slice(-6) || '----'}
+                                            </td>
+                                            <td className="p-2 text-center text-slate-700 border-r border-slate-100">{row.mobileNumber}</td>
+                                            <td className="p-2 text-center font-bold text-slate-800 border-r border-slate-100">Tk. {row.amount}</td>
+                                            <td className="p-2 text-center text-slate-700 border-r border-slate-100">{row.payType}</td>
+                                            <td className="p-2 text-blue-600 border-r border-slate-100">{row.payeeName}</td>
+                                            <td className="p-2 text-slate-700 border-r border-slate-100">{row.item}</td>
+                                            <td className="p-2 text-[11px] text-slate-600 border-r border-slate-100 whitespace-nowrap">
+                                                {row.payTime ? format(new Date(row.payTime), 'yyyy-MM-dd HH:mm:ss') : '----'}
+                                            </td>
+                                            <td className="p-2 text-center">
+                                                <span className={`${row.status === 'VALID' ? 'bg-emerald-600' :
+                                                        row.status === 'FAILED' ? 'bg-rose-600' :
+                                                            row.status === 'CANCELLED' ? 'bg-amber-600' : 'bg-slate-400'
+                                                    } text-white px-2 py-0.5 rounded-[1px] text-[10px] font-bold`}>
+                                                    {row.status}
+                                                </span>
+                                            </td>
+                                            <td className="p-2 text-center">
+                                                <button
+                                                    onClick={() => handleDelete(row._id)}
+                                                    className="p-1 hover:bg-rose-50 text-rose-500 rounded"
+                                                >
+                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {filteredTransactions.length === 0 && !loading && (
+                                        <tr>
+                                            <td colSpan={13} className="p-10 text-center text-slate-500">No transactions found</td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        )}
                     </div>
                 </div>
             </div>

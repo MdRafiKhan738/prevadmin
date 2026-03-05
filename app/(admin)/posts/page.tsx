@@ -200,16 +200,24 @@ export default function PostManagement() {
                 axios.get(`${API_BASE_URL}/api/locations/sub`)
             ]);
 
-            const cats = (catRes.data.data || []).map((c: any) => ({
-                ...c,
-                subcategories: (subCatRes.data.data || []).filter((sc: any) => (sc.category?._id || sc.category) === c._id)
-            }));
+            const cats = (catRes.data.data || [])
+                .map((c: any) => ({
+                    ...c,
+                    subcategories: (subCatRes.data.data || [])
+                        .filter((sc: any) => (sc.category?._id || sc.category) === c._id)
+                        .sort((a: any, b: any) => (a.order || 0) - (b.order || 0))
+                }))
+                .sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
             setCategories(cats);
 
-            const locs = (locRes.data.data || []).map((l: any) => ({
-                ...l,
-                subLocations: (subLocRes.data.data || []).filter((sl: any) => (sl.location?._id || sl.location) === l._id)
-            }));
+            const locs = (locRes.data.data || [])
+                .map((l: any) => ({
+                    ...l,
+                    subLocations: (subLocRes.data.data || [])
+                        .filter((sl: any) => (sl.location?._id || sl.location) === l._id)
+                        .sort((a: any, b: any) => (a.order || 0) - (b.order || 0))
+                }))
+                .sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
             setLocations(locs);
         } catch (error) {
             console.error("Failed to fetch meta", error);

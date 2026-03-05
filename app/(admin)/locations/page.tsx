@@ -83,8 +83,8 @@ export default function LocationsPage() {
                 axios.get(`${API_BASE_URL}/api/locations/sub`),
                 axios.get(`${API_BASE_URL}/api/locations`)
             ]);
-            setSubLocations(slRes.data.data);
-            setLocations(lRes.data.data);
+            setSubLocations((slRes.data.data || []).sort((a: any, b: any) => (a.order || 0) - (b.order || 0)));
+            setLocations((lRes.data.data || []).sort((a: any, b: any) => (a.order || 0) - (b.order || 0)));
         } catch (error) {
             console.error('Fetch error:', error);
             toast.error('Failed to load locations');

@@ -140,8 +140,8 @@ export default function UserManagement() {
                 axios.get(`${API_BASE_URL}/api/locations`),
                 axios.get(`${API_BASE_URL}/api/categories`)
             ]);
-            setLocations(locRes.data.data || []);
-            setCategories(catRes.data.data || []);
+            setLocations((locRes.data.data || []).sort((a: any, b: any) => (a.order || 0) - (b.order || 0)));
+            setCategories((catRes.data.data || []).sort((a: any, b: any) => (a.order || 0) - (b.order || 0)));
         } catch (err) {
             console.error("Failed to fetch meta data", err);
         }

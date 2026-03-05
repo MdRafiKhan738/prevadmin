@@ -29,7 +29,7 @@ interface Feature {
     selectionType?: 'Single' | 'Multi';
     boxFadeName?: string;
     buttonItemNames?: string[];
-    category?: Category;
+    subcategory?: SubCategory;
 }
 
 interface Category {
@@ -101,7 +101,7 @@ export default function CategoriesPage() {
     // Form States - Feature
     const [featForm, setFeatForm] = useState({
         name: '',
-        category: '',
+        subcategory: '',
         inputType: 'Text',
         order: 1,
         status: true,
@@ -126,9 +126,9 @@ export default function CategoriesPage() {
                 axios.get(`${API_BASE_URL}/api/categories`),
                 axios.get(`${API_BASE_URL}/api/categories/features`)
             ]);
-            setSubCategories(scRes.data.data);
-            setCategories(cRes.data.data);
-            setFeatures(fRes.data.data);
+            setSubCategories((scRes.data.data || []).sort((a: any, b: any) => (a.order || 0) - (b.order || 0)));
+            setCategories((cRes.data.data || []).sort((a: any, b: any) => (a.order || 0) - (b.order || 0)));
+            setFeatures((fRes.data.data || []).sort((a: any, b: any) => (a.order || 0) - (b.order || 0)));
         } catch (error) {
             console.error('Fetch error:', error);
             toast.error('Failed to load data');
@@ -217,7 +217,7 @@ export default function CategoriesPage() {
         try {
             const payload = {
                 ...featForm,
-                category: featForm.category,
+                subcategory: featForm.subcategory,
                 buttonItemNames: featForm.buttonItemNames.filter(n => n.trim())
             };
             if (editingFeatId) {
@@ -292,7 +292,7 @@ export default function CategoriesPage() {
         setEditingFeatId(f._id);
         setFeatForm({
             name: f.name,
-            category: f.category?._id || '',
+            subcategory: f.subcategory?._id || '',
             inputType: f.inputType,
             order: f.order,
             status: f.status,
@@ -338,7 +338,7 @@ export default function CategoriesPage() {
         setEditingFeatId(null);
         setFeatForm({
             name: '',
-            category: '',
+            subcategory: '',
             inputType: 'Text',
             order: 1,
             status: true,
@@ -361,7 +361,7 @@ export default function CategoriesPage() {
             <div className="flex items-center gap-1.5 text-xs text-black mb-3 ml-1">
                 <Home className="w-3 h-3" />
                 <span>/</span>
-                <span>Manage Categories</span>
+                <span>Manage SubCategories</span>
             </div>
 
             {/* Header Area */}
@@ -370,11 +370,11 @@ export default function CategoriesPage() {
                     <button className="text-rose-500 hover:opacity-80 transition-opacity">
                         <ArrowLeft className="w-4 h-4 stroke-[3]" />
                     </button>
-                    <span className="text-indigo-600 font-bold text-sm tracking-tight">Categories</span>
+                    <span className="text-indigo-600 font-bold text-sm tracking-tight">SubCategories</span>
                 </div>
 
                 <div className="text-black text-xs font-medium">
-                    Total Categories <span className="font-bold">({subCategories.length})</span>
+                    Total Sub Categories <span className="font-bold">({subCategories.length})</span>
                 </div>
 
                 <button
@@ -765,7 +765,7 @@ export default function CategoriesPage() {
                                                 <thead className="bg-[#f8f9fa] border-b border-slate-200 sticky top-0 z-10 transition-colors shadow-sm">
                                                     <tr>
                                                         <th className="px-2 py-2 font-bold whitespace-nowrap bg-[#f8f9fa]">Feature name</th>
-                                                        <th className="px-2 py-2 font-bold bg-[#f8f9fa]">Category</th>
+                                                        <th className="px-2 py-2 font-bold bg-[#f8f9fa]">SubCategory</th>
                                                         <th className="px-2 py-2 font-bold text-center bg-[#f8f9fa]">Order</th>
                                                         <th className="px-2 py-2 font-bold text-center bg-[#f8f9fa]">Status</th>
                                                         <th className="w-6 px-1 py-2 text-center bg-[#f8f9fa]"></th>
@@ -776,7 +776,7 @@ export default function CategoriesPage() {
                                                     {features.map(f => (
                                                         <tr key={f._id}>
                                                             <td className="px-2 py-1.5 font-bold text-black">{f.name}</td>
-                                                            <td className="px-2 py-1.5">{f.category?.name}</td>
+                                                            <td className="px-2 py-1.5">{f.subcategory?.name}</td>
                                                             <td className="px-2 py-1.5 text-center">{f.order}</td>
                                                             <td className="px-2 py-1.5 text-center">
                                                                 <CheckCircle2 className={cn("w-3 h-3 mx-auto", f.status ? "text-green-500" : "text-black")} />
@@ -883,9 +883,9 @@ export default function CategoriesPage() {
                                                 </div>
                                                 <div className="space-y-1">
                                                     <select className="w-full border border-slate-300 px-2 py-1.5 outline-none font-medium bg-white"
-                                                        value={featForm.category} onChange={e => setFeatForm({ ...featForm, category: e.target.value })} required>
-                                                        <option value="">Select Category</option>
-                                                        {categories.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+                                                        value={featForm.subcategory} onChange={e => setFeatForm({ ...featForm, subcategory: e.target.value })} required>
+                                                        <option value="">Select Sub Category</option>
+                                                        {subCategories.map(sc => <option key={sc._id} value={sc._id}>{sc.name}</option>)}
                                                     </select>
                                                 </div>
                                                 <div className="space-y-1">
