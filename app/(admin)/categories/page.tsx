@@ -128,7 +128,12 @@ export default function CategoriesPage() {
             ]);
             setSubCategories((scRes.data.data || []).sort((a: any, b: any) => (a.order || 0) - (b.order || 0)));
             setCategories((cRes.data.data || []).sort((a: any, b: any) => (a.order || 0) - (b.order || 0)));
-            setFeatures((fRes.data.data || []).sort((a: any, b: any) => (a.order || 0) - (b.order || 0)));
+            setFeatures((fRes.data.data || []).sort((a: any, b: any) => {
+                const subA = a.subcategory?.name || "";
+                const subB = b.subcategory?.name || "";
+                if (subA !== subB) return subA.localeCompare(subB);
+                return (a.order || 0) - (b.order || 0);
+            }));
         } catch (error) {
             console.error('Fetch error:', error);
             toast.error('Failed to load data');
@@ -603,7 +608,11 @@ export default function CategoriesPage() {
                                                         }}
                                                     >
                                                         <option value="">Select Feature</option>
-                                                        {features.map(f => <option key={f._id} value={f._id}>{f.name}</option>)}
+                                                        {features.map(f => (
+                                                            <option key={f._id} value={f._id}>
+                                                                {f.name}{f.subcategory?.name ? ` - (${f.subcategory.name})` : ''}
+                                                            </option>
+                                                        ))}
                                                     </select>
                                                     {index === subCatForm.features.length - 1 ? (
                                                         <button
