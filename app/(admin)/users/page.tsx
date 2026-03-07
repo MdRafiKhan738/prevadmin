@@ -96,6 +96,10 @@ export default function UserManagement() {
         dateTo: ''
     });
 
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalUsers, setTotalUsers] = useState(0);
+
     const [formData, setFormData] = useState<UserFormData>({
         name: '',
         email: '',
@@ -130,9 +134,12 @@ export default function UserManagement() {
     const [tempMobile, setTempMobile] = useState('');
 
     useEffect(() => {
-        fetchUsers();
         fetchMeta();
     }, []);
+
+    useEffect(() => {
+        fetchUsers(searchFilters, currentPage);
+    }, [currentPage]);
 
     const fetchMeta = async () => {
         try {
@@ -147,7 +154,7 @@ export default function UserManagement() {
         }
     };
 
-    const fetchUsers = async (filters: any = {}) => {
+    const fetchUsers = async (filters: any = searchFilters, page = 1) => {
         setLoading(true);
         try {
             const token = Cookies.get('adminToken');
@@ -159,10 +166,22 @@ export default function UserManagement() {
                 }
             });
 
+            params.append('page', page.toString());
+            params.append('limit', '100');
+
             const res = await axios.get(`${API_BASE}?${params.toString()}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            setUsers(res.data);
+
+            if (res.data && res.data.success) {
+                setUsers(res.data.data);
+                setTotalPages(res.data.pages || 1);
+                setCurrentPage(res.data.page || 1);
+                setTotalUsers(res.data.total || res.data.data.length);
+            } else {
+                setUsers(res.data); // Fallback if backend hasn't updated or different format
+                setTotalUsers(res.data.length || 0);
+            }
         } catch (err: any) {
             console.error("Failed to fetch users", err);
             setError(`Failed to fetch users: ${err.message}`);
@@ -480,7 +499,7 @@ export default function UserManagement() {
                         <button className="text-rose-500"><ArrowLeft className="w-3.5 h-3.5" strokeWidth={3} /></button>
                         <span className="font-bold text-blue-600 text-xs">Users</span>
                     </div>
-                    <div className="text-black font-bold text-xs">Total Users ({users.length})</div>
+                    <div className="text-black font-bold text-xs">Total Users ({totalUsers})</div>
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -489,7 +508,8 @@ export default function UserManagement() {
                             onClick={() => {
                                 setUserTypeFilter('both');
                                 setSearchFilters(prev => ({ ...prev, merchantType: 'both' }));
-                                fetchUsers({ ...searchFilters, merchantType: 'both' });
+                                setCurrentPage(1);
+                                fetchUsers({ ...searchFilters, merchantType: 'both' }, 1);
                             }}
                             className={cn("px-2 py-1 text-xs font-bold rounded-sm transition-colors", userTypeFilter === 'both' ? "bg-rose-500 text-white" : "text-black")}
                         >
@@ -499,7 +519,8 @@ export default function UserManagement() {
                             onClick={() => {
                                 setUserTypeFilter('seller');
                                 setSearchFilters(prev => ({ ...prev, merchantType: 'seller' }));
-                                fetchUsers({ ...searchFilters, merchantType: 'seller' });
+                                setCurrentPage(1);
+                                fetchUsers({ ...searchFilters, merchantType: 'seller' }, 1);
                             }}
                             className={cn("px-2 py-1 text-xs font-bold rounded-sm transition-colors", userTypeFilter === 'seller' ? "bg-emerald-600 text-white" : "text-black")}
                         >
@@ -509,7 +530,8 @@ export default function UserManagement() {
                             onClick={() => {
                                 setUserTypeFilter('customer');
                                 setSearchFilters(prev => ({ ...prev, merchantType: 'customer' }));
-                                fetchUsers({ ...searchFilters, merchantType: 'customer' });
+                                setCurrentPage(1);
+                                fetchUsers({ ...searchFilters, merchantType: 'customer' }, 1);
                             }}
                             className={cn("px-2 py-1 text-xs font-bold rounded-sm transition-colors", userTypeFilter === 'customer' ? "bg-emerald-600 text-white" : "text-black")}
                         >
@@ -606,6 +628,26 @@ export default function UserManagement() {
                         ))}
                     </tbody>
                 </table>
+            </div>
+            {/* Pagination Controls */}
+            <div className="flex items-center justify-between p-2 border-t border-slate-200 bg-white shadow-inner">
+                <button
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1 || loading}
+                    className={cn("px-6 py-1.5 text-xs font-bold rounded-sm border shadow-sm transition-colors", currentPage === 1 || loading ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed" : "bg-white text-blue-600 border-blue-200 hover:bg-blue-50")}
+                >
+                    Previous
+                </button>
+                <span className="text-xs text-slate-600 font-bold bg-slate-100 px-3 py-1.5 rounded-sm border border-slate-200">
+                    Page {currentPage} of {totalPages || 1}
+                </span>
+                <button
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage >= totalPages || loading}
+                    className={cn("px-6 py-1.5 text-xs font-bold rounded-sm border shadow-sm transition-colors", currentPage >= totalPages || loading ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed" : "bg-white text-blue-600 border-blue-200 hover:bg-blue-50")}
+                >
+                    Next
+                </button>
             </div>
 
             {/* SEARCH MODAL */}
@@ -743,7 +785,8 @@ export default function UserManagement() {
                                             <button onClick={() => setShowSearchModal(false)} className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-600 text-white text-xs font-bold rounded-sm shadow-sm"><X className="w-3 h-3" /> Hide Search</button>
                                             <button
                                                 onClick={() => {
-                                                    fetchUsers(searchFilters);
+                                                    setCurrentPage(1);
+                                                    fetchUsers(searchFilters, 1);
                                                     setShowSearchModal(false);
                                                 }}
                                                 className="flex items-center gap-1.5 px-6 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-sm shadow-sm"

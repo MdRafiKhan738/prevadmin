@@ -67,6 +67,18 @@ interface Ad {
     dailyViewsCount: number;
     promotedViews?: number;
     promotedDeliveryCount?: number;
+    promotionHistory?: {
+        startDate: string;
+        endDate: string;
+        adType: string;
+        promoteType?: string;
+        promoteTag?: string;
+        budget: number;
+        views: number;
+        deliveryCount: number;
+    }[];
+    promoteStartDate?: string;
+    promoteEndDate?: string;
     features?: Record<string, any>;
     isReported?: boolean;
     photoStatus: 'pending' | 'approved' | 'rejected';
@@ -167,6 +179,10 @@ export default function PostManagement() {
     const [selectedAd, setSelectedAd] = useState<Ad | null>(null);
     const [selectedAds, setSelectedAds] = useState<string[]>([]);
 
+    // Pagination State
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+
     // Edit State
     const [categories, setCategories] = useState<Category[]>([]);
     const [locations, setLocations] = useState<Location[]>([]);
@@ -174,6 +190,20 @@ export default function PostManagement() {
     const [pendingDescriptionAction, setPendingDescriptionAction] = useState<string | null>(null);
     const [editFormData, setEditFormData] = useState<Partial<Ad>>({});
     const [saveLoading, setSaveLoading] = useState(false);
+    const [merchantName, setMerchantName] = useState<string>('');
+
+    const verifyMerchant = async (id: string) => {
+        try {
+            const res = await axios.get(`${API_BASE_URL}/api/user/profile/${id}`);
+            if (res.data) {
+                setMerchantName(res.data.name || res.data.mobile || 'User Found');
+            } else {
+                setMerchantName('User not found');
+            }
+        } catch (error) {
+            setMerchantName('User not found');
+        }
+    };
 
     // New Modal States
     const [showSearchModal, setShowSearchModal] = useState(false);
@@ -204,7 +234,10 @@ export default function PostManagement() {
 
     // Fetch Ads
     useEffect(() => {
-        fetchAds();
+        fetchAds({ page: currentPage, limit: 100, ...searchKeys });
+    }, [currentPage]);
+
+    useEffect(() => {
         fetchMeta();
     }, []);
 
@@ -247,11 +280,12 @@ export default function PostManagement() {
             const token = Cookies.get('adminToken');
             const res = await axios.get(`${API_BASE_URL}/api/ads/admin/all`, {
                 headers: { 'x-auth-token': token },
-                params: filters
+                params: { page: currentPage, limit: 100, ...filters }
             });
             if (res.data.success) {
                 setAds(res.data.data);
                 setFilteredAds(res.data.data);
+                setTotalPages(res.data.pages || 1);
             }
         } catch (error) {
             console.error("Failed to fetch ads", error);
@@ -618,6 +652,7 @@ export default function PostManagement() {
                 setShowEditModal(false);
                 setSelectedFiles([]);
                 setPendingDescriptionAction(null);
+                setMerchantName('');
                 toast.success(selectedAd?._id ? "Ad updated successfully!" : "Ad created successfully!");
                 fetchAds();
             }
@@ -722,6 +757,7 @@ export default function PostManagement() {
                                 status: 'active',
                                 features: {}
                             });
+                            setMerchantName('');
                             setShowEditModal(true);
                         }}
                         className="bg-emerald-500 text-white p-1.5 rounded-sm hover:bg-emerald-600 transition-colors shadow-sm"
@@ -920,7 +956,10 @@ export default function PostManagement() {
                                                     <button
                                                         onClick={() => {
                                                             setSelectedAd(ad);
-                                                            setEditFormData(ad);
+                                                            setEditFormData({
+                                                                ...ad,
+                                                                merchantID: ad.merchantID || ad.user?._id || ''
+                                                            });
                                                             setPendingDescriptionAction(null);
                                                             setShowShortViewModal(true);
                                                             markAdAsSeen(ad._id);
@@ -932,7 +971,11 @@ export default function PostManagement() {
                                                     <button
                                                         onClick={() => {
                                                             setSelectedAd(ad);
-                                                            setEditFormData(ad);
+                                                            setEditFormData({
+                                                                ...ad,
+                                                                merchantID: ad.merchantID || ad.user?._id || ''
+                                                            });
+                                                            setMerchantName('');
                                                             setPendingDescriptionAction(null);
                                                             setShowEditModal(true);
                                                             markAdAsSeen(ad._id);
@@ -959,6 +1002,26 @@ export default function PostManagement() {
                             )}
                         </tbody>
                     </table>
+                </div>
+                {/* Pagination Controls */}
+                <div className="flex items-center justify-between p-2 border-t border-slate-200 bg-white shadow-inner">
+                    <button
+                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                        disabled={currentPage === 1 || loading}
+                        className={cn("px-6 py-1.5 text-xs font-bold rounded-sm border shadow-sm transition-colors", currentPage === 1 || loading ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed" : "bg-white text-blue-600 border-blue-200 hover:bg-blue-50")}
+                    >
+                        Previous
+                    </button>
+                    <span className="text-xs text-slate-600 font-bold bg-slate-100 px-3 py-1.5 rounded-sm border border-slate-200">
+                        Page {currentPage} of {totalPages || 1}
+                    </span>
+                    <button
+                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                        disabled={currentPage >= totalPages || loading}
+                        className={cn("px-6 py-1.5 text-xs font-bold rounded-sm border shadow-sm transition-colors", currentPage >= totalPages || loading ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed" : "bg-white text-blue-600 border-blue-200 hover:bg-blue-50")}
+                    >
+                        Next
+                    </button>
                 </div>
             </div >
 
@@ -1352,11 +1415,24 @@ export default function PostManagement() {
                                                 <div className="relative">
                                                     <input
                                                         type="text"
-                                                        className="border border-slate-200 h-7 outline-none text-xs w-48 px-2 bg-slate-50 font-bold text-black"
-                                                        value={selectedAd ? (selectedAd._id) : "Auto Value"}
-                                                        readOnly
+                                                        className={cn("border border-slate-200 h-7 outline-none w-56 px-2 font-bold text-black text-xs", selectedAd?._id ? "bg-slate-100 cursor-not-allowed text-slate-500" : "bg-white focus:border-black")}
+                                                        value={editFormData.merchantID || ''}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value;
+                                                            handleEditChange('merchantID', val);
+                                                            if (val.length === 24) {
+                                                                verifyMerchant(val);
+                                                            } else {
+                                                                setMerchantName('');
+                                                            }
+                                                        }}
+                                                        disabled={!!selectedAd?._id}
+                                                        placeholder="Enter User ID"
                                                     />
-                                                    <span className="absolute -top-3 left-0 text-xs text-black">Merchant ID (Auto)</span>
+                                                    <span className="absolute -top-3 left-0 text-[10px] text-slate-400 font-bold uppercase tracking-wider">Merchant ID</span>
+                                                    {merchantName && !selectedAd?._id && (
+                                                        <span className={cn("absolute -bottom-4 left-0 text-[10px] font-bold", merchantName === 'User not found' ? 'text-rose-500' : 'text-emerald-600')}>{merchantName}</span>
+                                                    )}
                                                 </div>
                                                 <div className="ml-0.5 flex items-center justify-center h-7 text-black font-bold text-lg">+</div>
                                                 <div className="ml-4 flex-1">
@@ -1395,7 +1471,7 @@ export default function PostManagement() {
                                                     })()}
                                                 </div>
                                             </div>
-                                            <div className="border-t border-dashed pt-2 space-y-2">
+                                            <div className="pt-2 space-y-2">
                                                 <div className="text-[10px] font-bold text-slate-400 uppercase">Features / Attributes</div>
                                                 {categories.find(c => c.name === editFormData.category)?.subcategories.find((s: any) => s.name === editFormData.subCategory)?.features?.map((feature: any) => (
                                                     <div key={feature._id} className="space-y-1 py-1 px-1 border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition-colors">
@@ -1572,8 +1648,8 @@ export default function PostManagement() {
                                                 </select>
                                             </div>
                                             <div className="flex flex-col gap-0.5">
-                                                <label className="text-xs text-black font-bold">Marchent ID</label>
-                                                <div className="text-xs font-bold text-black">{selectedAd?._id || 'Auto value'}</div>
+                                                <label className="text-xs text-black font-bold">Product ID</label>
+                                                <div className="text-xs font-bold text-black border border-slate-200 px-2 py-1 bg-slate-50 rounded min-w-[120px]">{selectedAd?._id || 'Generated on save'}</div>
                                             </div>
                                         </div>
 
@@ -1598,7 +1674,7 @@ export default function PostManagement() {
                                                         <option value="unatv_msg">Inactive & Message</option>
                                                     </select>
                                                 </div>
-                                                <div className="grid grid-cols-2 gap-2">
+                                                {/* <div className="grid grid-cols-2 gap-2">
                                                     <div className="flex flex-col gap-0.5">
                                                         <label className="text-xs text-black">Target Value</label>
                                                         <input
@@ -1616,20 +1692,68 @@ export default function PostManagement() {
                                                             onChange={(e) => handleEditChange('targetD', e.target.value)}
                                                         />
                                                     </div>
-                                                </div>
-                                                <div className="grid grid-cols-2 gap-2">
-                                                    <div className="flex flex-col gap-0.5">
-                                                        <label className="text-xs text-black">Delivered (Total / Daily)</label>
-                                                        <div className="h-7 border border-slate-200 flex items-center px-1.5 text-xs font-bold text-black bg-slate-50">
-                                                            {editFormData.deliveryCount || 0} / {editFormData.dailyDeliveryCount || 0}
+                                                </div> */}
+                                                <div className="flex items-center gap-3 overflow-x-auto no-scrollbar scroll-smooth">
+                                                    <div className="grid grid-cols-4 gap-2 flex-grow min-w-[320px]">
+                                                        <div className="flex flex-col gap-0.5">
+                                                            <label className="text-[10px] text-black font-bold uppercase">Delivery (Lifetime)</label>
+                                                            <div className="h-6 border border-slate-200 flex items-center px-1.5 text-xs font-bold text-black bg-slate-50">
+                                                                {editFormData.deliveryCount || 0}
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex flex-col gap-0.5">
+                                                            <label className="text-[10px] text-black font-bold uppercase">Views (Lifetime)</label>
+                                                            <div className="h-6 border border-slate-200 flex items-center px-1.5 text-xs font-bold text-black bg-slate-50">
+                                                                {editFormData.views || 0}
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex flex-col gap-0.5">
+                                                            <label className="text-[10px] text-black font-bold uppercase">Delivery (Daily)</label>
+                                                            <div className="h-6 border border-slate-200 flex items-center px-1.5 text-xs font-bold text-black bg-slate-50">
+                                                                {editFormData.dailyDeliveryCount || 0}
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex flex-col gap-0.5">
+                                                            <label className="text-[10px] text-black font-bold uppercase">Views (Daily)</label>
+                                                            <div className="h-6 border border-slate-200 flex items-center px-1.5 text-xs font-bold text-black bg-slate-50">
+                                                                {editFormData.dailyViewsCount || 0}
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                    <div className="flex flex-col gap-0.5">
-                                                        <label className="text-xs text-black">Views (Total / Daily)</label>
-                                                        <div className="h-7 border border-slate-200 flex items-center px-1.5 text-xs font-bold text-black bg-slate-50">
-                                                            {editFormData.views || 0} / {editFormData.dailyViewsCount || 0}
+
+                                                    {((editFormData.adType === 'Promoted') || (editFormData.promotionHistory && editFormData.promotionHistory.length > 0)) && (
+                                                        <div className="flex items-center gap-2 border-l border-slate-300 pl-2">
+                                                            {/* Current Promotion Period */}
+                                                            {editFormData.adType === 'Promoted' && (
+                                                                <div className="flex flex-col justify-center min-w-[140px] border border-blue-200 p-1 rounded-sm bg-blue-50/50 shadow-sm shrink-0">
+                                                                    <div className="text-[8px] bg-blue-600 text-white w-fit px-1 font-black mb-1 italic">ACTIVE</div>
+                                                                    <div className="text-[9px] font-black text-slate-600 leading-none mb-1">
+                                                                        {editFormData.promoteStartDate ? new Date(editFormData.promoteStartDate).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' }) : '--'} - {editFormData.promoteEndDate ? new Date(editFormData.promoteEndDate).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' }) : '--'}
+                                                                    </div>
+                                                                    <div className="text-[10px] font-bold text-blue-700 bg-white px-1 border border-blue-100 flex justify-between">
+                                                                        <span>D: {editFormData.promotedDeliveryCount || 0}</span>
+                                                                        <span className="text-slate-200">|</span>
+                                                                        <span>V: {editFormData.promotedViews || 0}</span>
+                                                                    </div>
+                                                                </div>
+                                                            )}
+
+                                                            {/* Historical Periods */}
+                                                            {editFormData.promotionHistory && [...editFormData.promotionHistory].reverse().map((hist, idx) => (
+                                                                <div key={idx} className="flex flex-col justify-center min-w-[140px] border border-slate-100 p-1 rounded-sm bg-white shadow-sm shrink-0 opacity-70">
+                                                                    <div className="text-[8px] bg-slate-400 text-white w-fit px-1 font-black mb-1 uppercase">Past</div>
+                                                                    <div className="text-[9px] font-black text-slate-500 leading-none mb-1">
+                                                                        {new Date(hist.startDate).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' })} - {new Date(hist.endDate).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' })}
+                                                                    </div>
+                                                                    <div className="text-[10px] font-bold text-black bg-slate-50 px-1 border border-slate-100 flex justify-between">
+                                                                        <span>D: {hist.deliveryCount}</span>
+                                                                        <span className="text-slate-200">|</span>
+                                                                        <span>V: {hist.views}</span>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
                                                         </div>
-                                                    </div>
+                                                    )}
                                                 </div>
                                             </div>
                                             <div className="flex flex-col gap-2">
@@ -1650,7 +1774,7 @@ export default function PostManagement() {
                                                         placeholder=""
                                                     />
                                                 </div>
-                                                <div className="grid grid-cols-[1fr_1fr_0.8fr] gap-1.5">
+                                                {/* <div className="grid grid-cols-[1fr_1fr_0.8fr] gap-1.5">
                                                     <div className="flex flex-col gap-0.5">
                                                         <label className="text-xs text-black whitespace-nowrap">View From</label>
                                                         <div className="flex border border-slate-200 h-7 items-center justify-center bg-slate-50"><Calendar className="w-3 h-3 text-black" /></div>
@@ -1663,7 +1787,7 @@ export default function PostManagement() {
                                                         <label className="text-xs text-black">Result</label>
                                                         <div className="h-7 border border-slate-200 bg-slate-50"></div>
                                                     </div>
-                                                </div>
+                                                </div> */}
                                             </div>
                                         </div>
 

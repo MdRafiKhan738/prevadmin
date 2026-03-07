@@ -45,10 +45,17 @@ export default function TransactionManagerPage() {
         mode: ''
     });
 
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalTransactions, setTotalTransactions] = useState(0);
+
     useEffect(() => {
         fetchData();
-        fetchTransactions();
     }, []);
+
+    useEffect(() => {
+        fetchTransactions(currentPage);
+    }, [currentPage]);
 
     const fetchData = async () => {
         try {
@@ -68,16 +75,34 @@ export default function TransactionManagerPage() {
         }
     };
 
-    const fetchTransactions = async () => {
+    const fetchTransactions = async (page = 1) => {
         setLoading(true);
         try {
             const token = Cookies.get('adminToken');
-            const res = await axios.get(`${API_BASE_URL}/api/admins/transactions`, {
+
+            const params = new URLSearchParams();
+            if (filters.tnxId) params.append('tnxId', filters.tnxId);
+            if (filters.productId) params.append('productId', filters.productId);
+            if (filters.sellerMobile) params.append('sellerMobile', filters.sellerMobile);
+            if (filters.sellerId) params.append('sellerId', filters.sellerId);
+            if (filters.item) params.append('item', filters.item);
+            if (filters.mode) params.append('mode', filters.mode);
+            if (filters.fromDate) params.append('fromDate', filters.fromDate);
+            if (filters.toDate) params.append('toDate', filters.toDate);
+
+            params.append('page', page.toString());
+            params.append('limit', '100');
+
+            const res = await axios.get(`${API_BASE_URL}/api/admins/transactions?${params.toString()}`, {
                 headers: { 'Authorization': `Bearer ${token}`, 'x-auth-token': token }
             });
+
             if (res.data.success) {
                 setTransactions(res.data.data);
                 setFilteredTransactions(res.data.data);
+                setCurrentPage(res.data.page || 1);
+                setTotalPages(res.data.pages || 1);
+                setTotalTransactions(res.data.total || res.data.data.length);
             }
         } catch (err) {
             console.error("Fetch transactions error:", err);
@@ -99,7 +124,7 @@ export default function TransactionManagerPage() {
             });
             toast.success("Ad promoted successfully!");
             setManualPromote({ productId: '', adType: 'Free', amount: '', runTill: '', sellerId: '', isVerifyBadge: 'No', level: '' });
-            fetchTransactions(); // Refresh table
+            fetchTransactions(1); // Refresh table
         } catch (err: any) {
             toast.error(err.response?.data?.message || "Failed to promote ad");
         } finally {
@@ -108,39 +133,8 @@ export default function TransactionManagerPage() {
     };
 
     const handleSearch = () => {
-        let result = [...transactions];
-
-        if (filters.tnxId) {
-            result = result.filter(t => t.tnxId?.toLowerCase().includes(filters.tnxId.toLowerCase()));
-        }
-        if (filters.productId) {
-            result = result.filter(t =>
-                t.productId?._id?.toLowerCase().includes(filters.productId.toLowerCase()) ||
-                t.productId?.headline?.toLowerCase().includes(filters.productId.toLowerCase())
-            );
-        }
-        if (filters.sellerMobile) {
-            result = result.filter(t => t.mobileNumber?.includes(filters.sellerMobile));
-        }
-        if (filters.sellerId) {
-            result = result.filter(t => t.sellerId?._id?.toLowerCase().includes(filters.sellerId.toLowerCase()));
-        }
-        if (filters.item) {
-            result = result.filter(t => t.item?.toLowerCase().includes(filters.item.toLowerCase()));
-        }
-        if (filters.mode) {
-            result = result.filter(t => t.mode?.toLowerCase().includes(filters.mode.toLowerCase()));
-        }
-        if (filters.fromDate) {
-            result = result.filter(t => new Date(t.payTime) >= new Date(filters.fromDate));
-        }
-        if (filters.toDate) {
-            const toDate = new Date(filters.toDate);
-            toDate.setHours(23, 59, 59, 999);
-            result = result.filter(t => new Date(t.payTime) <= toDate);
-        }
-
-        setFilteredTransactions(result);
+        setCurrentPage(1);
+        fetchTransactions(1);
     };
 
     const handleDelete = async (id: string) => {
@@ -299,7 +293,7 @@ export default function TransactionManagerPage() {
                 {/* Transaction Report Section */}
                 <div className="bg-white border border-slate-200 rounded-sm shadow-sm overflow-hidden flex flex-col">
                     <div className="p-3 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between">
-                        <h2 className="text-xs font-bold text-black uppercase">Transaction Report</h2>
+                        <h2 className="text-xs font-bold text-black uppercase">Transaction Report ({totalTransactions})</h2>
                     </div>
 
                     {/* Filters */}
@@ -437,8 +431,8 @@ export default function TransactionManagerPage() {
                                             </td>
                                             <td className="p-2 text-center">
                                                 <span className={`${row.status === 'VALID' ? 'bg-emerald-600' :
-                                                        row.status === 'FAILED' ? 'bg-rose-600' :
-                                                            row.status === 'CANCELLED' ? 'bg-amber-600' : 'bg-slate-400'
+                                                    row.status === 'FAILED' ? 'bg-rose-600' :
+                                                        row.status === 'CANCELLED' ? 'bg-amber-600' : 'bg-slate-400'
                                                     } text-white px-2 py-0.5 rounded-[1px] text-[10px] font-bold`}>
                                                     {row.status}
                                                 </span>
@@ -461,6 +455,33 @@ export default function TransactionManagerPage() {
                                 </tbody>
                             </table>
                         )}
+                    </div>
+
+                    {/* Pagination Controls */}
+                    <div className="flex items-center justify-between p-2 border-t border-slate-200 bg-white shadow-inner">
+                        <button
+                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                            disabled={currentPage === 1 || loading}
+                            className={`px-6 py-1.5 text-[10px] font-bold rounded-sm border shadow-sm transition-colors ${currentPage === 1 || loading
+                                ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
+                                : "bg-white text-blue-600 border-blue-200 hover:bg-blue-50"
+                                }`}
+                        >
+                            Previous
+                        </button>
+                        <span className="text-[10px] text-slate-600 font-bold bg-slate-100 px-3 py-1.5 rounded-sm border border-slate-200">
+                            Page {currentPage} of {totalPages || 1}
+                        </span>
+                        <button
+                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                            disabled={currentPage >= totalPages || loading}
+                            className={`px-6 py-1.5 text-[10px] font-bold rounded-sm border shadow-sm transition-colors ${currentPage >= totalPages || loading
+                                ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
+                                : "bg-white text-blue-600 border-blue-200 hover:bg-blue-50"
+                                }`}
+                        >
+                            Next
+                        </button>
                     </div>
                 </div>
             </div>
