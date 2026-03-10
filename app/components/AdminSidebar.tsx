@@ -24,17 +24,25 @@ interface AdminSidebarProps {
 export default function AdminSidebar({ isCollapsed, toggleCollapse }: AdminSidebarProps) {
     const pathname = usePathname();
     const router = useRouter();
-    const [user, setUser] = useState<{ email: string, role: string } | null>(null);
+    const [user, setUser] = useState<{ email: string, permissions?: Record<string, boolean> } | null>(null);
 
     useEffect(() => {
-        const userStr = Cookies.get('adminUser');
-        if (userStr) {
-            try {
-                setUser(JSON.parse(userStr));
-            } catch (e) {
-                console.error("Failed to parse user cookie");
+        const loadUser = () => {
+            const userStr = Cookies.get('adminUser');
+            if (userStr) {
+                try {
+                    setUser(JSON.parse(userStr));
+                } catch (e) {
+                    console.error("Failed to parse user cookie");
+                }
             }
-        }
+        };
+
+        loadUser();
+
+        // Listen for updates from Layout sync
+        window.addEventListener('admin-user-updated', loadUser);
+        return () => window.removeEventListener('admin-user-updated', loadUser);
     }, []);
 
     const menuItems = [
@@ -51,6 +59,14 @@ export default function AdminSidebar({ isCollapsed, toggleCollapse }: AdminSideb
         { href: '/locations', label: 'Location Manager', icon: MapPin },
         { href: '/all-settings', label: 'Settings & Others', icon: Settings },
     ];
+
+    const filteredMenuItems = menuItems.filter(item => {
+        if (!user) return false;
+        if (item.label === 'Dashboard') return true;
+
+        // Check permissions
+        return user.permissions?.[item.label] === true;
+    });
 
     const MenuItem = ({ item, isSub = false }: { item: any, isSub?: boolean }) => {
         const Icon = item.icon;
@@ -85,7 +101,7 @@ export default function AdminSidebar({ isCollapsed, toggleCollapse }: AdminSideb
             )}
         >
             <div className="flex-1 py-3 flex flex-col gap-0.5 overflow-y-auto no-scrollbar">
-                {menuItems.map((item) => (
+                {filteredMenuItems.map((item) => (
                     <MenuItem key={item.href} item={item} />
                 ))}
             </div>

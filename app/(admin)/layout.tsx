@@ -7,7 +7,12 @@ import { getImageUrl } from '../../utils/imageUrl';
 import { useEffect } from 'react';
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { Menu, Moon, User } from 'lucide-react';
+import { Menu, Moon, User, AlertTriangle } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import Cookies from 'js-cookie';
+import toast from 'react-hot-toast';
+import axios from 'axios';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
 
 function cn(...inputs: (string | undefined | null | false)[]) {
     return twMerge(clsx(inputs));
@@ -20,6 +25,92 @@ export default function AdminLayout({
 }) {
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const { settings } = useSettings();
+    const pathname = usePathname();
+    const router = useRouter();
+    const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
+
+    const routeToPermission: Record<string, string> = {
+        '/posts': 'Post',
+        '/users': 'User',
+        '/reports': 'Report',
+        '/promoted-ads': 'Promote Management',
+        '/transaction-manager': 'Transaction Manager',
+        '/admin-create': 'Admin Create',
+        '/notifications': 'Notification & Messaging',
+        '/ad-position': 'AD Position (W/A/Q)',
+        '/categories': 'Categorie Manager',
+        '/locations': 'Location Manager',
+        '/all-settings': 'Settings & Others',
+    };
+
+    const syncUserData = async (token: string) => {
+        try {
+            const res = await axios.get(`${API_BASE_URL}/api/admins/me`, {
+                headers: { 'x-auth-token': token }
+            });
+            const freshUser = res.data;
+            // Update cookie with fresh permissions
+            Cookies.set('adminUser', JSON.stringify(freshUser), { expires: 1 });
+
+            // Notify other components (like Sidebar) to refresh their state
+            window.dispatchEvent(new Event('admin-user-updated'));
+
+            // Re-check authorization with fresh data
+            const requiredPermission = routeToPermission[pathname];
+            if (requiredPermission) {
+                const hasPermission = freshUser.permissions?.[requiredPermission] === true;
+                if (!hasPermission) {
+                    toast.error(`Access Denied: Permission removed for ${requiredPermission}`, {
+                        id: 'permission-denied',
+                        icon: <AlertTriangle className="w-5 h-5 text-rose-500" />
+                    });
+                    router.push('/dashboard');
+                    setIsAuthorized(false);
+                } else {
+                    setIsAuthorized(true);
+                }
+            } else {
+                setIsAuthorized(true);
+            }
+        } catch (e) {
+            console.error("Failed to sync user data", e);
+        }
+    };
+
+    useEffect(() => {
+        const userStr = Cookies.get('adminUser');
+        const token = Cookies.get('adminToken');
+
+        if (!token || !userStr) {
+            router.push('/login');
+            return;
+        }
+
+        try {
+            const user = JSON.parse(userStr);
+            const requiredPermission = routeToPermission[pathname];
+
+            if (requiredPermission) {
+                const hasPermission = user.permissions?.[requiredPermission] === true;
+                if (!hasPermission) {
+                    toast.error(`Access Denied: You don't have permission for ${requiredPermission}`, {
+                        id: 'permission-denied',
+                        icon: <AlertTriangle className="w-5 h-5 text-rose-500" />
+                    });
+                    router.push('/dashboard');
+                    setIsAuthorized(false);
+                    return;
+                }
+            }
+            setIsAuthorized(true);
+
+            // Fetch fresh data in background to sync permissions
+            syncUserData(token);
+        } catch (e) {
+            console.error("Auth check failed", e);
+            router.push('/login');
+        }
+    }, [pathname, router]);
 
     // Apply favicon
     useEffect(() => {
@@ -95,7 +186,12 @@ export default function AdminLayout({
                     )}
                 >
                     <div className="w-full p-3 pt-4">
-                        {children}
+                        {isAuthorized === true ? children : (
+                            <div className="flex flex-col items-center justify-center min-h-[60vh] text-slate-400">
+                                <AlertTriangle className="w-12 h-12 mb-4 opacity-20" />
+                                <p className="text-sm font-medium">Checking authorization...</p>
+                            </div>
+                        )}
                     </div>
                 </main>
             </div>

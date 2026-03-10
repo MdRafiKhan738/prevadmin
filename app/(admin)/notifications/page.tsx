@@ -22,6 +22,7 @@ interface MetaOption {
 }
 
 interface SearchedUser {
+    _id: string;
     mobile: string;
     name: string;
 }
@@ -290,9 +291,9 @@ export default function NotificationMessaging() {
                                         isFilterAnimating ? "overflow-hidden" : "overflow-visible"
                                     )}
                                 >
-                                    {/* Catagorie Type */}
+                                    {/* Category Type */}
                                     <div className="flex items-center">
-                                        <span className="w-36 text-[15px] text-slate-900 leading-none">Catagorie Type</span>
+                                        <span className="w-36 text-[15px] text-slate-900 leading-none">Category Type</span>
                                         <div className="flex items-center gap-4">
                                             <Checkbox selected={categories.includes('All')} onClick={() => setCategories(['All'])} label="All" />
                                             <div className="relative" ref={categoryContainerRef}>
@@ -529,9 +530,9 @@ export default function NotificationMessaging() {
                                                 exit={{ opacity: 0, y: 5 }}
                                                 className="absolute top-full left-0 right-0 z-[60] mt-1 bg-white border border-slate-200 shadow-xl max-h-48 overflow-y-auto rounded-sm no-scrollbar"
                                             >
-                                                {searchResults.map((user) => (
+                                                {searchResults.map((user, index) => (
                                                     <div
-                                                        key={user.mobile}
+                                                        key={`${user.mobile}-${index}`}
                                                         onClick={() => addSelectedUser(user.mobile)}
                                                         className="px-3 py-2 hover:bg-slate-50 cursor-pointer flex flex-col border-b border-slate-50 last:border-b-0"
                                                     >

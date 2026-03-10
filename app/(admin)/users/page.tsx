@@ -1121,7 +1121,19 @@ export default function UserManagement() {
                                         </div>
 
                                         <div className="flex gap-2 h-10 items-end">
-                                            <button type="button" onClick={handleCloseModal} className="px-5 py-2 bg-[#d9534f] text-white font-black rounded-[2px] text-xs shadow-sm uppercase">Cancel</button>
+                                            {editingUser && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        handleDeleteUser(editingUser._id);
+                                                        handleCloseModal();
+                                                    }}
+                                                    className="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white font-black rounded-[2px] text-xs shadow-sm uppercase mr-auto"
+                                                >
+                                                    Delete User
+                                                </button>
+                                            )}
+                                            <button type="button" onClick={handleCloseModal} className="px-5 py-2 bg-[#d9534f] text-white font-black rounded-[2px] text-xs shadow-sm uppercase ml-auto">Cancel</button>
                                             <button type="submit" className="px-10 py-2 bg-[#00a65a] text-white font-black rounded-[2px] text-xs shadow-sm uppercase flex items-center justify-center gap-2">
                                                 {formLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin text-white" /> : 'Save Profile'}
                                             </button>

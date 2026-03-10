@@ -21,7 +21,6 @@ function cn(...inputs: (string | undefined | null | false)[]) {
 interface Admin {
     _id: string;
     email: string;
-    role: string;
     staffName?: string;
     staffType?: string;
     status?: boolean;
@@ -52,15 +51,17 @@ export default function AdminCreatePage() {
     });
 
     const [permissions, setPermissions] = useState<Record<string, boolean>>({
-        'Article': false,
-        'Keyword Article': false,
-        'Article Category': false,
-        'Static Page': false,
-        'Occasion Manager': false,
-        'Comment Manager': false,
-        'Feature Panel': false,
-        'Upload Information': false,
-        'Staff Initial': false,
+        'Post': false,
+        'User': false,
+        'Report': false,
+        'Promote Management': false,
+        'Transaction Manager': false,
+        'Admin Create': false,
+        'Notification & Messaging': false,
+        'AD Position (W/A/Q)': false,
+        'Categorie Manager': false,
+        'Location Manager': false,
+        'Settings & Others': false,
     });
 
     const router = useRouter();
@@ -99,8 +100,7 @@ export default function AdminCreatePage() {
                 staffName: formData.staffName,
                 staffType: formData.staffType,
                 status: formData.status,
-                ...(formData.password ? { password: formData.password } : {}),
-                role: 'admin'
+                ...(formData.password ? { password: formData.password } : {})
             };
 
             if (editingAdminId) {
@@ -275,15 +275,17 @@ export default function AdminCreatePage() {
                                                 setSelectedAdmin(admin);
                                                 // Reset permissions to default then merge with admin permissions
                                                 const defaultPerms = {
-                                                    'Article': false,
-                                                    'Keyword Article': false,
-                                                    'Article Category': false,
-                                                    'Static Page': false,
-                                                    'Occasion Manager': false,
-                                                    'Comment Manager': false,
-                                                    'Feature Panel': false,
-                                                    'Upload Information': false,
-                                                    'Staff Initial': false,
+                                                    'Post': false,
+                                                    'User': false,
+                                                    'Report': false,
+                                                    'Promote Management': false,
+                                                    'Transaction Manager': false,
+                                                    'Admin Create': false,
+                                                    'Notification & Messaging': false,
+                                                    'AD Position (W/A/Q)': false,
+                                                    'Categorie Manager': false,
+                                                    'Location Manager': false,
+                                                    'Settings & Others': false,
                                                 };
                                                 setPermissions({ ...defaultPerms, ...(admin.permissions || {}) });
                                                 setShowPermissionModal(true);
