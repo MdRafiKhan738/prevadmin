@@ -8,7 +8,7 @@ import {
     ImageIcon, User, Phone, MapPin, ExternalLink,
     Loader2, Check, HelpCircle, Calendar, AlertCircle, X,
     Edit3, Save, RotateCcw, ArrowLeft, Plus, Edit2, CheckCircle2, ChevronRight, ChevronLeft,
-    Bell, Camera
+    Bell, Camera, Target
 } from 'lucide-react';
 import { RiCameraFill } from 'react-icons/ri';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -67,6 +67,7 @@ interface Ad {
     dailyViewsCount: number;
     promotedViews?: number;
     promotedDeliveryCount?: number;
+    targetLocations?: string[];
     promotionHistory?: {
         startDate: string;
         endDate: string;
@@ -297,6 +298,7 @@ export default function PostManagement() {
     // Search & Tab Filter
     useEffect(() => {
         let filtered = ads;
+        const normalizeText = (value: unknown) => String(value ?? '').trim().toLowerCase();
 
         // Apply Tab Filter
         if (activeTab === 'pending') {
@@ -306,21 +308,18 @@ export default function PostManagement() {
             // Today Promoted
             const today = new Date().toISOString().split('T')[0];
             filtered = filtered.filter(ad =>
-                ad.adType === 'Promoted' &&
+                normalizeText(ad.adType) === 'promoted' &&
                 ad.createdAt && ad.createdAt.split('T')[0] === today
             );
         } else if (activeTab === 'running') {
             // Currently Running Promotion
             filtered = filtered.filter(ad =>
-                ad.adType === 'Promoted' &&
+                normalizeText(ad.adType) === 'promoted' &&
                 ad.status === 'active'
             );
         } else if (activeTab === 'waiting_promote') {
-            // Promoted ads from Untrusted Users
-            filtered = filtered.filter(ad =>
-                ad.adType === 'Promoted' &&
-                ad.user?.merchantTrustStatus !== 'Trusted'
-            );
+            // Processing ads
+            filtered = filtered.filter(ad => normalizeText(ad.adType) === 'processing');
         }
 
         // Apply Search Query
@@ -341,17 +340,28 @@ export default function PostManagement() {
     const updateStatus = async (id: string, newStatus: string) => {
         try {
             const token = Cookies.get('adminToken');
-            await axios.put(`${API_BASE_URL}/api/ads/admin/${id}/status`, { status: newStatus }, {
+            const res = await axios.put(`${API_BASE_URL}/api/ads/admin/${id}/status`, { status: newStatus }, {
                 headers: { 'x-auth-token': token }
             });
-            // Update UI
-            setAds(prev => prev.map(ad => ad._id === id ? { ...ad, status: newStatus as any } : ad));
-            if (selectedAd && selectedAd._id === id) {
-                setSelectedAd(prev => prev ? { ...prev, status: newStatus as any } : null);
+
+            if (res.data.success && res.data.data) {
+                const updatedAd = res.data.data;
+                // Update local list
+                setAds(prev => prev.map(ad => ad._id === id ? updatedAd : ad));
+                if (selectedAd && selectedAd._id === id) {
+                    setSelectedAd(updatedAd);
+                }
+                toast.success(`Status updated to ${newStatus}`);
+            } else {
+                // Fallback UI update
+                setAds(prev => prev.map(ad => ad._id === id ? { ...ad, status: newStatus as any } : ad));
+                if (selectedAd && selectedAd._id === id) {
+                    setSelectedAd(prev => prev ? { ...prev, status: newStatus as any } : null);
+                }
             }
         } catch (error) {
             console.error("Update failed", error);
-            alert("Failed to update status");
+            toast.error("Failed to update status");
         }
     };
 
@@ -551,6 +561,7 @@ export default function PostManagement() {
             adType: selectedAd.adType,
             targetValue: selectedAd.targetValue,
             targetD: selectedAd.targetD,
+            targetLocations: selectedAd.targetLocations || [],
             photoStatus: selectedAd.photoStatus,
             images: [...selectedAd.images],
             features: { ...(selectedAd.features || {}) },
@@ -728,10 +739,7 @@ export default function PostManagement() {
                             className={cn("hover:text-indigo-600 transition-colors whitespace-nowrap", activeTab === 'waiting_promote' && "text-indigo-600 border-b-2 border-indigo-600")}
                         >
                             Waiting Promote ({
-                                ads.filter(a =>
-                                    a.adType === 'Promoted' &&
-                                    a.user?.merchantTrustStatus !== 'Trusted'
-                                ).length
+                                ads.filter(a => a.adType === 'Processing').length
                             })
                         </button>
                     </div>
@@ -868,7 +876,6 @@ export default function PostManagement() {
                                                     <option value="pause">Pause</option>
                                                     <option value="review">Review</option>
                                                     <option value="delete_request">Delete Request</option>
-                                                    <option value="unatv_msg">Inactive & Message</option>
                                                 </select>
                                             </td>
                                             <td className="px-1 py-1 border-r border-b border-slate-300 align-top" rowSpan={2}>
@@ -1078,12 +1085,11 @@ export default function PostManagement() {
                                         >
                                             <option value="">Select</option>
                                             <option value="active">Active</option>
-                                            <option value="pending">Pending</option>
-                                            <option value="rejected">Rejected</option>
+                                            <option value="inactive">Inactive</option>
+                                            <option value="notification">Notification</option>
                                             <option value="pause">Pause</option>
                                             <option value="review">Review</option>
-                                            <option value="expired">Expired</option>
-                                            <option value="deleted">Deleted</option>
+                                            <option value="delete_request">Delete Request</option>
                                         </select>
                                     </div>
                                     <div className="flex flex-col gap-1">
@@ -1671,7 +1677,6 @@ export default function PostManagement() {
                                                         <option value="pause">Pause</option>
                                                         <option value="review">Review</option>
                                                         <option value="delete_request">Delete Request</option>
-                                                        <option value="unatv_msg">Inactive & Message</option>
                                                     </select>
                                                 </div>
                                                 {/* <div className="grid grid-cols-2 gap-2">
@@ -1755,6 +1760,22 @@ export default function PostManagement() {
                                                         </div>
                                                     )}
                                                 </div>
+
+                                                {/* Target Locations Section for Promoted Ads */}
+                                                {editFormData.adType === 'Promoted' && editFormData.targetLocations && editFormData.targetLocations.length > 0 && (
+                                                    <div className="flex flex-col gap-1 border-t border-slate-100 pt-2 mt-1">
+                                                        <label className="text-[10px] text-blue-600 font-bold uppercase tracking-wider flex items-center gap-1">
+                                                            <Target className="w-3 h-3" /> Target Locations
+                                                        </label>
+                                                        <div className="flex flex-wrap gap-1">
+                                                            {editFormData.targetLocations.map((loc, idx) => (
+                                                                <span key={idx} className="bg-blue-50 text-blue-700 text-[10px] font-bold px-2 py-0.5 border border-blue-100 rounded-sm">
+                                                                    {loc}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
                                             <div className="flex flex-col gap-2">
                                                 <div className="flex flex-col gap-0.5">
@@ -2118,6 +2139,20 @@ export default function PostManagement() {
                                                         <div className="text-sm font-black text-rose-600 flex items-center gap-2">
                                                             <Calendar className="w-4 h-4" />
                                                             {new Date(selectedAd.showTill).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* Target Locations Section for Promoted Ads */}
+                                                {editFormData.adType === 'Promoted' && editFormData.targetLocations && editFormData.targetLocations.length > 0 && (
+                                                    <div className="p-3 bg-blue-50 border border-blue-200 rounded-px">
+                                                        <label className="text-[11px] font-black text-blue-600 uppercase underline mb-2 block italic">Target Locations</label>
+                                                        <div className="flex flex-wrap gap-1">
+                                                            {editFormData.targetLocations.map((loc, idx) => (
+                                                                <span key={idx} className="bg-white text-blue-700 text-[10px] font-bold px-2 py-0.5 border border-blue-100 rounded-sm shadow-sm">
+                                                                    {loc}
+                                                                </span>
+                                                            ))}
                                                         </div>
                                                     </div>
                                                 )}

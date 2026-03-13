@@ -377,9 +377,9 @@ export default function LocationsPage() {
                                 </button>
                             </div>
 
-                            <div className="p-4 flex gap-6">
+                            <div className="p-4 flex gap-6 overflow-hidden flex-1">
                                 {/* Left Side Form */}
-                                <form onSubmit={handleSubLocSubmit} className="flex-1 space-y-3 text-xs">
+                                <form onSubmit={handleSubLocSubmit} className="flex-1 space-y-3 text-xs overflow-y-auto pr-4 custom-scrollbar">
                                     <div className="flex gap-4">
                                         <div className="flex-1 space-y-3">
                                             <div className="flex flex-col gap-1.5">
@@ -478,7 +478,7 @@ export default function LocationsPage() {
                                 </form>
 
                                 {/* Right Column Table */}
-                                <div className="w-[450px] border-l border-slate-200 pl-6 flex flex-col gap-2">
+                                <div className="w-[450px] border-l border-slate-200 pl-6 flex flex-col gap-2 h-full overflow-y-auto pr-2 custom-scrollbar">
                                     <div className="flex justify-between items-center px-1">
                                         <span className="text-xs font-bold text-black uppercase tracking-tighter">Create Location</span>
                                         <button onClick={openNewLoc} className="bg-white border border-slate-400 p-0.5 px-2 hover:bg-slate-50">

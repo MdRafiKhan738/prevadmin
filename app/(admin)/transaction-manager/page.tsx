@@ -18,7 +18,9 @@ export default function TransactionManagerPage() {
         runTill: '',
         sellerId: '',
         isVerifyBadge: 'No',
-        level: ''
+        level: '',
+        promoteType: 'call_msg',
+        trafficLink: ''
     });
     const [manualSaving, setManualSaving] = useState(false);
 
@@ -90,6 +92,7 @@ export default function TransactionManagerPage() {
             if (filters.fromDate) params.append('fromDate', filters.fromDate);
             if (filters.toDate) params.append('toDate', filters.toDate);
 
+            params.append('status', 'VALID');
             params.append('page', page.toString());
             params.append('limit', '100');
 
@@ -123,7 +126,7 @@ export default function TransactionManagerPage() {
                 headers: { 'Authorization': `Bearer ${token}`, 'x-auth-token': token }
             });
             toast.success("Ad promoted successfully!");
-            setManualPromote({ productId: '', adType: 'Free', amount: '', runTill: '', sellerId: '', isVerifyBadge: 'No', level: '' });
+            setManualPromote({ productId: '', adType: 'Free', amount: '', runTill: '', sellerId: '', isVerifyBadge: 'No', level: '', promoteType: 'call_msg', trafficLink: '' });
             fetchTransactions(1); // Refresh table
         } catch (err: any) {
             toast.error(err.response?.data?.message || "Failed to promote ad");
@@ -133,8 +136,37 @@ export default function TransactionManagerPage() {
     };
 
     const handleSearch = () => {
+        let result = transactions;
+
+        if (filters.tnxId) {
+            result = result.filter(t => t.tnxId?.toLowerCase().includes(filters.tnxId.toLowerCase()));
+        }
+        if (filters.productId) {
+            result = result.filter(t => t.productId?._id?.toLowerCase().includes(filters.productId.toLowerCase()));
+        }
+        if (filters.sellerMobile) {
+            result = result.filter(t => t.mobileNumber?.includes(filters.sellerMobile));
+        }
+        if (filters.sellerId) {
+            result = result.filter(t => t.sellerId?._id?.toLowerCase().includes(filters.sellerId.toLowerCase()));
+        }
+        if (filters.item) {
+            result = result.filter(t => t.item?.toLowerCase().includes(filters.item.toLowerCase()));
+        }
+        if (filters.mode) {
+            result = result.filter(t => t.mode?.toLowerCase().includes(filters.mode.toLowerCase()));
+        }
+        if (filters.fromDate) {
+            const start = new Date(filters.fromDate).setHours(0, 0, 0, 0);
+            result = result.filter(t => new Date(t.payTime).getTime() >= start);
+        }
+        if (filters.toDate) {
+            const end = new Date(filters.toDate).setHours(23, 59, 59, 999);
+            result = result.filter(t => new Date(t.payTime).getTime() <= end);
+        }
+
+        setFilteredTransactions(result);
         setCurrentPage(1);
-        fetchTransactions(1);
     };
 
     const handleDelete = async (id: string) => {
@@ -203,7 +235,7 @@ export default function TransactionManagerPage() {
                         Promote Manually
                     </h2>
 
-                    <div className="grid grid-cols-3 gap-3 mb-3">
+                    <div className="grid grid-cols-4 gap-3 mb-3">
                         <div className="space-y-2">
                             <div className="relative">
                                 <input
@@ -224,17 +256,12 @@ export default function TransactionManagerPage() {
 
                         <div className="space-y-2">
                             <div className="relative">
-                                <select
-                                    className="w-full border border-slate-300 px-2 h-8 outline-none text-xs bg-white text-slate-500 appearance-none"
+                                <input
+                                    type="date"
+                                    className="w-full border border-slate-300 px-2 h-8 outline-none text-xs bg-white text-slate-500 appearance-none uppercase"
                                     value={manualPromote.runTill}
                                     onChange={(e) => setManualPromote({ ...manualPromote, runTill: e.target.value })}
-                                >
-                                    <option value="" disabled>Promote till</option>
-                                    <option value="7">7 Days</option>
-                                    <option value="15">15 Days</option>
-                                    <option value="30">30 Days</option>
-                                </select>
-                                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-black pointer-events-none" />
+                                />
                             </div>
                             <div className="relative">
                                 <select
@@ -271,6 +298,29 @@ export default function TransactionManagerPage() {
                                 <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-black pointer-events-none" />
                             </div>
                         </div>
+
+                        <div className="space-y-2">
+                            <div className="relative">
+                                <select
+                                    className="w-full border border-slate-300 px-2 h-8 outline-none text-xs bg-white text-slate-500 appearance-none"
+                                    value={manualPromote.promoteType}
+                                    onChange={(e) => setManualPromote({ ...manualPromote, promoteType: e.target.value })}
+                                >
+                                    <option value="" disabled>Promote Type</option>
+                                    <option value="call_msg">Call & Message</option>
+                                    <option value="traffic">Traffic</option>
+                                </select>
+                                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-black pointer-events-none" />
+                            </div>
+                            {manualPromote.promoteType === 'traffic' && (
+                                <input
+                                    placeholder="Link (If Select Traffic)"
+                                    className="w-full border border-slate-300 px-2 h-8 outline-none text-xs placeholder:font-normal bg-white"
+                                    value={manualPromote.trafficLink}
+                                    onChange={(e) => setManualPromote({ ...manualPromote, trafficLink: e.target.value })}
+                                />
+                            )}
+                        </div>
                     </div>
 
                     <div className="flex gap-2">
@@ -282,7 +332,7 @@ export default function TransactionManagerPage() {
                             {manualSaving ? "Saving..." : "Save"}
                         </button>
                         <button
-                            onClick={() => setManualPromote({ productId: '', adType: 'Free', amount: '', runTill: '', sellerId: '', isVerifyBadge: 'No', level: '' })}
+                            onClick={() => setManualPromote({ productId: '', adType: 'Free', amount: '', runTill: '', sellerId: '', isVerifyBadge: 'No', level: '', promoteType: 'call_msg', trafficLink: '' })}
                             className="bg-white border border-slate-300 text-black px-5 py-1.5 rounded-[1px] font-bold text-xs shadow-sm hover:bg-slate-50 uppercase"
                         >
                             Cancel
@@ -416,10 +466,10 @@ export default function TransactionManagerPage() {
                                             <td className="p-2 font-mono text-[11px] text-slate-600 border-r border-slate-100">{row.tnxId}</td>
                                             <td className="p-2 text-center text-slate-700 border-r border-slate-100">{row.mode}</td>
                                             <td className="p-2 text-center text-slate-700 border-r border-slate-100" title={row.sellerId?._id}>
-                                                {row.sellerId?._id?.slice(-6) || '----'}
+                                                {row.sellerId?._id || '----'}
                                             </td>
                                             <td className="p-2 text-center text-slate-700 border-r border-slate-100" title={row.productId?._id}>
-                                                {row.productId?._id?.slice(-6) || '----'}
+                                                {row.productId?._id || '----'}
                                             </td>
                                             <td className="p-2 text-center text-slate-700 border-r border-slate-100">{row.mobileNumber}</td>
                                             <td className="p-2 text-center font-bold text-slate-800 border-r border-slate-100">Tk. {row.amount}</td>

@@ -87,15 +87,12 @@ export default function PromotedAdsPage() {
             if (premierRes && premierRes.data && premierRes.data.data) {
                 const data = premierRes.data.data;
                 const fetchedCredits = data.freeAdCredits || [];
+                // Ensure specific order: First Product, then All, then others
+                const productCredit = fetchedCredits.find((c: any) => c.forType === 'product') || { amount: 400, forType: 'product', forValue: 'First Product', status: true };
+                const allCredit = fetchedCredits.find((c: any) => c.forType === 'all') || { amount: 400, forType: 'all', forValue: 'All', startDate: new Date(), endDate: new Date(), status: true };
+                const otherCredits = fetchedCredits.filter((c: any) => c.forType !== 'product' && c.forType !== 'all');
 
-                // Ensure default rows exist if not present
-                const finalCredits = [...fetchedCredits];
-                if (!finalCredits.find((c: any) => c.forType === 'product')) {
-                    finalCredits.push({ amount: 400, forType: 'product', forValue: 'First Product', status: true });
-                }
-                if (!finalCredits.find((c: any) => c.forType === 'all')) {
-                    finalCredits.push({ amount: 400, forType: 'all', forValue: 'All', startDate: new Date(), endDate: new Date(), status: true });
-                }
+                const finalCredits = [productCredit, allCredit, ...otherCredits];
 
                 setPremierSettings({
                     ...data,
@@ -478,44 +475,52 @@ export default function PromotedAdsPage() {
                                     <hr className="border-slate-100" />
                                 </div>
 
-                                {/* Highlight Post Price */}
-                                <div className="space-y-3">
-                                    <div className="flex items-center justify-between">
-                                        <label className="text-black font-medium">Highlight Post Price</label>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-slate-400">$</span>
-                                            <input
-                                                type="number"
-                                                className="w-20 border border-slate-300 px-2 py-1 outline-none text-center font-bold"
-                                                value={premierSettings.highlightPostPrice}
-                                                readOnly={!editMode.highlight}
-                                                onChange={e => setPremierSettings({ ...premierSettings, highlightPostPrice: Number(e.target.value) })}
-                                            />
-                                            <div className="flex items-center gap-1.5 ml-2">
-                                                <Edit2 className="w-4 h-4 text-black cursor-pointer hover:text-blue-600" onClick={() => toggleEdit('highlight')} />
-                                                <CheckCircle2 className="w-4 h-4 text-black cursor-pointer hover:text-emerald-600" onClick={handleSavePremier} />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <hr className="border-slate-100" />
-                                </div>
-
                                 {/* Add Label Section */}
                                 <div className="space-y-4">
                                     <label className="text-black font-bold block">Add Label</label>
                                     <div className="space-y-2">
-                                        {premierSettings.labels?.map((label: any, idx: number) => (
-                                            <div key={idx} className="flex items-center justify-between w-full max-w-[400px]">
-                                                <span className="text-black font-medium">{label.name}</span>
-                                                <div className="flex items-center gap-4">
-                                                    <span className="font-bold">$ {label.price}</span>
+                                        {premierSettings.labels?.map((label: any, idx: number) => {
+                                            const labelEditKey = `label_${idx}`;
+                                            const isEditing = editMode[labelEditKey];
+                                            return (
+                                                <div key={idx} className="flex items-center justify-between w-full max-w-[400px]">
+                                                    {isEditing ? (
+                                                        <div className="flex items-center gap-2 flex-1 mr-4">
+                                                            <input 
+                                                                type="text" 
+                                                                value={label.name} 
+                                                                onChange={(e) => updateLabel(idx, 'name', e.target.value)}
+                                                                className="flex-1 border border-slate-300 px-2 py-0.5 outline-none"
+                                                            />
+                                                            <div className="flex items-center gap-1 border border-slate-300 px-1 bg-white">
+                                                                <span className="text-slate-400">$</span>
+                                                                <input 
+                                                                    type="number" 
+                                                                    value={label.price} 
+                                                                    onChange={(e) => updateLabel(idx, 'price', Number(e.target.value))}
+                                                                    className="w-16 py-0.5 outline-none text-center font-bold"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <>
+                                                            <span className="text-black font-medium">{label.name}</span>
+                                                            <div className="flex items-center gap-4">
+                                                                <span className="font-bold">$ {label.price}</span>
+                                                            </div>
+                                                        </>
+                                                    )}
                                                     <div className="flex items-center gap-2">
-                                                        <Edit2 className="w-4 h-4 text-black cursor-pointer hover:text-blue-600" />
+                                                        {isEditing ? (
+                                                            <CheckCircle2 onClick={() => toggleEdit(labelEditKey)} className="w-4 h-4 text-emerald-600 cursor-pointer hover:text-emerald-700" />
+                                                        ) : (
+                                                            <Edit2 onClick={() => toggleEdit(labelEditKey)} className="w-4 h-4 text-black cursor-pointer hover:text-blue-600" />
+                                                        )}
                                                         <Trash2 onClick={() => removeLabel(idx)} className="w-4 h-4 text-black hover:text-rose-500 cursor-pointer" />
                                                     </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
 
                                         <div className="flex items-center gap-2 mt-3">
                                             <div className="flex items-center border border-slate-300 rounded-sm bg-white w-full max-w-[280px]">
@@ -591,12 +596,7 @@ export default function PromotedAdsPage() {
                                                             </div>
                                                         </div>
                                                     ) : credit.forType === 'product' ? (
-                                                        <input
-                                                            type="text"
-                                                            value={credit.forValue}
-                                                            onChange={e => updateCredit(idx, 'forValue', e.target.value)}
-                                                            className="w-48 border border-slate-300 px-3 py-1 outline-none text-[12px] font-medium bg-white focus:border-blue-400"
-                                                        />
+                                                        <div className="px-3 py-1 border border-slate-300 text-[12px] font-bold bg-white w-48 text-center">First Product</div>
                                                     ) : (
                                                         <div className="relative">
                                                             <select
