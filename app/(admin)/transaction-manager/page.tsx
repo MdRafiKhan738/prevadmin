@@ -19,6 +19,7 @@ export default function TransactionManagerPage() {
         sellerId: '',
         isVerifyBadge: 'No',
         level: '',
+        labels: [] as string[],
         promoteType: 'call_msg',
         trafficLink: ''
     });
@@ -126,13 +127,28 @@ export default function TransactionManagerPage() {
                 headers: { 'Authorization': `Bearer ${token}`, 'x-auth-token': token }
             });
             toast.success("Ad promoted successfully!");
-            setManualPromote({ productId: '', adType: 'Free', amount: '', runTill: '', sellerId: '', isVerifyBadge: 'No', level: '', promoteType: 'call_msg', trafficLink: '' });
+            setManualPromote({ productId: '', adType: 'Free', amount: '', runTill: '', sellerId: '', isVerifyBadge: 'No', level: '', labels: [], promoteType: 'call_msg', trafficLink: '' });
             fetchTransactions(1); // Refresh table
         } catch (err: any) {
             toast.error(err.response?.data?.message || "Failed to promote ad");
         } finally {
             setManualSaving(false);
         }
+    };
+
+    const toggleManualLabel = (labelName: string) => {
+        setManualPromote(prev => {
+            const currentLabels = Array.isArray(prev.labels) ? prev.labels : [];
+            const nextLabels = currentLabels.includes(labelName)
+                ? currentLabels.filter(l => l !== labelName)
+                : [...currentLabels, labelName];
+
+            return {
+                ...prev,
+                labels: nextLabels,
+                level: nextLabels[0] || '' // keep a primary label for backward compatibility
+            };
+        });
     };
 
     const handleSearch = () => {
@@ -284,18 +300,31 @@ export default function TransactionManagerPage() {
                                 value={manualPromote.amount}
                                 onChange={(e) => setManualPromote({ ...manualPromote, amount: e.target.value })}
                             />
-                            <div className="relative">
-                                <select
-                                    className="w-full border border-slate-300 px-2 h-8 outline-none text-xs bg-white text-slate-500 appearance-none"
-                                    value={manualPromote.level}
-                                    onChange={(e) => setManualPromote({ ...manualPromote, level: e.target.value })}
-                                >
-                                    <option value="" disabled>Select Level</option>
-                                    {premierSettings.labels?.map((label: any) => (
-                                        <option key={label.name} value={label.name}>{label.name}</option>
-                                    ))}
-                                </select>
-                                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-black pointer-events-none" />
+                            <div className="border border-slate-300 bg-white px-2 py-1.5 rounded-[1px]">
+                                <div className="flex items-center justify-between mb-1">
+                                    <span className="text-[11px] font-bold text-slate-700 uppercase">Labels</span>
+                                    <span className="text-[10px] text-slate-500 truncate max-w-[160px]">
+                                        {manualPromote.labels?.length ? manualPromote.labels.join(', ') : 'None'}
+                                    </span>
+                                </div>
+                                <div className="max-h-20 overflow-auto pr-1 space-y-1">
+                                    {premierSettings.labels?.map((label: any) => {
+                                        const labelName = String(label?.name || '').trim();
+                                        if (!labelName) return null;
+                                        const checked = Array.isArray(manualPromote.labels) && manualPromote.labels.includes(labelName);
+                                        return (
+                                            <label key={labelName} className="flex items-center gap-2 cursor-pointer select-none">
+                                                <input
+                                                    type="checkbox"
+                                                    className="w-3 h-3"
+                                                    checked={checked}
+                                                    onChange={() => toggleManualLabel(labelName)}
+                                                />
+                                                <span className="text-[11px] text-slate-700">{labelName}</span>
+                                            </label>
+                                        );
+                                    })}
+                                </div>
                             </div>
                         </div>
 
@@ -332,7 +361,7 @@ export default function TransactionManagerPage() {
                             {manualSaving ? "Saving..." : "Save"}
                         </button>
                         <button
-                            onClick={() => setManualPromote({ productId: '', adType: 'Free', amount: '', runTill: '', sellerId: '', isVerifyBadge: 'No', level: '', promoteType: 'call_msg', trafficLink: '' })}
+                            onClick={() => setManualPromote({ productId: '', adType: 'Free', amount: '', runTill: '', sellerId: '', isVerifyBadge: 'No', level: '', labels: [], promoteType: 'call_msg', trafficLink: '' })}
                             className="bg-white border border-slate-300 text-black px-5 py-1.5 rounded-[1px] font-bold text-xs shadow-sm hover:bg-slate-50 uppercase"
                         >
                             Cancel

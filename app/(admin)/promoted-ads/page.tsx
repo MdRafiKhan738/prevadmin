@@ -426,28 +426,28 @@ export default function PromotedAdsPage() {
                             onClick={() => setShowPremierModal(false)}
                             className="absolute inset-0 bg-black/30 backdrop-blur-sm"
                         />
-                        <motion.div
-                            initial={{ scale: 0.98, opacity: 0, y: 10 }}
-                            animate={{ scale: 1, opacity: 1, y: 0 }}
-                            exit={{ scale: 0.98, opacity: 0, y: 10 }}
-                            className="bg-white border border-slate-900 w-full max-w-[800px] rounded-sm shadow-2xl relative z-10 flex flex-col overflow-hidden"
-                        >
-                            {/* Modal Header */}
-                            <div className="p-3 border-b border-slate-200 flex justify-between items-center bg-slate-50/50">
-                                <h2 className="text-[14px] font-bold text-black uppercase tracking-tight">PREMIER OPPORTUNITY</h2>
-                                <button
+                         <motion.div
+                             initial={{ scale: 0.98, opacity: 0, y: 10 }}
+                             animate={{ scale: 1, opacity: 1, y: 0 }}
+                             exit={{ scale: 0.98, opacity: 0, y: 10 }}
+                             className="bg-white border border-slate-900 w-full max-w-[800px] max-h-[calc(100vh-2rem)] rounded-sm shadow-2xl relative z-10 flex flex-col overflow-hidden"
+                         >
+                             {/* Modal Header */}
+                             <div className="p-3 border-b border-slate-200 flex justify-between items-center bg-slate-50/50">
+                                 <h2 className="text-[14px] font-bold text-black uppercase tracking-tight">PREMIER OPPORTUNITY</h2>
+                                 <button
                                     onClick={() => setShowPremierModal(false)}
                                     className="hover:bg-slate-200 p-1 rounded transition-colors text-black"
                                 >
                                     <X className="w-4 h-4" />
                                 </button>
-                            </div>
-
-                            {/* Modal Body */}
-                            <div className="p-5 flex-1 flex flex-col gap-5 overflow-y-auto custom-scrollbar text-[13px]">
-                                {/* Profile Verify Badge Price */}
-                                <div className="space-y-3">
-                                    <div className="flex items-center justify-between">
+                             </div>
+ 
+                             {/* Modal Body */}
+                             <div className="p-5 flex-1 min-h-0 flex flex-col gap-5 overflow-y-auto custom-scrollbar text-[13px]">
+                                 {/* Profile Verify Badge Price */}
+                                 <div className="space-y-3">
+                                     <div className="flex items-center justify-between">
                                         <label className="text-black font-medium">Profile Verify Badge Price (year)</label>
                                         <div className="flex items-center gap-2">
                                             <span className="text-slate-400">$</span>

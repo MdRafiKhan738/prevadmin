@@ -22,6 +22,40 @@ function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+function parseIntSafe(value: unknown): number {
+    const n = parseInt(String(value ?? ''), 10);
+    return Number.isFinite(n) ? n : 0;
+}
+
+function getPromotionMetrics(ad: Ad) {
+    const duration = Number((ad as any).promoteDuration) || 0;
+    const targetValue = Number((ad as any).targetValue) || 0;
+    const targetD = parseIntSafe((ad as any).targetD);
+
+    const totalTarget =
+        targetValue > 0 ? targetValue : (targetD > 0 && duration > 0 ? targetD * duration : 0);
+
+    const achievedSoFar = Number((ad as any).promotedDeliveryCount ?? (ad as any).deliveryCount ?? 0) || 0;
+
+    const startMs = (ad as any).promoteStartDate ? new Date((ad as any).promoteStartDate).getTime() : NaN;
+    const adTypeLower = String((ad as any).adType || '').trim().toLowerCase();
+    const isRunning = adTypeLower === 'promoted' || adTypeLower === 'processing';
+
+    let expectedSoFar = 0;
+    if (totalTarget > 0) {
+        if (isRunning && duration > 0 && Number.isFinite(startMs)) {
+            const daysElapsed = Math.min(duration, Math.max(1, Math.floor((Date.now() - startMs) / MS_PER_DAY) + 1));
+            expectedSoFar = Math.round((totalTarget / duration) * daysElapsed);
+        } else {
+            expectedSoFar = totalTarget;
+        }
+    }
+
+    return { totalTarget, expectedSoFar, achievedSoFar };
+}
+
 interface Ad {
     _id: string;
     headline: string;
@@ -80,6 +114,7 @@ interface Ad {
     }[];
     promoteStartDate?: string;
     promoteEndDate?: string;
+    promoteDuration?: number;
     features?: Record<string, any>;
     isReported?: boolean;
     photoStatus: 'pending' | 'approved' | 'rejected';
@@ -902,10 +937,14 @@ export default function PostManagement() {
                                                 <div className="flex items-center px-0.5">
                                                     <div className={cn(
                                                         "w-6 h-4 rounded-[1px] shadow-sm",
-                                                        ad.adType !== 'Promoted' ? "bg-slate-200" :
-                                                            (ad.deliveryCount > ad.targetValue) ? "bg-blue-600" :
-                                                                (ad.deliveryCount === ad.targetValue) ? "bg-purple-600" :
-                                                                    (ad.deliveryCount >= ad.targetValue * 0.7) ? "bg-sky-400" : "bg-black"
+                                                        (() => {
+                                                            const { totalTarget, achievedSoFar } = getPromotionMetrics(ad);
+                                                            if (totalTarget <= 0) return "bg-slate-200";
+                                                            if (achievedSoFar > totalTarget) return "bg-blue-600";
+                                                            if (achievedSoFar === totalTarget) return "bg-purple-600";
+                                                            if (achievedSoFar >= totalTarget * 0.7) return "bg-sky-400";
+                                                            return "bg-black";
+                                                        })()
                                                     )} />
                                                 </div>
                                             </td>
@@ -913,7 +952,11 @@ export default function PostManagement() {
                                             {/* Columns 10-15 with rowSpan=2 */}
                                             <td className="px-1 py-1 text-black whitespace-nowrap border-r border-b border-slate-300 align-top text-center" rowSpan={2}>
                                                 <div className="mt-1 font-medium">
-                                                    {ad.adType === 'Promoted' ? `${ad.targetD || 0}/${ad.dailyDeliveryCount || 0}` : '0/0'}
+                                                    {(() => {
+                                                        const { totalTarget, expectedSoFar, achievedSoFar } = getPromotionMetrics(ad);
+                                                        if (totalTarget <= 0) return '0/0';
+                                                        return `${expectedSoFar}/${achievedSoFar}`;
+                                                    })()}
                                                 </div>
                                             </td>
                                             <td className="px-1 py-1 border-r border-b border-slate-300 align-top text-center" rowSpan={2}>
