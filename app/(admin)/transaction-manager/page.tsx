@@ -23,6 +23,13 @@ export default function TransactionManagerPage() {
         promoteType: 'call_msg',
         trafficLink: ''
     });
+    const [manualErrors, setManualErrors] = useState<{
+        productId?: string;
+        sellerId?: string;
+        amount?: string;
+        runTill?: string;
+        trafficLink?: string;
+    }>({});
     const [manualSaving, setManualSaving] = useState(false);
 
     // Premier Opportunity State for Labels
@@ -117,16 +124,40 @@ export default function TransactionManagerPage() {
     };
 
     const handleManualPromote = async () => {
-        if (!manualPromote.productId && !manualPromote.sellerId) {
-            return toast.error("Either Product ID or Seller ID is required");
+        const productId = manualPromote.productId.trim();
+        const sellerId = manualPromote.sellerId.trim();
+
+        const nextErrors: typeof manualErrors = {};
+
+        if (!productId && !sellerId) {
+            nextErrors.productId = "Either Product ID or Seller ID is required";
+            nextErrors.sellerId = "Either Product ID or Seller ID is required";
         }
+
+        // If Product ID is provided, date + amount are mandatory
+        if (productId) {
+            if (!manualPromote.runTill) nextErrors.runTill = "Run Till date is required";
+            if (!manualPromote.amount.trim()) nextErrors.amount = "Amount is required";
+            if (manualPromote.promoteType === 'traffic' && !manualPromote.trafficLink.trim()) {
+                nextErrors.trafficLink = "Traffic link is required for Traffic promotion";
+            }
+        }
+
+        if (Object.keys(nextErrors).length > 0) {
+            setManualErrors(nextErrors);
+            const firstError = Object.values(nextErrors).find(Boolean);
+            if (firstError) toast.error(firstError);
+            return;
+        }
+
+        setManualErrors({});
         setManualSaving(true);
         try {
             const token = Cookies.get('adminToken');
-            await axios.post(`${API_BASE_URL}/api/admins/manual-promote`, manualPromote, {
+            const res = await axios.post(`${API_BASE_URL}/api/admins/manual-promote`, manualPromote, {
                 headers: { 'Authorization': `Bearer ${token}`, 'x-auth-token': token }
             });
-            toast.success("Ad promoted successfully!");
+            toast.success(res.data?.message || (productId ? "Ad promoted successfully!" : "Seller verification updated"));
             setManualPromote({ productId: '', adType: 'Free', amount: '', runTill: '', sellerId: '', isVerifyBadge: 'No', level: '', labels: [], promoteType: 'call_msg', trafficLink: '' });
             fetchTransactions(1); // Refresh table
         } catch (err: any) {
@@ -254,33 +285,42 @@ export default function TransactionManagerPage() {
                     <div className="grid grid-cols-4 gap-3 mb-3">
                         <div className="space-y-2">
                             <div className="relative">
-                                <input
-                                    placeholder="Product ID"
-                                    className="w-full border border-slate-300 px-2 h-8 outline-none text-xs placeholder:font-normal bg-white"
-                                    value={manualPromote.productId}
-                                    onChange={(e) => setManualPromote({ ...manualPromote, productId: e.target.value })}
-                                />
-                                <Search className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-emerald-600" />
-                            </div>
-                            <input
-                                placeholder="Seller ID For Verify Badge"
-                                className="w-full border border-slate-300 px-2 h-8 outline-none text-xs placeholder:font-normal bg-white"
-                                value={manualPromote.sellerId}
-                                onChange={(e) => setManualPromote({ ...manualPromote, sellerId: e.target.value })}
-                            />
-                        </div>
+                                 <input
+                                     placeholder="Product ID"
+                                     className={`w-full border ${manualErrors.productId ? 'border-red-500' : 'border-slate-300'} px-2 h-8 outline-none text-xs placeholder:font-normal bg-white`}
+                                     value={manualPromote.productId}
+                                     onChange={(e) => {
+                                         setManualPromote({ ...manualPromote, productId: e.target.value });
+                                         setManualErrors(prev => ({ ...prev, productId: undefined }));
+                                     }}
+                                 />
+                                 <Search className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-emerald-600" />
+                             </div>
+                             <input
+                                 placeholder="Seller ID For Verify Badge"
+                                 className={`w-full border ${manualErrors.sellerId ? 'border-red-500' : 'border-slate-300'} px-2 h-8 outline-none text-xs placeholder:font-normal bg-white`}
+                                 value={manualPromote.sellerId}
+                                 onChange={(e) => {
+                                     setManualPromote({ ...manualPromote, sellerId: e.target.value });
+                                     setManualErrors(prev => ({ ...prev, sellerId: undefined }));
+                                 }}
+                             />
+                         </div>
 
-                        <div className="space-y-2">
-                            <div className="relative">
-                                <input
-                                    type="date"
-                                    className="w-full border border-slate-300 px-2 h-8 outline-none text-xs bg-white text-slate-500 appearance-none uppercase"
-                                    value={manualPromote.runTill}
-                                    onChange={(e) => setManualPromote({ ...manualPromote, runTill: e.target.value })}
-                                />
-                            </div>
-                            <div className="relative">
-                                <select
+                         <div className="space-y-2">
+                             <div className="relative">
+                                 <input
+                                     type="date"
+                                     className={`w-full border ${manualErrors.runTill ? 'border-red-500' : 'border-slate-300'} px-2 h-8 outline-none text-xs bg-white text-slate-500 appearance-none uppercase`}
+                                     value={manualPromote.runTill}
+                                     onChange={(e) => {
+                                         setManualPromote({ ...manualPromote, runTill: e.target.value });
+                                         setManualErrors(prev => ({ ...prev, runTill: undefined }));
+                                     }}
+                                 />
+                             </div>
+                             <div className="relative">
+                                 <select
                                     className="w-full border border-slate-300 px-2 h-8 outline-none text-xs bg-white text-slate-500 appearance-none"
                                     value={manualPromote.isVerifyBadge}
                                     onChange={(e) => setManualPromote({ ...manualPromote, isVerifyBadge: e.target.value })}
@@ -293,17 +333,20 @@ export default function TransactionManagerPage() {
                             </div>
                         </div>
 
-                        <div className="space-y-2">
-                            <input
-                                placeholder="Amount"
-                                className="w-full border border-slate-300 px-2 h-8 outline-none text-xs placeholder:font-normal bg-white"
-                                value={manualPromote.amount}
-                                onChange={(e) => setManualPromote({ ...manualPromote, amount: e.target.value })}
-                            />
-                            <div className="border border-slate-300 bg-white px-2 py-1.5 rounded-[1px]">
-                                <div className="flex items-center justify-between mb-1">
-                                    <span className="text-[11px] font-bold text-slate-700 uppercase">Labels</span>
-                                    <span className="text-[10px] text-slate-500 truncate max-w-[160px]">
+                         <div className="space-y-2">
+                             <input
+                                 placeholder="Amount"
+                                 className={`w-full border ${manualErrors.amount ? 'border-red-500' : 'border-slate-300'} px-2 h-8 outline-none text-xs placeholder:font-normal bg-white`}
+                                 value={manualPromote.amount}
+                                 onChange={(e) => {
+                                     setManualPromote({ ...manualPromote, amount: e.target.value });
+                                     setManualErrors(prev => ({ ...prev, amount: undefined }));
+                                 }}
+                             />
+                             <div className="border border-slate-300 bg-white px-2 py-1.5 rounded-[1px]">
+                                 <div className="flex items-center justify-between mb-1">
+                                     <span className="text-[11px] font-bold text-slate-700 uppercase">Labels</span>
+                                     <span className="text-[10px] text-slate-500 truncate max-w-[160px]">
                                         {manualPromote.labels?.length ? manualPromote.labels.join(', ') : 'None'}
                                     </span>
                                 </div>
@@ -341,16 +384,19 @@ export default function TransactionManagerPage() {
                                 </select>
                                 <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-black pointer-events-none" />
                             </div>
-                            {manualPromote.promoteType === 'traffic' && (
-                                <input
-                                    placeholder="Link (If Select Traffic)"
-                                    className="w-full border border-slate-300 px-2 h-8 outline-none text-xs placeholder:font-normal bg-white"
-                                    value={manualPromote.trafficLink}
-                                    onChange={(e) => setManualPromote({ ...manualPromote, trafficLink: e.target.value })}
-                                />
-                            )}
-                        </div>
-                    </div>
+                             {manualPromote.promoteType === 'traffic' && (
+                                 <input
+                                     placeholder="Link (If Select Traffic)"
+                                     className={`w-full border ${manualErrors.trafficLink ? 'border-red-500' : 'border-slate-300'} px-2 h-8 outline-none text-xs placeholder:font-normal bg-white`}
+                                     value={manualPromote.trafficLink}
+                                     onChange={(e) => {
+                                         setManualPromote({ ...manualPromote, trafficLink: e.target.value });
+                                         setManualErrors(prev => ({ ...prev, trafficLink: undefined }));
+                                     }}
+                                 />
+                             )}
+                         </div>
+                     </div>
 
                     <div className="flex gap-2">
                         <button

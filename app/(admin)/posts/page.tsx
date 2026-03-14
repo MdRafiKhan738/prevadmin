@@ -30,25 +30,38 @@ function parseIntSafe(value: unknown): number {
 }
 
 function getPromotionMetrics(ad: Ad) {
-    const duration = Number((ad as any).promoteDuration) || 0;
-    const targetValue = Number((ad as any).targetValue) || 0;
-    const targetD = parseIntSafe((ad as any).targetD);
+    const targetValue = Number(ad.targetValue) || 0;
+    const targetD = parseIntSafe(ad.targetD);
+    let duration = Number(ad.promoteDuration) || 0;
+
+    // If duration is missing but we have target totals, infer it
+    if (duration <= 0 && targetValue > 0 && targetD > 0) {
+        duration = Math.ceil(targetValue / targetD);
+    }
 
     const totalTarget =
         targetValue > 0 ? targetValue : (targetD > 0 && duration > 0 ? targetD * duration : 0);
 
-    const achievedSoFar = Number((ad as any).promotedDeliveryCount ?? (ad as any).deliveryCount ?? 0) || 0;
+    // Cumulative Running Views: We use promotedViews if available, otherwise fallback to views (if newly promoted)
+    // Actually, promotedViews is the field specifically for the current promotion metrics
+    const achievedSoFar = Number(ad.promotedViews ?? 0) || 0;
 
-    const startMs = (ad as any).promoteStartDate ? new Date((ad as any).promoteStartDate).getTime() : NaN;
-    const adTypeLower = String((ad as any).adType || '').trim().toLowerCase();
+    const startMs = ad.promoteStartDate ? new Date(ad.promoteStartDate).getTime() : NaN;
+    const adTypeLower = String(ad.adType || '').trim().toLowerCase();
     const isRunning = adTypeLower === 'promoted' || adTypeLower === 'processing';
 
     let expectedSoFar = 0;
     if (totalTarget > 0) {
         if (isRunning && duration > 0 && Number.isFinite(startMs)) {
+            // Calculate days elapsed (Day 1, Day 2, etc.)
             const daysElapsed = Math.min(duration, Math.max(1, Math.floor((Date.now() - startMs) / MS_PER_DAY) + 1));
+            // Cumulative Target = (Total / Duration) * Days passed
             expectedSoFar = Math.round((totalTarget / duration) * daysElapsed);
+        } else if (!isRunning) {
+            // Not running yet or already done
+            expectedSoFar = totalTarget;
         } else {
+             // Running but duration 0? fallback
             expectedSoFar = totalTarget;
         }
     }
@@ -72,7 +85,7 @@ interface Ad {
     actionType: string;
     images: string[];
     adType: string;
-    status: 'active' | 'pending' | 'rejected' | 'expired' | 'notification' | 'pause' | 'review' | 'atv_msg' | 'unatv_msg' | 'deleted';
+    status: 'active' | 'pending' | 'rejected' | 'expired' | 'notification' | 'pause' | 'review' | 'atv_msg' | 'unatv_msg' | 'deleted' | 'inactive' | 'delete_request';
     createdAt: string;
     price?: number;
     priceType?: 'Negotiable' | 'Fixed';
@@ -109,12 +122,18 @@ interface Ad {
         promoteType?: string;
         promoteTag?: string;
         budget: number;
+        targetD?: string;
+        targetValue?: number;
         views: number;
         deliveryCount: number;
     }[];
     promoteStartDate?: string;
     promoteEndDate?: string;
     promoteDuration?: number;
+    promoteType?: string;
+    promoteTag?: string;
+    promoteBudget?: number;
+    estimatedReach?: string;
     features?: Record<string, any>;
     isReported?: boolean;
     photoStatus: 'pending' | 'approved' | 'rejected';
