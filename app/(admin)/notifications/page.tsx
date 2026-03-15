@@ -99,7 +99,7 @@ export default function NotificationMessaging() {
                         console.error("No admin token found in cookies");
                         return;
                     }
-                    const res = await axios.get(`${API_BASE_URL}/api/admins/users/search-mobile?query=${tempUser}`, {
+                    const res = await axios.get(`${API_BASE_URL}/api/admins/users/search-mobile?mobile=${tempUser}`, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
                     setSearchResults(res.data);
