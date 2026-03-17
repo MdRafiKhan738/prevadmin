@@ -62,11 +62,11 @@ export default function ReportManagement() {
         try {
             const token = Cookies.get('adminToken');
             const params = new URLSearchParams();
-            
+
             if (statusFilter !== 'All') params.append('status', statusFilter);
             params.append('page', currentPage.toString());
             params.append('limit', limit.toString());
-            
+
             Object.entries(searchFilters).forEach(([key, value]) => {
                 if (value && value !== 'Select') {
                     params.append(key, value);
@@ -96,7 +96,7 @@ export default function ReportManagement() {
     };
 
     const toggleExpandAd = (adId: string) => {
-        setExpandedAds(prev => 
+        setExpandedAds(prev =>
             prev.includes(adId) ? prev.filter(id => id !== adId) : [...prev, adId]
         );
     };
@@ -140,7 +140,7 @@ export default function ReportManagement() {
             const token = Cookies.get('adminToken');
             await axios.post(`${API_BASE_URL}/api/admins/notifications/send`, {
                 userType: 'Selected',
-                selectedUsers: [targetUserMobile], 
+                selectedUsers: [targetUserMobile],
                 message: message,
                 sendIn: ['Account']
             }, {
@@ -166,10 +166,10 @@ export default function ReportManagement() {
 
         try {
             const token = Cookies.get('adminToken');
-            
+
             // Delete all reports for selected Ads
             if (selectedAds.length > 0) {
-                await Promise.all(selectedAds.map(adId => 
+                await Promise.all(selectedAds.map(adId =>
                     axios.delete(`${API_BASE}/${adId}?deleteAllForAd=true`, {
                         headers: { 'x-auth-token': token }
                     })
@@ -178,7 +178,7 @@ export default function ReportManagement() {
 
             // Delete individual selected Reports
             if (selectedReports.length > 0) {
-                await Promise.all(selectedReports.map(id => 
+                await Promise.all(selectedReports.map(id =>
                     axios.delete(`${API_BASE}/${id}`, {
                         headers: { 'x-auth-token': token }
                     })
@@ -196,13 +196,13 @@ export default function ReportManagement() {
     };
 
     const toggleSelectAd = (adId: string) => {
-        setSelectedAds(prev => 
+        setSelectedAds(prev =>
             prev.includes(adId) ? prev.filter(id => id !== adId) : [...prev, adId]
         );
     };
 
     const toggleSelectReport = (reportId: string) => {
-        setSelectedReports(prev => 
+        setSelectedReports(prev =>
             prev.includes(reportId) ? prev.filter(id => id !== reportId) : [...prev, reportId]
         );
     };
@@ -233,32 +233,32 @@ export default function ReportManagement() {
             {/* Search Filters */}
             <div className="bg-white border border-slate-200 p-2 rounded-sm shadow-sm flex flex-wrap items-center gap-3">
                 <div className="flex bg-slate-50 border border-slate-200 rounded-full px-4 py-1.5 focus-within:border-blue-400 transition-colors">
-                    <input 
-                        placeholder="User ID" 
+                    <input
+                        placeholder="User ID"
                         className="bg-transparent outline-none w-24"
                         value={searchFilters.userId}
                         onChange={(e) => setSearchFilters(prev => ({ ...prev, userId: e.target.value }))}
                     />
                 </div>
                 <div className="flex bg-slate-50 border border-slate-200 rounded-full px-4 py-1.5 focus-within:border-blue-400 transition-colors">
-                    <input 
-                        placeholder="Product ID" 
+                    <input
+                        placeholder="Product ID"
                         className="bg-transparent outline-none w-24"
                         value={searchFilters.productId}
                         onChange={(e) => setSearchFilters(prev => ({ ...prev, productId: e.target.value }))}
                     />
                 </div>
                 <div className="flex bg-slate-50 border border-slate-200 rounded-full px-4 py-1.5 focus-within:border-blue-400 transition-colors">
-                    <input 
-                        placeholder="Mobile" 
+                    <input
+                        placeholder="Mobile"
                         className="bg-transparent outline-none w-28"
                         value={searchFilters.mobile}
                         onChange={(e) => setSearchFilters(prev => ({ ...prev, mobile: e.target.value }))}
                     />
                 </div>
-                
+
                 <div className="flex bg-slate-50 border border-slate-200 rounded-full px-4 py-1.5 focus-within:border-blue-400 transition-colors">
-                    <select 
+                    <select
                         className="bg-transparent outline-none w-24 cursor-pointer"
                         value={searchFilters.category}
                         onChange={(e) => setSearchFilters(prev => ({ ...prev, category: e.target.value }))}
@@ -284,7 +284,7 @@ export default function ReportManagement() {
                     </select>
                 </div> */}
 
-                <button 
+                <button
                     onClick={handleSearch}
                     className="bg-black text-white px-8 py-1.5 rounded-full font-bold hover:bg-slate-800 transition-colors"
                 >
@@ -304,8 +304,8 @@ export default function ReportManagement() {
                             }}
                             className={cn(
                                 "px-3 py-1 rounded-full font-bold text-[10px] border transition-all",
-                                statusFilter === tab.label 
-                                    ? `${tab.color} border-transparent ring-2 ring-offset-1 ring-slate-400` 
+                                statusFilter === tab.label
+                                    ? `${tab.color} border-transparent ring-2 ring-offset-1 ring-slate-400`
                                     : "bg-white text-slate-500 border-slate-200 hover:border-slate-400"
                             )}
                         >
@@ -317,7 +317,7 @@ export default function ReportManagement() {
 
                 <div className="flex items-center gap-2">
                     {(selectedAds.length > 0 || selectedReports.length > 0) && (
-                        <button 
+                        <button
                             onClick={handleBulkDelete}
                             className="p-1.5 bg-rose-600 text-white rounded-sm hover:bg-rose-700 transition-all scale-110 shadow-lg"
                         >
@@ -333,9 +333,9 @@ export default function ReportManagement() {
                     <thead>
                         <tr className="text-[10px] text-white uppercase tracking-tight font-medium bg-[#1e293b]">
                             <th className="w-10 px-2 py-2 text-left border-r border-slate-700">
-                                <input 
-                                    type="checkbox" 
-                                    className="w-3 h-3 accent-slate-600 cursor-pointer" 
+                                <input
+                                    type="checkbox"
+                                    className="w-3 h-3 accent-slate-600 cursor-pointer"
                                     checked={groupedReports.length > 0 && selectedAds.length === groupedReports.length}
                                     onChange={toggleSelectAllAds}
                                 />
@@ -368,9 +368,9 @@ export default function ReportManagement() {
                             <React.Fragment key={item.ad._id}>
                                 <tr className={cn("border-b border-slate-100 group cursor-pointer hover:bg-slate-50 transition-colors", expandedAds.includes(item.ad._id) && "bg-slate-50")}>
                                     <td className="px-2 py-2 border-r border-slate-100 text-center">
-                                        <input 
-                                            type="checkbox" 
-                                            className="w-3 h-3 accent-blue-600 cursor-pointer" 
+                                        <input
+                                            type="checkbox"
+                                            className="w-3 h-3 accent-blue-600 cursor-pointer"
                                             checked={selectedAds.includes(item.ad._id)}
                                             onChange={() => toggleSelectAd(item.ad._id)}
                                         />
@@ -404,14 +404,14 @@ export default function ReportManagement() {
                                     <td className="px-2 py-2">
                                         <div className="flex items-center gap-1.5">
                                             <div className="flex-1 flex bg-slate-50 border border-slate-200 rounded-full px-3 py-1 items-center">
-                                                <input 
-                                                    className="bg-transparent outline-none w-full text-[10px]" 
+                                                <input
+                                                    className="bg-transparent outline-none w-full text-[10px]"
                                                     placeholder="Send notification..."
                                                     value={notifyMessages[`${item.ad.user?.mobile || item.ad.phone}-owner`] || ''}
                                                     onChange={(e) => setNotifyMessages(prev => ({ ...prev, [`${item.ad.user?.mobile || item.ad.phone}-owner`]: e.target.value }))}
                                                 />
                                             </div>
-                                            <button 
+                                            <button
                                                 onClick={() => handleSendNotify(item.ad.user?.mobile || item.ad.phone, 'owner')}
                                                 className="w-6 h-6 rounded-full bg-slate-800 text-white flex items-center justify-center hover:bg-black transition-colors"
                                             >
@@ -430,9 +430,9 @@ export default function ReportManagement() {
                                                     <thead>
                                                         <tr className="bg-slate-50 text-[9px] text-slate-500 uppercase font-bold border-b border-slate-100">
                                                             <th className="w-8 px-2 py-1.5">
-                                                                <input 
-                                                                    type="checkbox" 
-                                                                    className="w-3 h-3 cursor-pointer" 
+                                                                <input
+                                                                    type="checkbox"
+                                                                    className="w-3 h-3 cursor-pointer"
                                                                     checked={item.reporters.every((r: any) => selectedReports.includes(r.reportId))}
                                                                     onChange={() => {
                                                                         const allIds = item.reporters.map((r: any) => r.reportId);
@@ -460,9 +460,9 @@ export default function ReportManagement() {
                                                         {item.reporters.map((rep: any) => (
                                                             <tr key={rep.reportId} className="hover:bg-blue-50/30 transition-colors">
                                                                 <td className="px-2 py-1.5 text-center">
-                                                                    <input 
-                                                                        type="checkbox" 
-                                                                        className="w-3 h-3 cursor-pointer" 
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        className="w-3 h-3 cursor-pointer"
                                                                         checked={selectedReports.includes(rep.reportId)}
                                                                         onChange={() => toggleSelectReport(rep.reportId)}
                                                                     />
@@ -493,14 +493,14 @@ export default function ReportManagement() {
                                                                 <td className="px-2 py-1.5">
                                                                     <div className="flex items-center gap-1.5">
                                                                         <div className="flex-1 flex bg-slate-50 border border-slate-100 rounded-full px-3 py-0.5 items-center">
-                                                                            <input 
-                                                                                className="bg-transparent outline-none w-full text-[10px]" 
+                                                                            <input
+                                                                                className="bg-transparent outline-none w-full text-[10px]"
                                                                                 placeholder="Notify reporter..."
                                                                                 value={notifyMessages[`${rep.mobile}-reporter`] || ''}
                                                                                 onChange={(e) => setNotifyMessages(prev => ({ ...prev, [`${rep.mobile}-reporter`]: e.target.value }))}
                                                                             />
                                                                         </div>
-                                                                        <button 
+                                                                        <button
                                                                             onClick={() => handleSendNotify(rep.mobile, 'reporter')}
                                                                             className="w-5 h-5 rounded-full bg-slate-700 text-white flex items-center justify-center hover:bg-black transition-colors"
                                                                         >
@@ -553,6 +553,6 @@ export default function ReportManagement() {
 
 function User({ className }: { className?: string }) {
     return (
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
     )
 }

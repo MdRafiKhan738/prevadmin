@@ -369,7 +369,8 @@ export default function PostManagement() {
             // Currently Running Promotion
             filtered = filtered.filter(ad =>
                 normalizeText(ad.adType) === 'promoted' &&
-                ad.status === 'active'
+                ad.status === 'active' &&
+                ad.promoteEndDate && new Date(ad.promoteEndDate) >= new Date()
             );
         } else if (activeTab === 'waiting_promote') {
             // Processing ads
@@ -783,10 +784,12 @@ export default function PostManagement() {
                             Running Promote ({
                                 ads.filter(a =>
                                     a.adType === 'Promoted' &&
-                                    a.status === 'active'
+                                    a.status === 'active' &&
+                                    a.promoteEndDate && new Date(a.promoteEndDate) >= new Date()
                                 ).length
                             })
                         </button>
+
                         <span className="text-black">|</span>
                         <button
                             onClick={() => setActiveTab('waiting_promote')}

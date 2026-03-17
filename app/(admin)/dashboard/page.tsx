@@ -8,37 +8,69 @@ import {
     Home, Folder, FileText, Inbox,
     ShieldAlert, Users, Box, MessageSquare
 } from 'lucide-react';
+import { API_BASE_URL } from '@/utils/apiConfig';
+import axios from 'axios';
+
 
 export default function DashboardPage() {
     const router = useRouter();
+
+    const [loading, setLoading] = React.useState(true);
+    const [realStats, setRealStats] = React.useState<{
+        runningPromoted: number;
+        todayPromoted: number;
+        totalPost: number;
+        approvalWaiting: number;
+        totalReport: number;
+        totalUser: number;
+    } | null>(null);
 
     useEffect(() => {
         const token = Cookies.get('adminToken');
         if (!token) {
             router.push('/login');
+            return;
         }
+
+        const fetchStats = async () => {
+            try {
+                const response = await axios.get(`${API_BASE_URL}/api/admins/dashboard/stats`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                setRealStats(response.data);
+            } catch (error) {
+                console.error('Error fetching dashboard stats:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchStats();
     }, [router]);
 
+
     const stats = [
-        { title: 'Running Promoted', value: '8', icon: Folder, color: 'border-blue-500', iconColor: 'text-blue-600' },
-        { title: 'Today Promoted', value: '16', icon: Folder, color: 'border-cyan-400', iconColor: 'text-cyan-500' },
-        { title: 'Total Post', icon: FileText, value: '6', color: 'border-red-500', iconColor: 'text-red-600' },
-        { title: 'Post Approval waiting', value: '30', icon: Inbox, color: 'border-green-600', iconColor: 'text-green-600' },
-        {
-            title: 'PMR Target',
-            value: '19',
-            icon: Folder,
-            color: 'border-amber-400',
-            iconColor: 'text-amber-500',
-            subText: true
-        },
-        { title: '', value: '3', icon: MessageSquare, color: 'border-green-400', iconColor: 'text-green-500' },
-        { title: '', value: '109', icon: Folder, color: 'border-blue-400', iconColor: 'text-blue-500' },
-        { title: '', value: '1', icon: ShieldAlert, color: 'border-cyan-400', iconColor: 'text-cyan-500' },
-        { title: 'Report', value: '19', icon: Box, color: 'border-orange-500', iconColor: 'text-orange-500' },
-        { title: 'Today Product View', value: '3', icon: MessageSquare, color: 'border-green-400', iconColor: 'text-green-500' },
-        { title: 'Total Seller', value: '109', icon: Folder, color: 'border-blue-500', iconColor: 'text-blue-600' },
-        { title: 'Total User', value: '1', icon: ShieldAlert, color: 'border-cyan-400', iconColor: 'text-cyan-500' },
+        { title: 'Running Promoted', value: realStats?.runningPromoted.toString() || '0', icon: Folder, color: 'border-blue-500', iconColor: 'text-blue-600' },
+        { title: 'Today Promoted', value: realStats?.todayPromoted.toString() || '0', icon: Folder, color: 'border-cyan-400', iconColor: 'text-cyan-500' },
+        { title: 'Total Post', icon: FileText, value: realStats?.totalPost.toString() || '0', color: 'border-red-500', iconColor: 'text-red-600' },
+        { title: 'Post Approval waiting', value: realStats?.approvalWaiting.toString() || '0', icon: Inbox, color: 'border-green-600', iconColor: 'text-green-600' },
+        // {
+        //     title: 'PMR Target',
+        //     value: '19',
+        //     icon: Folder,
+        //     color: 'border-amber-400',
+        //     iconColor: 'text-amber-500',
+        //     subText: true
+        // },
+        // { title: '', value: '3', icon: MessageSquare, color: 'border-green-400', iconColor: 'text-green-500' },
+        // { title: '', value: '109', icon: Folder, color: 'border-blue-400', iconColor: 'text-blue-500' },
+        // { title: '', value: '1', icon: ShieldAlert, color: 'border-cyan-400', iconColor: 'text-cyan-500' },
+        { title: 'Report', value: realStats?.totalReport.toString() || '0', icon: Box, color: 'border-orange-500', iconColor: 'text-orange-500' },
+        // { title: 'Today Product View', value: '3', icon: MessageSquare, color: 'border-green-400', iconColor: 'text-green-500' },
+        // { title: 'Total Seller', value: '109', icon: Folder, color: 'border-blue-500', iconColor: 'text-blue-600' },
+        { title: 'Total User', value: realStats?.totalUser.toString() || '0', icon: ShieldAlert, color: 'border-cyan-400', iconColor: 'text-cyan-500' },
     ];
 
     return (
@@ -64,13 +96,14 @@ export default function DashboardPage() {
                         >
                             <div className="flex flex-col h-full justify-between">
                                 <h3 className="text-4xl font-light text-black leading-none">{stat.value}</h3>
-                                {stat.subText ? (
+                                {/* {stat.subText ? (
                                     <div className="flex flex-col mt-auto pt-2">
                                         <p className="text-xs text-black font-medium truncate">{stat.title}</p>
                                     </div>
                                 ) : (
                                     <p className="text-xs text-black font-medium mt-auto pt-2 truncate">{stat.title}</p>
-                                )}
+                                )} */}
+                                <p className="text-xs text-black font-medium mt-auto pt-2 truncate">{stat.title}</p>
                             </div>
                             <div className={`${stat.iconColor} pt-0.5 opacity-90`}>
                                 <Icon className="w-7 h-7" strokeWidth={1.2} />
