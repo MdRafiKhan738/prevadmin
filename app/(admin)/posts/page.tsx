@@ -517,8 +517,8 @@ export default function PostManagement() {
     };
 
     // Handle Image Delete
-    const deleteImage = async (adId: string, imageUrl: string) => {
-        if (!confirm("Are you sure you want to remove this image?")) return;
+    const deleteImage = async (adId: string, imageUrl: string, index?: number) => {
+        if (!confirm("Delete this photo?")) return;
 
         try {
             const token = Cookies.get('adminToken');
@@ -527,7 +527,7 @@ export default function PostManagement() {
                 data: { imageUrl } // Send body in delete request
             });
 
-            // Update UI
+            // Update UI list
             setAds(prev => prev.map(ad => {
                 if (ad._id === adId) {
                     return { ...ad, images: ad.images.filter(img => img !== imageUrl) };
@@ -538,13 +538,31 @@ export default function PostManagement() {
             if (selectedAd && selectedAd._id === adId) {
                 setSelectedAd(prev => prev ? { ...prev, images: prev.images.filter(img => img !== imageUrl) } : null);
             }
+
+            // Sync with Edit State if index provided
             if (editFormData && selectedAd?._id === adId) {
-                setEditFormData(prev => ({ ...prev, images: prev.images?.filter(img => img !== imageUrl) }));
+                const newImages = [...(editFormData.images || [])];
+                if (index !== undefined) {
+                    newImages[index] = "";
+                    const newFiles = [...selectedFiles];
+                    newFiles[index] = undefined as any;
+                    setSelectedFiles(newFiles);
+                } else {
+                    // Fallback for cases where index isn't provided (e.g. from table or different view)
+                    const idx = newImages.findIndex(img => img === imageUrl);
+                    if (idx !== -1) {
+                        newImages[idx] = "";
+                        const newFiles = [...selectedFiles];
+                        newFiles[idx] = undefined as any;
+                        setSelectedFiles(newFiles);
+                    }
+                }
+                setEditFormData(prev => ({ ...prev, images: newImages }));
             }
-            alert("Image removed successfully");
+            toast.success("Image removed successfully");
         } catch (error) {
             console.error("Image delete failed", error);
-            alert("Failed to remove image");
+            toast.error("Failed to remove image");
         }
     };
 
@@ -1922,12 +1940,19 @@ export default function PostManagement() {
                                                                         <div className="bg-[#5cb85c] rounded-full p-0.5 border-[0.5px] border-white shadow-sm cursor-pointer whitespace-nowrap"><Check className="w-2 h-2 text-white" strokeWidth={4} /></div>
                                                                         <div
                                                                             onClick={() => {
-                                                                                const newImages = [...(editFormData.images || [])];
-                                                                                newImages[i] = "";
-                                                                                const newFiles = [...selectedFiles];
-                                                                                newFiles[i] = undefined as any;
-                                                                                setEditFormData({ ...editFormData, images: newImages });
-                                                                                setSelectedFiles(newFiles);
+                                                                                const imageUrl = editFormData.images?.[i];
+                                                                                if (selectedAd?._id && imageUrl && !selectedFiles[i]) {
+                                                                                    // Existing image on server
+                                                                                    deleteImage(selectedAd._id, imageUrl, i);
+                                                                                } else {
+                                                                                    // Local file or just clearing UI
+                                                                                    const newImages = [...(editFormData.images || [])];
+                                                                                    newImages[i] = "";
+                                                                                    const newFiles = [...selectedFiles];
+                                                                                    newFiles[i] = undefined as any;
+                                                                                    setEditFormData({ ...editFormData, images: newImages });
+                                                                                    setSelectedFiles(newFiles);
+                                                                                }
                                                                             }}
                                                                             className="bg-[#d9534f] rounded-full p-0.5 border-[0.5px] border-white shadow-sm cursor-pointer"
                                                                         >
@@ -2068,18 +2093,18 @@ export default function PostManagement() {
                                                 <div className="grid grid-cols-2 gap-3">
                                                     <div className="space-y-1.5">
                                                         <span className="text-[9px] font-bold text-slate-400 uppercase">Live Description</span>
-                                                        <div className="text-[12px] text-slate-500 max-h-48 overflow-y-auto bg-slate-50 p-3 border border-slate-100 leading-relaxed italic">{editFormData.description}</div>
+                                                        <div className="text-[12px] text-slate-500 max-h-48 overflow-y-auto bg-slate-50 p-3 border border-slate-100 leading-relaxed italic whitespace-pre-wrap">{editFormData.description}</div>
                                                     </div>
                                                     <div className="space-y-1.5">
                                                         <span className="text-[9px] font-bold text-rose-600 uppercase">Requested Edit</span>
-                                                        <div className="text-[12px] text-black max-h-48 overflow-y-auto bg-rose-50/20 p-3 border border-rose-200 leading-relaxed font-bold shadow-sm">{editFormData.pendingDescription}</div>
+                                                        <div className="text-[12px] text-black max-h-48 overflow-y-auto bg-rose-50/20 p-3 border border-rose-200 leading-relaxed font-bold shadow-sm whitespace-pre-wrap">{editFormData.pendingDescription}</div>
                                                     </div>
                                                 </div>
                                             </div>
                                         ) : (
                                             <div className="space-y-2">
                                                 <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest">Post Description</label>
-                                                <div className="text-[12px] text-black max-h-64 overflow-y-auto bg-slate-50 p-4 border border-slate-200 leading-relaxed rounded-sm">{editFormData.description}</div>
+                                                 <div className="text-[12px] text-black max-h-64 overflow-y-auto bg-slate-50 p-4 border border-slate-200 leading-relaxed rounded-sm whitespace-pre-wrap">{editFormData.description}</div>
                                             </div>
                                         )}
 
