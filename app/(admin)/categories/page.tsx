@@ -35,6 +35,7 @@ interface Feature {
 interface Category {
     _id: string;
     name: string;
+    categoryNameBn?: string;
     inputType: string;
     order: number;
     status: boolean;
@@ -44,6 +45,7 @@ interface Category {
 interface SubCategory {
     _id: string;
     name: string;
+    subCategoryNameBn?: string;
     category: Category;
     features?: Feature[];
     buttonType?: string;
@@ -77,6 +79,7 @@ export default function CategoriesPage() {
     // Form States - SubCategory (Main Modal)
     const [subCatForm, setSubCatForm] = useState({
         names: [''], // Multiple names support
+        nameBns: [''],
         category: '',
         features: [''], // Multiple features support
         buttonType: 'Call, Message, Send CV',
@@ -92,6 +95,7 @@ export default function CategoriesPage() {
     // Form States - Category
     const [catForm, setCatForm] = useState({
         name: '',
+        categoryNameBn: '',
         inputType: 'Text',
         order: 1,
         status: true,
@@ -149,7 +153,13 @@ export default function CategoriesPage() {
 
         try {
             const formData = new FormData();
-            subCatForm.names.filter((n: string) => n.trim()).forEach((n: string) => formData.append('name', n));
+            subCatForm.names.forEach((nameValue: string, index: number) => {
+                const trimmedName = nameValue.trim();
+                if (!trimmedName) return;
+
+                formData.append('name', trimmedName);
+                formData.append('subCategoryNameBn', (subCatForm.nameBns[index] || '').trim());
+            });
             formData.append('category', subCatForm.category);
             formData.append('features', JSON.stringify(subCatForm.features.filter(f => f.trim())));
             formData.append('buttonType', subCatForm.buttonType);
@@ -189,6 +199,7 @@ export default function CategoriesPage() {
         try {
             const formData = new FormData();
             formData.append('name', catForm.name);
+            formData.append('categoryNameBn', catForm.categoryNameBn);
             formData.append('inputType', catForm.inputType);
             formData.append('order', String(catForm.order));
             formData.append('status', String(catForm.status));
@@ -267,6 +278,7 @@ export default function CategoriesPage() {
         setEditingSubCatId(sc._id);
         setSubCatForm({
             names: [sc.name],
+            nameBns: [sc.subCategoryNameBn || ''],
             category: sc.category._id,
             features: sc.features?.length ? sc.features.map(f => f._id) : [''],
             buttonType: sc.buttonType || 'Call, Message, Send CV',
@@ -285,6 +297,7 @@ export default function CategoriesPage() {
         setEditingCatId(c._id);
         setCatForm({
             name: c.name,
+            categoryNameBn: c.categoryNameBn || '',
             inputType: c.inputType,
             order: c.order,
             status: c.status,
@@ -313,6 +326,7 @@ export default function CategoriesPage() {
         setEditingSubCatId(null);
         setSubCatForm({
             names: [''],
+            nameBns: [''],
             category: '',
             features: [''],
             buttonType: 'Call, Message, Send CV',
@@ -331,6 +345,7 @@ export default function CategoriesPage() {
         setEditingCatId(null);
         setCatForm({
             name: '',
+            categoryNameBn: '',
             inputType: 'Text',
             order: 1,
             status: true,
@@ -357,7 +372,9 @@ export default function CategoriesPage() {
 
     const filteredSubCategories = subCategories.filter(sc =>
         sc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        sc.category?.name.toLowerCase().includes(searchQuery.toLowerCase())
+        (sc.subCategoryNameBn || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        sc.category?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (sc.category?.categoryNameBn || '').toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     return (
@@ -410,13 +427,19 @@ export default function CategoriesPage() {
                         </thead>
                         <tbody className="text-black">
                             {isLoading ? (
-                                <tr><td colSpan={8} className="py-20 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-blue-500" /></td></tr>
+                                <tr><td colSpan={10} className="py-20 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-blue-500" /></td></tr>
                             ) : filteredSubCategories.length === 0 ? (
-                                <tr><td colSpan={8} className="py-12 text-center text-black italic">No subcategories found</td></tr>
+                                <tr><td colSpan={10} className="py-12 text-center text-black italic">No subcategories found</td></tr>
                             ) : filteredSubCategories.map((sc) => (
                                 <tr key={sc._id} className="border-b border-slate-50 hover:bg-slate-50 transition-colors">
-                                    <td className="px-5 py-2.5 text-black">{sc.name}</td>
-                                    <td className="px-5 py-2.5 text-black">{sc.category?.name}</td>
+                                    <td className="px-5 py-2.5 text-black">
+                                        <div>{sc.name}</div>
+                                        {sc.subCategoryNameBn && <div className="text-[11px] text-slate-500">{sc.subCategoryNameBn}</div>}
+                                    </td>
+                                    <td className="px-5 py-2.5 text-black">
+                                        <div>{sc.category?.name}</div>
+                                        {sc.category?.categoryNameBn && <div className="text-[11px] text-slate-500">{sc.category.categoryNameBn}</div>}
+                                    </td>
                                     <td className="px-5 py-2.5 text-black">
                                         <div className="flex flex-wrap gap-1">
                                             {sc.buttonType?.split(',').map(t => (
@@ -487,6 +510,7 @@ export default function CategoriesPage() {
                                                 <div key={index} className="flex gap-1">
                                                     <input
                                                         type="text"
+                                                        placeholder="Sub Category Name (EN)"
                                                         className="flex-1 border border-slate-300 px-2 py-1.5 outline-none font-medium bg-[#f9fbff]"
                                                         value={name}
                                                         onChange={e => {
@@ -496,10 +520,25 @@ export default function CategoriesPage() {
                                                         }}
                                                         required
                                                     />
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Sub Category Name (BN)"
+                                                        className="flex-1 border border-slate-300 px-2 py-1.5 outline-none font-medium bg-[#f9fbff]"
+                                                        value={subCatForm.nameBns[index] || ''}
+                                                        onChange={e => {
+                                                            const newNameBns = [...subCatForm.nameBns];
+                                                            newNameBns[index] = e.target.value;
+                                                            setSubCatForm({ ...subCatForm, nameBns: newNameBns });
+                                                        }}
+                                                    />
                                                     {index === subCatForm.names.length - 1 ? (
                                                         <button
                                                             type="button"
-                                                            onClick={() => setSubCatForm({ ...subCatForm, names: [...subCatForm.names, ''] })}
+                                                            onClick={() => setSubCatForm({
+                                                                ...subCatForm,
+                                                                names: [...subCatForm.names, ''],
+                                                                nameBns: [...subCatForm.nameBns, '']
+                                                            })}
                                                             className="p-1 px-2 border border-slate-900 bg-white hover:bg-slate-50"
                                                         >
                                                             <Plus className="w-3 h-3 stroke-[3]" />
@@ -507,7 +546,11 @@ export default function CategoriesPage() {
                                                     ) : (
                                                         <button
                                                             type="button"
-                                                            onClick={() => setSubCatForm({ ...subCatForm, names: subCatForm.names.filter((_: string, i: number) => i !== index) })}
+                                                            onClick={() => setSubCatForm({
+                                                                ...subCatForm,
+                                                                names: subCatForm.names.filter((_: string, i: number) => i !== index),
+                                                                nameBns: subCatForm.nameBns.filter((_: string, i: number) => i !== index)
+                                                            })}
                                                             className="p-1 px-2 border border-slate-900 bg-white hover:bg-slate-50"
                                                         >
                                                             <Minus className="w-3 h-3 stroke-[3]" />
@@ -581,7 +624,7 @@ export default function CategoriesPage() {
                                         <select className="w-full border border-slate-300 px-2 py-1.5 outline-none font-medium bg-white"
                                             value={subCatForm.category} onChange={e => setSubCatForm({ ...subCatForm, category: e.target.value })} required>
                                             <option value="">Select Category</option>
-                                            {categories.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+                                            {categories.map(c => <option key={c._id} value={c._id}>{c.name}{c.categoryNameBn ? ` (${c.categoryNameBn})` : ''}</option>)}
                                         </select>
                                     </div>
 
@@ -610,7 +653,7 @@ export default function CategoriesPage() {
                                                         <option value="">Select Feature</option>
                                                         {features.map(f => (
                                                             <option key={f._id} value={f._id}>
-                                                                {f.name}{f.subcategory?.name ? ` - (${f.subcategory.name})` : ''}
+                                                                {f.name}{f.subcategory?.name ? ` - (${f.subcategory.name}${f.subcategory?.subCategoryNameBn ? ` / ${f.subcategory.subCategoryNameBn}` : ''})` : ''}
                                                             </option>
                                                         ))}
                                                     </select>
@@ -727,6 +770,7 @@ export default function CategoriesPage() {
                                                     <tr>
                                                         <th className="px-2 py-2 font-bold whitespace-nowrap text-center w-10 bg-[#f8f9fa]">Icon</th>
                                                         <th className="px-2 py-2 font-bold whitespace-nowrap bg-[#f8f9fa]">Catagorie Name</th>
+                                                        <th className="px-2 py-2 font-bold whitespace-nowrap bg-[#f8f9fa]">Catagorie Name (BN)</th>
                                                         <th className="px-2 py-2 font-bold bg-[#f8f9fa]">Inpute</th>
                                                         <th className="px-2 py-2 font-bold text-center bg-[#f8f9fa]">Order</th>
                                                         <th className="px-2 py-2 font-bold text-center bg-[#f8f9fa]">Status</th>
@@ -747,6 +791,7 @@ export default function CategoriesPage() {
                                                                 )}
                                                             </td>
                                                             <td className="px-2 py-1.5 font-bold text-black">{c.name}</td>
+                                                            <td className="px-2 py-1.5 text-slate-500">{c.categoryNameBn || '-'}</td>
                                                             <td className="px-2 py-1.5">{c.inputType}</td>
                                                             <td className="px-2 py-1.5 text-center">{c.order}</td>
                                                             <td className="px-2 py-1.5 text-center">
@@ -819,6 +864,8 @@ export default function CategoriesPage() {
                                                 <div className="space-y-1">
                                                     <input type="text" placeholder="Catagorie Name" className="w-full border border-slate-300 px-2 py-1.5 outline-none font-medium bg-white"
                                                         value={catForm.name} onChange={e => setCatForm({ ...catForm, name: e.target.value })} required />
+                                                    <input type="text" placeholder="Catagorie Name (BN)" className="w-full border border-slate-300 px-2 py-1.5 outline-none font-medium bg-white"
+                                                        value={catForm.categoryNameBn} onChange={e => setCatForm({ ...catForm, categoryNameBn: e.target.value })} />
                                                 </div>
                                                 <div className="flex gap-2">
                                                     <label className="bg-white border border-slate-300 px-3 py-1 cursor-pointer hover:bg-slate-50 font-bold self-start">

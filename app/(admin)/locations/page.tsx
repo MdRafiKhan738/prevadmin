@@ -22,6 +22,7 @@ function cn(...inputs: (string | undefined | null | false)[]) {
 interface Location {
     _id: string;
     name: string;
+    locationNameBn?: string;
     order: number;
     status: boolean;
     image?: string;
@@ -30,6 +31,7 @@ interface Location {
 interface SubLocation {
     _id: string;
     name: string;
+    subLocationNameBn?: string;
     location: Location;
     mapLink?: string;
     order: number;
@@ -55,6 +57,7 @@ export default function LocationsPage() {
     // Form States - SubLocation (Main Modal)
     const [subLocForm, setSubLocForm] = useState({
         names: [''], // Multiple names support
+        nameBns: [''],
         location: '',
         mapLink: '',
         order: 1,
@@ -65,6 +68,7 @@ export default function LocationsPage() {
     // Form States - Location
     const [locForm, setLocForm] = useState({
         name: '',
+        locationNameBn: '',
         order: 1,
         status: true,
         image: null as File | null,
@@ -100,7 +104,13 @@ export default function LocationsPage() {
 
         try {
             const formData = new FormData();
-            subLocForm.names.filter((n: string) => n.trim()).forEach((n: string) => formData.append('name', n));
+            subLocForm.names.forEach((nameValue: string, index: number) => {
+                const trimmedName = nameValue.trim();
+                if (!trimmedName) return;
+
+                formData.append('name', trimmedName);
+                formData.append('subLocationNameBn', (subLocForm.nameBns[index] || '').trim());
+            });
             formData.append('location', subLocForm.location);
             formData.append('mapLink', subLocForm.mapLink);
             formData.append('order', String(subLocForm.order));
@@ -124,6 +134,7 @@ export default function LocationsPage() {
             // Reset form
             setSubLocForm({
                 names: [''],
+                nameBns: [''],
                 location: '',
                 mapLink: '',
                 order: 1,
@@ -144,6 +155,7 @@ export default function LocationsPage() {
         try {
             const formData = new FormData();
             formData.append('name', locForm.name);
+            formData.append('locationNameBn', locForm.locationNameBn);
             formData.append('order', String(locForm.order));
             formData.append('status', String(locForm.status));
             if (locForm.image) formData.append('image', locForm.image);
@@ -165,6 +177,7 @@ export default function LocationsPage() {
             // Reset form
             setLocForm({
                 name: '',
+                locationNameBn: '',
                 order: 1,
                 status: true,
                 image: null as File | null,
@@ -196,6 +209,7 @@ export default function LocationsPage() {
         setEditingSubLocId(sl._id);
         setSubLocForm({
             names: [sl.name],
+            nameBns: [sl.subLocationNameBn || ''],
             location: sl.location._id,
             mapLink: sl.mapLink || '',
             order: sl.order,
@@ -209,6 +223,7 @@ export default function LocationsPage() {
         setEditingLocId(l._id);
         setLocForm({
             name: l.name,
+            locationNameBn: l.locationNameBn || '',
             order: l.order,
             status: l.status,
             image: null,
@@ -220,6 +235,7 @@ export default function LocationsPage() {
         setEditingSubLocId(null);
         setSubLocForm({
             names: [''],
+            nameBns: [''],
             location: '',
             mapLink: '',
             order: 1,
@@ -233,6 +249,7 @@ export default function LocationsPage() {
         setEditingLocId(null);
         setLocForm({
             name: '',
+            locationNameBn: '',
             order: 1,
             status: true,
             image: null,
@@ -242,7 +259,9 @@ export default function LocationsPage() {
 
     const filteredSubLocations = subLocations.filter(sl =>
         sl.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        sl.location?.name.toLowerCase().includes(searchQuery.toLowerCase())
+        (sl.subLocationNameBn || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        sl.location?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (sl.location?.locationNameBn || '').toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     return (
@@ -308,9 +327,9 @@ export default function LocationsPage() {
                         </thead>
                         <tbody className="text-black">
                             {isLoading ? (
-                                <tr><td colSpan={8} className="py-20 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-blue-500" /></td></tr>
+                                <tr><td colSpan={9} className="py-20 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-blue-500" /></td></tr>
                             ) : filteredSubLocations.length === 0 ? (
-                                <tr><td colSpan={8} className="py-12 text-center text-black italic">No locations found</td></tr>
+                                <tr><td colSpan={9} className="py-12 text-center text-black italic">No locations found</td></tr>
                             ) : filteredSubLocations.map((sl) => (
                                 <tr key={sl._id} className="border-b border-slate-50 hover:bg-slate-50 transition-colors">
                                     <td className="px-5 py-2.5 text-center">
@@ -324,8 +343,14 @@ export default function LocationsPage() {
                                             </div>
                                         )}
                                     </td>
-                                    <td className="px-5 py-2.5 text-black">{sl.name}</td>
-                                    <td className="px-5 py-2.5 text-black">{sl.location?.name}</td>
+                                    <td className="px-5 py-2.5 text-black">
+                                        <div>{sl.name}</div>
+                                        {sl.subLocationNameBn && <div className="text-[11px] text-slate-500">{sl.subLocationNameBn}</div>}
+                                    </td>
+                                    <td className="px-5 py-2.5 text-black">
+                                        <div>{sl.location?.name}</div>
+                                        {sl.location?.locationNameBn && <div className="text-[11px] text-slate-500">{sl.location.locationNameBn}</div>}
+                                    </td>
                                     <td className="px-5 py-2.5 text-center">{sl.order}</td>
                                     <td className="px-5 py-2.5 text-center">
                                         {sl.status ? (
@@ -387,7 +412,7 @@ export default function LocationsPage() {
                                                     <div key={index} className="flex gap-1 items-center">
                                                         <input
                                                             type="text"
-                                                            placeholder="Sub Location Name"
+                                                            placeholder="Sub Location Name (EN)"
                                                             className="flex-1 border border-slate-300 px-2 py-1.5 outline-none font-medium"
                                                             value={name}
                                                             onChange={e => {
@@ -397,10 +422,25 @@ export default function LocationsPage() {
                                                             }}
                                                             required
                                                         />
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Sub Location Name (BN)"
+                                                            className="flex-1 border border-slate-300 px-2 py-1.5 outline-none font-medium"
+                                                            value={subLocForm.nameBns[index] || ''}
+                                                            onChange={e => {
+                                                                const newNameBns = [...subLocForm.nameBns];
+                                                                newNameBns[index] = e.target.value;
+                                                                setSubLocForm({ ...subLocForm, nameBns: newNameBns });
+                                                            }}
+                                                        />
                                                         {index === subLocForm.names.length - 1 ? (
                                                             <button
                                                                 type="button"
-                                                                onClick={() => setSubLocForm({ ...subLocForm, names: [...subLocForm.names, ''] })}
+                                                                onClick={() => setSubLocForm({
+                                                                    ...subLocForm,
+                                                                    names: [...subLocForm.names, ''],
+                                                                    nameBns: [...subLocForm.nameBns, '']
+                                                                })}
                                                                 className="p-1 px-2 border border-slate-900 bg-white hover:bg-slate-50"
                                                             >
                                                                 <Plus className="w-3 h-3 stroke-[3]" />
@@ -408,7 +448,11 @@ export default function LocationsPage() {
                                                         ) : (
                                                             <button
                                                                 type="button"
-                                                                onClick={() => setSubLocForm({ ...subLocForm, names: subLocForm.names.filter((_, i) => i !== index) })}
+                                                                onClick={() => setSubLocForm({
+                                                                    ...subLocForm,
+                                                                    names: subLocForm.names.filter((_, i) => i !== index),
+                                                                    nameBns: subLocForm.nameBns.filter((_, i) => i !== index)
+                                                                })}
                                                                 className="p-1 px-2 border border-slate-900 bg-white hover:bg-slate-50"
                                                             >
                                                                 <Minus className="w-3 h-3 stroke-[3]" />
@@ -421,7 +465,7 @@ export default function LocationsPage() {
                                             <select className="w-full border border-slate-300 px-2 py-1.5 outline-none font-medium bg-white"
                                                 value={subLocForm.location} onChange={e => setSubLocForm({ ...subLocForm, location: e.target.value })} required>
                                                 <option value="">Location</option>
-                                                {locations.map(l => <option key={l._id} value={l._id}>{l.name}</option>)}
+                                                {locations.map(l => <option key={l._id} value={l._id}>{l.name}{l.locationNameBn ? ` (${l.locationNameBn})` : ''}</option>)}
                                             </select>
 
                                             <input type="number" placeholder="Ordering" className="w-full border border-slate-300 px-2 py-1.5 outline-none font-medium"
@@ -490,7 +534,8 @@ export default function LocationsPage() {
                                             <thead className="bg-[#f8f9fa] border-b border-slate-200 sticky top-0">
                                                 <tr>
                                                     <th className="px-2 py-2 font-bold whitespace-nowrap text-center w-10">Image</th>
-                                                    <th className="px-2 py-2 font-bold whitespace-nowrap italic">Catagory Name</th>
+                                                    <th className="px-2 py-2 font-bold whitespace-nowrap italic">Location Name</th>
+                                                    <th className="px-2 py-2 font-bold whitespace-nowrap italic">Location Name (BN)</th>
                                                     <th className="px-2 py-2 font-bold italic">Inpute</th>
                                                     <th className="px-2 py-2 font-bold text-center italic">Order</th>
                                                     <th className="px-2 py-2 font-bold text-center italic">Status</th>
@@ -511,6 +556,7 @@ export default function LocationsPage() {
                                                             )}
                                                         </td>
                                                         <td className="px-2 py-1.5 font-bold text-black">{l.name}</td>
+                                                        <td className="px-2 py-1.5 text-slate-500">{l.locationNameBn || '-'}</td>
                                                         <td className="px-2 py-1.5">Text</td>
                                                         <td className="px-2 py-1.5 text-center">{l.order}</td>
                                                         <td className="px-2 py-1.5 text-center">
@@ -543,6 +589,9 @@ export default function LocationsPage() {
                                             <form onSubmit={handleLocSubmit} className="p-6 grid grid-cols-2 gap-x-12 gap-y-4 text-xs">
                                                 <input type="text" placeholder="Location Name" className="w-full border border-slate-300 px-2 py-1.5 outline-none font-medium"
                                                     value={locForm.name} onChange={e => setLocForm({ ...locForm, name: e.target.value })} required />
+
+                                                <input type="text" placeholder="Location Name (BN)" className="w-full border border-slate-300 px-2 py-1.5 outline-none font-medium"
+                                                    value={locForm.locationNameBn} onChange={e => setLocForm({ ...locForm, locationNameBn: e.target.value })} />
 
                                                 <div className="flex gap-2">
                                                     <label className="bg-white border border-slate-300 px-3 py-1 cursor-pointer hover:bg-slate-50 font-bold self-start">
