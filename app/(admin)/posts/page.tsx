@@ -61,7 +61,7 @@ function getPromotionMetrics(ad: Ad) {
             // Not running yet or already done
             expectedSoFar = totalTarget;
         } else {
-             // Running but duration 0? fallback
+            // Running but duration 0? fallback
             expectedSoFar = totalTarget;
         }
     }
@@ -759,6 +759,34 @@ export default function PostManagement() {
         }
     };
 
+    const getVisiblePages = (): Array<number | string> => {
+        const total = Math.max(1, totalPages || 1);
+
+        if (total <= 10) {
+            return Array.from({ length: total }, (_, i) => i + 1);
+        }
+
+        if (currentPage <= 5) {
+            return [1, 2, 3, 4, 5, 'ellipsis-right', total - 2, total - 1, total];
+        }
+
+        if (currentPage >= total - 4) {
+            return [1, 2, 3, 'ellipsis-left', total - 4, total - 3, total - 2, total - 1, total];
+        }
+
+        return [
+            1,
+            2,
+            'ellipsis-left',
+            currentPage - 1,
+            currentPage,
+            currentPage + 1,
+            'ellipsis-right',
+            total - 1,
+            total,
+        ];
+    };
+
     return (
         <div className="bg-[#f1f5f9] min-h-[calc(100vh-4rem)] p-2 font-['Tahoma','Verdana',sans-serif] overflow-y-auto text-xs">
             {/* Top Navigation & Status Bar */}
@@ -1094,21 +1122,51 @@ export default function PostManagement() {
                     </table>
                 </div>
                 {/* Pagination Controls */}
-                <div className="flex items-center justify-between p-2 border-t border-slate-200 bg-white shadow-inner">
+                <div className="flex items-center justify-center gap-2 p-3 border-t border-slate-200 bg-white shadow-inner flex-wrap">
                     <button
                         onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                         disabled={currentPage === 1 || loading}
-                        className={cn("px-6 py-1.5 text-xs font-bold rounded-sm border shadow-sm transition-colors", currentPage === 1 || loading ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed" : "bg-white text-blue-600 border-blue-200 hover:bg-blue-50")}
+                        className={cn("px-4 py-1.5 text-xs font-bold rounded-sm border shadow-sm transition-colors", currentPage === 1 || loading ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed" : "bg-white text-blue-600 border-blue-200 hover:bg-blue-50")}
                     >
                         Previous
                     </button>
-                    <span className="text-xs text-slate-600 font-bold bg-slate-100 px-3 py-1.5 rounded-sm border border-slate-200">
-                        Page {currentPage} of {totalPages || 1}
-                    </span>
+
+                    <div className="flex items-center gap-1">
+                        {getVisiblePages().map((item, index) => {
+                            if (typeof item !== 'number') {
+                                return (
+                                    <span key={`${item}-${index}`} className="px-2 py-1 text-xs text-slate-500 select-none">
+                                        ..
+                                    </span>
+                                );
+                            }
+
+                            const isActive = item === currentPage;
+
+                            return (
+                                <button
+                                    key={item}
+                                    onClick={() => setCurrentPage(item)}
+                                    disabled={loading}
+                                    className={cn(
+                                        "min-w-8 px-2 py-1.5 text-xs rounded-sm border shadow-sm transition-colors",
+                                        loading
+                                            ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
+                                            : isActive
+                                                ? "bg-blue-50 text-blue-600 border-blue-300 font-bold"
+                                                : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                                    )}
+                                >
+                                    {item}
+                                </button>
+                            );
+                        })}
+                    </div>
+
                     <button
                         onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                         disabled={currentPage >= totalPages || loading}
-                        className={cn("px-6 py-1.5 text-xs font-bold rounded-sm border shadow-sm transition-colors", currentPage >= totalPages || loading ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed" : "bg-white text-blue-600 border-blue-200 hover:bg-blue-50")}
+                        className={cn("px-4 py-1.5 text-xs font-bold rounded-sm border shadow-sm transition-colors", currentPage >= totalPages || loading ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed" : "bg-white text-blue-600 border-blue-200 hover:bg-blue-50")}
                     >
                         Next
                     </button>
@@ -2104,7 +2162,7 @@ export default function PostManagement() {
                                         ) : (
                                             <div className="space-y-2">
                                                 <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest">Post Description</label>
-                                                 <div className="text-[12px] text-black max-h-64 overflow-y-auto bg-slate-50 p-4 border border-slate-200 leading-relaxed rounded-sm whitespace-pre-wrap">{editFormData.description}</div>
+                                                <div className="text-[12px] text-black max-h-64 overflow-y-auto bg-slate-50 p-4 border border-slate-200 leading-relaxed rounded-sm whitespace-pre-wrap">{editFormData.description}</div>
                                             </div>
                                         )}
 
