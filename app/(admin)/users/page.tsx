@@ -6,7 +6,7 @@ import {
     Users, User, Plus, Search, Edit2, Trash2, X, Check,
     MoreHorizontal, MapPin, Tag, ShieldCheck, Mail,
     Phone, Store, Calendar, HelpCircle, Loader2, AlertCircle,
-    ArrowLeft, XCircle, PlusCircle, MessageSquare, ImageIcon,
+    ArrowLeft, XCircle, PlusCircle, MessageSquare, ImageIcon, LogIn,
     Minus, CheckCircle2, ChevronDown
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -21,12 +21,12 @@ import { RiCheckboxCircleFill } from 'react-icons/ri';
 const VerifiedBadge = () => (
     <div className="relative group/badge flex items-center justify-center -mt-0.5 ml-1">
         <RiCheckboxCircleFill className="w-4 h-4 text-[#0088cc] shrink-0 cursor-pointer" />
-        <div className="absolute bottom-full left-1/2 -translate-x-[20%] lg:-translate-x-1/2 mb-2 hidden group-hover/badge:block w-[240px] bg-slate-50 border border-slate-200 shadow-xl rounded-xl p-3 z-[100] animate-in fade-in zoom-in-95 duration-200 pointer-events-none text-left">
-            <p className="text-[13px] text-slate-700 font-medium leading-relaxed whitespace-normal break-words normal-case">
+        <div className="absolute bottom-full left-1/2 -translate-x-[20%] lg:-translate-x-1/2 mb-2 hidden group-hover/badge:block w-[190px] bg-white/95 backdrop-blur-[2px] border border-slate-200/90 shadow-[0_12px_26px_rgba(15,23,42,0.16)] rounded-xl px-2.5 py-2 z-[100] animate-in fade-in zoom-in-95 duration-200 pointer-events-none text-left">
+            <p className="text-[12px] text-slate-700 font-medium leading-[1.15] whitespace-normal break-words normal-case">
                 <span className="font-bold text-black">Verified</span> by mobile number & additional checks to ensure authenticity.
             </p>
             <div className="absolute top-full left-[20%] lg:left-1/2 -translate-x-1/2 -mt-[1px]">
-                <div className="w-3 h-3 bg-slate-50 border-b border-r border-slate-200 transform rotate-45" />
+                <div className="w-3 h-3 bg-white border-b border-r border-slate-200 transform rotate-45" />
             </div>
         </div>
     </div>
@@ -37,6 +37,7 @@ function cn(...inputs: (string | undefined | null | false)[]) {
 }
 
 const API_BASE = `${API_BASE_URL}/api/admins/users`;
+const WEBSITE_BASE_URL = 'https://shadamon.com';
 
 interface UserFormData {
     name: string;
@@ -81,6 +82,7 @@ export default function UserManagement() {
     const [error, setError] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+    const [loginAsLoadingUserId, setLoginAsLoadingUserId] = useState<string | null>(null);
     const [selectedFiles, setSelectedFiles] = useState<{ [key: string]: File }>({});
     const [locations, setLocations] = useState<any[]>([]);
     const [categories, setCategories] = useState<any[]>([]);
@@ -431,6 +433,55 @@ export default function UserManagement() {
         }
     };
 
+    const handleLoginAsUser = async (user: any) => {
+        if (!user?._id) {
+            toast.error('Invalid user selected');
+            return;
+        }
+
+        try {
+            const token = Cookies.get('adminToken');
+            if (!token) {
+                toast.error('Admin session expired. Please login again.');
+                return;
+            }
+
+            setLoginAsLoadingUserId(user._id);
+            const res = await axios.post(`${API_BASE}/${user._id}/login-as`, {}, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            const loginToken = res.data?.token;
+            if (!loginToken) {
+                throw new Error('No login token returned from server');
+            }
+
+            const loginUrl = `${WEBSITE_BASE_URL}/d?adminLoginToken=${encodeURIComponent(loginToken)}&adminLogin=1`;
+            const popup = window.open(loginUrl, '_blank', 'noopener,noreferrer');
+
+            if (!popup) {
+                window.location.href = loginUrl;
+            }
+
+            toast.success('Opened user session on website');
+        } catch (err: any) {
+            console.error('Login as user failed', err);
+            toast.error(err.response?.data?.message || 'Could not login as user automatically');
+
+            const fallbackDetails = [
+                `Name: ${user?.name || 'N/A'}`,
+                `Mobile: ${user?.mobile || 'N/A'}`,
+                `Email: ${user?.email || 'N/A'}`
+            ].join('\n');
+
+            alert(
+                `Auto-login failed.\n\nUser details:\n${fallbackDetails}\n\nPassword is never visible in admin for security reasons.`
+            );
+        } finally {
+            setLoginAsLoadingUserId(null);
+        }
+    };
+
     const toggleSelectUser = (id: string) => {
         setSelectedUsers(prev =>
             prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
@@ -578,11 +629,12 @@ export default function UserManagement() {
                             <th className="px-2 py-2 text-center font-bold text-black uppercase tracking-tight text-[10px]">Rating</th>
                             <th className="px-2 py-2 text-center font-bold text-black uppercase tracking-tight text-[10px]">Edit by</th>
                             <th className="px-2 py-2 text-center font-bold text-black uppercase tracking-tight text-[10px]">Edit</th>
+                            <th className="px-2 py-2 text-center font-bold text-black uppercase tracking-tight text-[10px]">Login</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                         {loading ? (
-                            <tr><td colSpan={13} className="py-20 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-indigo-600" /></td></tr>
+                            <tr><td colSpan={14} className="py-20 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-indigo-600" /></td></tr>
                         ) : filteredUsers.map((user) => (
                             <tr key={user._id} className={cn("hover:bg-slate-50 transition-colors", selectedUsers.includes(user._id) && "bg-rose-50/50")}>
                                 <td className="px-2 py-1.5">
@@ -623,6 +675,16 @@ export default function UserManagement() {
                                 <td className="px-2 py-1.5 text-center text-black">Admin</td>
                                 <td className="px-2 py-1.5 text-center">
                                     <button onClick={() => handleOpenModal(user)} className="text-blue-500 hover:underline">Edit</button>
+                                </td>
+                                <td className="px-2 py-1.5 text-center">
+                                    <button
+                                        onClick={() => handleLoginAsUser(user)}
+                                        disabled={loginAsLoadingUserId === user._id}
+                                        className="inline-flex items-center gap-1 text-emerald-600 hover:underline disabled:text-slate-400 disabled:no-underline"
+                                    >
+                                        <LogIn className="w-3 h-3" />
+                                        {loginAsLoadingUserId === user._id ? 'Opening...' : 'Login'}
+                                    </button>
                                 </td>
                             </tr>
                         ))}
