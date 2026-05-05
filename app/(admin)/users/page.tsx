@@ -38,6 +38,7 @@ function cn(...inputs: (string | undefined | null | false)[]) {
 
 const API_BASE = `${API_BASE_URL}/api/admins/users`;
 const WEBSITE_BASE_URL = 'https://shadamon.com';
+// const WEBSITE_BASE_URL = 'http://localhost:3001';
 
 interface UserFormData {
     name: string;
@@ -456,7 +457,7 @@ export default function UserManagement() {
                 throw new Error('No login token returned from server');
             }
 
-            const loginUrl = `${WEBSITE_BASE_URL}/d?adminLoginToken=${encodeURIComponent(loginToken)}&adminLogin=1`;
+            const loginUrl = `${WEBSITE_BASE_URL}/?adminLoginToken=${encodeURIComponent(loginToken)}&adminLogin=1`;
             const popup = window.open(loginUrl, '_blank', 'noopener,noreferrer');
 
             if (!popup) {

@@ -11,6 +11,7 @@ export default function SettingsAdminPage() {
     const [tags, setTags] = useState<string[]>([]);
     const [descriptionTags, setDescriptionTags] = useState<string[]>([]);
     const [productAutoInactiveTime, setProductAutoInactiveTime] = useState<number>(90);
+    const [productAutoActiveTime, setProductAutoActiveTime] = useState<number>(30);
     const [userRepeatAdViewTime, setUserRepeatAdViewTime] = useState<number>(3);
     const [productPhotoLimit, setProductPhotoLimit] = useState<number>(5);
 
@@ -37,6 +38,7 @@ export default function SettingsAdminPage() {
                 if (data.success && data.data) {
                     const settingsData = data.data;
                     setProductAutoInactiveTime(settingsData.productAutoInactiveTime !== undefined ? settingsData.productAutoInactiveTime : 90);
+                    setProductAutoActiveTime(settingsData.productAutoActiveTime !== undefined ? settingsData.productAutoActiveTime : 30);
                     setUserRepeatAdViewTime(settingsData.userRepeatAdViewTime !== undefined ? settingsData.userRepeatAdViewTime : 3);
                     setProductPhotoLimit(settingsData.productPhotoLimit !== undefined ? settingsData.productPhotoLimit : 5);
                     if (settingsData.blockCheckInHeadline && Array.isArray(settingsData.blockCheckInHeadline)) {
@@ -95,6 +97,7 @@ export default function SettingsAdminPage() {
             const formData = new FormData();
 
             formData.append('productAutoInactiveTime', productAutoInactiveTime.toString());
+            formData.append('productAutoActiveTime', productAutoActiveTime.toString());
             formData.append('userRepeatAdViewTime', userRepeatAdViewTime.toString());
             formData.append('productPhotoLimit', productPhotoLimit.toString());
 
@@ -218,6 +221,20 @@ export default function SettingsAdminPage() {
                                 className="w-[120px] text-[13px] border border-slate-200 rounded-[4px] px-3 py-1.5 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400/50"
                             />
                             <span className="text-[13px] text-[#333]">dayz</span>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center">
+                        <label className="w-[200px] text-[#333] text-[13px]">Product Auto active Time</label>
+                        <div className="flex-1 flex items-center gap-2">
+                            <input
+                                type="number"
+                                min={0}
+                                value={productAutoActiveTime}
+                                onChange={(e) => setProductAutoActiveTime(Math.max(0, parseInt(e.target.value) || 0))}
+                                className="w-[120px] text-[13px] border border-slate-200 rounded-[4px] px-3 py-1.5 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400/50"
+                            />
+                            <span className="text-[13px] text-[#333]">days (0 = off)</span>
                         </div>
                     </div>
 
