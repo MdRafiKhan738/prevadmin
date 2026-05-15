@@ -6,7 +6,7 @@ import {
     Users, User, Plus, Search, Edit2, Trash2, X, Check,
     MoreHorizontal, MapPin, Tag, ShieldCheck, Mail,
     Phone, Store, Calendar, HelpCircle, Loader2, AlertCircle,
-    ArrowLeft, XCircle, PlusCircle, MessageSquare, ImageIcon, LogIn,
+    ArrowLeft, XCircle, PlusCircle, MessageSquare, ImageIcon,
     Minus, CheckCircle2, ChevronDown
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -630,12 +630,11 @@ export default function UserManagement() {
                             <th className="px-2 py-2 text-center font-bold text-black uppercase tracking-tight text-[10px]">Rating</th>
                             <th className="px-2 py-2 text-center font-bold text-black uppercase tracking-tight text-[10px]">Edit by</th>
                             <th className="px-2 py-2 text-center font-bold text-black uppercase tracking-tight text-[10px]">Edit</th>
-                            <th className="px-2 py-2 text-center font-bold text-black uppercase tracking-tight text-[10px]">Login</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                         {loading ? (
-                            <tr><td colSpan={14} className="py-20 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-indigo-600" /></td></tr>
+                            <tr><td colSpan={13} className="py-20 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-indigo-600" /></td></tr>
                         ) : filteredUsers.map((user) => (
                             <tr key={user._id} className={cn("hover:bg-slate-50 transition-colors", selectedUsers.includes(user._id) && "bg-rose-50/50")}>
                                 <td className="px-2 py-1.5">
@@ -657,7 +656,11 @@ export default function UserManagement() {
                                 <td className="px-2 py-1.5 text-black">{user.email || ''}</td>
                                 <td className="px-2 py-1.5 text-black">{user.category}</td>
                                 <td className="px-2 py-1.5 text-black">{user.location}</td>
-                                <td className="px-2 py-1.5 text-black">{new Date(user.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'numeric', year: '2-digit' })}</td>
+                                <td
+                                    className="px-2 py-1.5 text-black cursor-pointer select-none"
+                                    onDoubleClick={() => handleLoginAsUser(user)}
+                                    title="Double-click to login as user"
+                                >{new Date(user.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'numeric', year: '2-digit' })}</td>
                                 <td className="px-2 py-1.5">
                                     <select
                                         className="border border-slate-300 rounded-sm h-6 text-xs outline-none px-1 w-full bg-white"
@@ -676,16 +679,6 @@ export default function UserManagement() {
                                 <td className="px-2 py-1.5 text-center text-black">Admin</td>
                                 <td className="px-2 py-1.5 text-center">
                                     <button onClick={() => handleOpenModal(user)} className="text-blue-500 hover:underline">Edit</button>
-                                </td>
-                                <td className="px-2 py-1.5 text-center">
-                                    <button
-                                        onClick={() => handleLoginAsUser(user)}
-                                        disabled={loginAsLoadingUserId === user._id}
-                                        className="inline-flex items-center gap-1 text-emerald-600 hover:underline disabled:text-slate-400 disabled:no-underline"
-                                    >
-                                        <LogIn className="w-3 h-3" />
-                                        {loginAsLoadingUserId === user._id ? 'Opening...' : 'Login'}
-                                    </button>
                                 </td>
                             </tr>
                         ))}

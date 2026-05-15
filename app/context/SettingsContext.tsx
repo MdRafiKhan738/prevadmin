@@ -9,6 +9,7 @@ interface Settings {
     favIcon?: string;
     watermarkLogo?: string;
     userRepeatAdViewTime?: number;
+    adReShowAfterMinutes?: number;
     productPhotoLimit?: number;
     blockCheckInHeadline?: string[];
     blockCheckInDescription?: string[];
