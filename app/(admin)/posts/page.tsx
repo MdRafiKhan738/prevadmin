@@ -42,8 +42,6 @@ function getPromotionMetrics(ad: Ad) {
     const totalTarget =
         targetValue > 0 ? targetValue : (targetD > 0 && duration > 0 ? targetD * duration : 0);
 
-    // Cumulative Running Views: We use promotedViews if available, otherwise fallback to views (if newly promoted)
-    // Actually, promotedViews is the field specifically for the current promotion metrics
     const achievedSoFar = Number(ad.promotedViews ?? 0) || 0;
 
     const startMs = ad.promoteStartDate ? new Date(ad.promoteStartDate).getTime() : NaN;
@@ -51,22 +49,29 @@ function getPromotionMetrics(ad: Ad) {
     const isRunning = adTypeLower === 'promoted' || adTypeLower === 'processing';
 
     let expectedSoFar = 0;
+    let dayNumber = 0;
     if (totalTarget > 0) {
         if (isRunning && duration > 0 && Number.isFinite(startMs)) {
-            // Calculate days elapsed (Day 1, Day 2, etc.)
             const daysElapsed = Math.min(duration, Math.max(1, Math.floor((Date.now() - startMs) / MS_PER_DAY) + 1));
-            // Cumulative Target = (Total / Duration) * Days passed
             expectedSoFar = Math.round((totalTarget / duration) * daysElapsed);
+            dayNumber = daysElapsed;
         } else if (!isRunning) {
-            // Not running yet or already done
             expectedSoFar = totalTarget;
         } else {
-            // Running but duration 0? fallback
             expectedSoFar = totalTarget;
         }
     }
 
-    return { totalTarget, expectedSoFar, achievedSoFar };
+    // Day-level metrics
+    const dailyTarget = targetD;
+    const dailyAchieved = Number(ad.dailyViewsCount) || 0;
+
+    // Slot-level metrics (3 slots per day)
+    const slotTarget = targetD > 0 ? Math.ceil(targetD / 3) : 0;
+    const slotAchieved = Number(ad.slotViewsCount) || 0;
+    const currentSlot = Number(ad.currentSlot) || 0;
+
+    return { totalTarget, expectedSoFar, achievedSoFar, duration, dayNumber, dailyTarget, dailyAchieved, slotTarget, slotAchieved, currentSlot };
 }
 
 interface Ad {
@@ -92,6 +97,9 @@ interface Ad {
     merchantID?: string;
     pwrTarget?: string[];
     targetD?: string;
+    slotDeliveryCount?: number;
+    slotViewsCount?: number;
+    currentSlot?: number;
     notificationDialogue?: string;
     showTill?: string;
     updatedAt?: string;
@@ -1019,13 +1027,23 @@ export default function PostManagement() {
 
                                             {/* Columns 10-15 with rowSpan=2 */}
                                             <td className="px-1 py-1 text-black whitespace-nowrap border-r border-b border-slate-300 align-top text-center" rowSpan={2}>
-                                                <div className="mt-1 font-medium">
-                                                    {(() => {
-                                                        const { totalTarget, expectedSoFar, achievedSoFar } = getPromotionMetrics(ad);
-                                                        if (totalTarget <= 0) return '0/0';
-                                                        return `${expectedSoFar}/${achievedSoFar}`;
-                                                    })()}
-                                                </div>
+                                                {(() => {
+                                                    const { totalTarget, achievedSoFar, duration, dayNumber, dailyTarget, dailyAchieved, slotTarget, slotAchieved, currentSlot } = getPromotionMetrics(ad);
+                                                    if (totalTarget <= 0) return <span className="text-slate-400 text-[10px]">—</span>;
+                                                    return (
+                                                        <div className="flex flex-col items-center gap-0.5 mt-0.5 leading-none">
+                                                            <span className="text-[9px] font-semibold text-slate-700">
+                                                                {totalTarget}/{duration}D[{totalTarget}-&gt;{achievedSoFar}]
+                                                            </span>
+                                                            <span className="text-[9px] font-semibold text-blue-600">
+                                                                D{dayNumber}[{dailyTarget}-&gt;{dailyAchieved}]
+                                                            </span>
+                                                            <span className="text-[9px] font-semibold text-emerald-600">
+                                                                S{currentSlot}[{slotTarget}-&gt;{slotAchieved}]
+                                                            </span>
+                                                        </div>
+                                                    );
+                                                })()}
                                             </td>
                                             <td className="px-1 py-1 border-r border-b border-slate-300 align-top text-center" rowSpan={2}>
                                                 <div className={cn("mt-1.5 font-bold", ad.isReported ? "text-rose-600" : "text-black")}>
