@@ -18,10 +18,12 @@ export default function SettingsAdminPage() {
     const [siteLogo, setSiteLogo] = useState<File | null>(null);
     const [favIcon, setFavIcon] = useState<File | null>(null);
     const [watermarkLogo, setWatermarkLogo] = useState<File | null>(null);
+    const [ogImage, setOgImage] = useState<File | null>(null);
 
     const [siteLogoPreview, setSiteLogoPreview] = useState<string>('');
     const [favIconPreview, setFavIconPreview] = useState<string>('');
     const [watermarkLogoPreview, setWatermarkLogoPreview] = useState<string>('');
+    const [ogImagePreview, setOgImagePreview] = useState<string>('');
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
 
@@ -50,6 +52,7 @@ export default function SettingsAdminPage() {
                     if (settingsData.siteLogo) setSiteLogoPreview(getImageUrl(settingsData.siteLogo));
                     if (settingsData.favIcon) setFavIconPreview(getImageUrl(settingsData.favIcon));
                     if (settingsData.watermarkLogo) setWatermarkLogoPreview(getImageUrl(settingsData.watermarkLogo));
+                    if (settingsData.ogImage) setOgImagePreview(getImageUrl(settingsData.ogImage));
                 }
             } catch (error) {
                 console.error("Error fetching settings:", error);
@@ -107,6 +110,7 @@ export default function SettingsAdminPage() {
             if (siteLogo) formData.append('siteLogo', siteLogo);
             if (favIcon) formData.append('favIcon', favIcon);
             if (watermarkLogo) formData.append('watermarkLogo', watermarkLogo);
+            if (ogImage) formData.append('ogImage', ogImage);
 
             const res = await fetch(`${API_BASE_URL}/api/settings`, {
                 method: 'PUT',
@@ -122,9 +126,11 @@ export default function SettingsAdminPage() {
                 if (data.data.siteLogo) setSiteLogoPreview(getImageUrl(data.data.siteLogo));
                 if (data.data.favIcon) setFavIconPreview(getImageUrl(data.data.favIcon));
                 if (data.data.watermarkLogo) setWatermarkLogoPreview(getImageUrl(data.data.watermarkLogo));
+                if (data.data.ogImage) setOgImagePreview(getImageUrl(data.data.ogImage));
                 setSiteLogo(null);
                 setFavIcon(null);
                 setWatermarkLogo(null);
+                setOgImage(null);
             } else {
                 toast.error(data.message || "Failed to update settings");
             }
@@ -205,6 +211,25 @@ export default function SettingsAdminPage() {
                             {(watermarkLogoPreview || watermarkLogo) && (
                                 <div className="w-[42px] h-[32px] border border-slate-200 rounded-[4px] ml-4 bg-white shadow-sm flex items-center justify-center overflow-hidden">
                                     <img src={watermarkLogo ? URL.createObjectURL(watermarkLogo) : watermarkLogoPreview} alt="Watermark preview" className="w-full h-full object-contain" />
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* OG Image */}
+                    <div className="flex items-center">
+                        <label className="w-[200px] text-[#333] text-[13px]">OG Image <span className="text-slate-400 text-[11px]">(1200×630)</span></label>
+                        <div className="flex-1 flex justify-between items-center pr-2">
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => setOgImage(e.target.files ? e.target.files[0] : null)}
+                                className="block w-auto text-[13px] text-slate-600 file:mr-4 file:py-1 file:px-2.5 file:rounded-[3px] file:border file:border-slate-300 file:text-[13px] file:text-[#333] file:bg-[#f3f4f6] hover:file:bg-slate-200 transition-colors cursor-pointer outline-none"
+                            />
+                            {/* Preview box */}
+                            {(ogImagePreview || ogImage) && (
+                                <div className="w-[63px] h-[32px] border border-slate-200 rounded-[4px] ml-4 bg-white shadow-sm flex items-center justify-center overflow-hidden">
+                                    <img src={ogImage ? URL.createObjectURL(ogImage) : ogImagePreview} alt="OG image preview" className="w-full h-full object-contain" />
                                 </div>
                             )}
                         </div>
