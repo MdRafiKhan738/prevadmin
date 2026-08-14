@@ -24,6 +24,8 @@ function cn(...inputs: ClassValue[]) {
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
+const ITEMS_PER_PAGE = 100;
+
 function parseIntSafe(value: unknown): number {
     const n = parseInt(String(value ?? ''), 10);
     return Number.isFinite(n) ? n : 0;
@@ -255,6 +257,12 @@ export default function PostManagement() {
     const [saveLoading, setSaveLoading] = useState(false);
     const [merchantName, setMerchantName] = useState<string>('');
 
+    const paginatedAds = filteredAds.slice(
+            (currentPage - 1) * ITEMS_PER_PAGE,
+            currentPage * ITEMS_PER_PAGE
+        );
+
+
     const verifyMerchant = async (id: string) => {
         try {
             const res = await axios.get(`${API_BASE_URL}/api/user/profile/${id}`);
@@ -297,8 +305,13 @@ export default function PostManagement() {
 
     // Fetch Ads
     useEffect(() => {
-        fetchAds({ page: currentPage, limit: 100, ...searchKeys });
-    }, [currentPage]);
+    fetchAds(searchKeys);
+}, []);
+
+useEffect(() => {
+    setTotalPages(Math.max(1, Math.ceil(filteredAds.length / ITEMS_PER_PAGE)));
+    setCurrentPage(1);
+}, [filteredAds]);
 
     useEffect(() => {
         fetchMeta();
@@ -337,25 +350,72 @@ export default function PostManagement() {
         }
     };
 
-    const fetchAds = async (filters: any = {}) => {
-        setLoading(true);
-        try {
-            const token = Cookies.get('adminToken');
-            const res = await axios.get(`${API_BASE_URL}/api/ads/admin/all`, {
-                headers: { 'x-auth-token': token },
-                params: { page: currentPage, limit: 100, ...filters }
-            });
-            if (res.data.success) {
-                setAds(res.data.data);
-                setFilteredAds(res.data.data);
-                setTotalPages(res.data.pages || 1);
+const fetchAds = async (filters: any = {}) => {
+    setLoading(true);
+
+    try {
+        const token = Cookies.get("adminToken");
+        const perPageLimit = 100;
+
+        const firstRes = await axios.get(
+            `${API_BASE_URL}/api/ads/admin/all`,
+            {
+                headers: {
+                    "x-auth-token": token,
+                },
+                params: {
+                    page: 1,
+                    limit: perPageLimit,
+                    ...filters,
+                },
             }
-        } catch (error) {
-            console.error("Failed to fetch ads", error);
-        } finally {
-            setLoading(false);
+        );
+
+        if (!firstRes.data.success) {
+            setAds([]);
+            setFilteredAds([]);
+            setTotalPages(Math.ceil(allAds.length / 100));
+            return;
         }
-    };
+
+        let allAds = [...firstRes.data.data];
+        const totalServerPages = firstRes.data.pages || 1;
+
+        if (totalServerPages > 1) {
+            const requests = [];
+
+            for (let page = 2; page <= totalServerPages; page++) {
+                requests.push(
+                    axios.get(`${API_BASE_URL}/api/ads/admin/all`, {
+                        headers: {
+                            "x-auth-token": token,
+                        },
+                        params: {
+                            page,
+                            limit: perPageLimit,
+                            ...filters,
+                        },
+                    })
+                );
+            }
+
+            const responses = await Promise.all(requests);
+
+            responses.forEach((res) => {
+                if (res.data.success) {
+                    allAds.push(...res.data.data);
+                }
+            });
+        }
+
+        setAds(allAds);
+        setFilteredAds(allAds);
+    } catch (error) {
+        console.error("Failed to fetch ads", error);
+    } finally {
+        setLoading(false);
+    }
+};
 
     // Search & Tab Filter
     useEffect(() => {
@@ -746,7 +806,9 @@ export default function PostManagement() {
                 setPendingDescriptionAction(null);
                 setMerchantName('');
                 toast.success(selectedAd?._id ? "Ad updated successfully!" : "Ad created successfully!");
-                fetchAds();
+                fetchAds(
+                    searchKeys
+                );
             }
         } catch (error) {
             console.error("Save failed", error);
@@ -934,7 +996,7 @@ export default function PostManagement() {
                                     <td colSpan={14} className="py-20 text-center text-black">No posts found</td>
                                 </tr>
                             ) : (
-                                filteredAds.map((ad, idx) => (
+                                paginatedAds.map((ad, idx) => (
                                     <React.Fragment key={ad._id}>
                                         <tr className={cn(
                                             idx % 2 === 0 ? "bg-white" : "bg-slate-100",
@@ -1496,9 +1558,9 @@ export default function PostManagement() {
                                             {(editFormData.pendingDescription && editFormData.pendingDescription !== editFormData.description) ? (
                                                 <>
                                                     <div className="space-y-0.5">
-                                                        <div className="text-xs text-black font-bold">Active Description</div>
+                                                        <div className="text-sm text-black font-bold">Active Description</div>
                                                         <textarea
-                                                            className="w-full border border-slate-200 p-1.5 outline-none text-[11px] h-28 resize-none bg-slate-100 text-slate-500 font-medium"
+                                                            className="w-full border border-slate-200 p-1.5 outline-none text-sm h-28 resize-none bg-slate-100 text-slate-500 font-medium"
                                                             value={editFormData.description || ''}
                                                             readOnly
                                                         />
@@ -1540,7 +1602,7 @@ export default function PostManagement() {
                                                             </div>
                                                         </div>
                                                         <textarea
-                                                            className="w-full border border-rose-200 p-1.5 outline-none text-[11px] h-36 resize-none bg-white font-bold text-black shadow-inner"
+                                                            className="w-full border border-rose-200 p-1.5 outline-none text-sm h-36 resize-none bg-white font-bold text-black shadow-inner"
                                                             value={editFormData.pendingDescription || ''}
                                                             onChange={(e) => handleEditChange('pendingDescription', e.target.value)}
                                                         />
@@ -1550,7 +1612,7 @@ export default function PostManagement() {
                                                 <div className="space-y-0.5">
                                                     <div className="text-xs text-black font-bold">Description</div>
                                                     <textarea
-                                                        className="w-full border border-slate-200 p-1.5 outline-none text-[11px] h-64 resize-none bg-white font-medium"
+                                                        className="w-full border border-slate-200 p-1.5 outline-none text-sm h-64 resize-none bg-white font-medium"
                                                         value={editFormData.description || ''}
                                                         onChange={(e) => handleEditChange('description', e.target.value)}
                                                     />
