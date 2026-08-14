@@ -370,6 +370,7 @@ const fetchAds = async (filters: any = {}) => {
                 },
             }
         );
+        const allAds = [...firstRes.data.data];
 
         if (!firstRes.data.success) {
             setAds([]);
@@ -378,7 +379,6 @@ const fetchAds = async (filters: any = {}) => {
             return;
         }
 
-        let allAds = [...firstRes.data.data];
         const totalServerPages = firstRes.data.pages || 1;
 
         if (totalServerPages > 1) {
